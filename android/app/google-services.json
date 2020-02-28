@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "767646115177",
+    "firebase_url": "https://vvin-fc248.firebaseio.com",
+    "project_id": "vvin-fc248",
+    "storage_bucket": "vvin-fc248.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:767646115177:android:e781da24fd1e14892cc9f8",
+        "android_client_info": {
+          "package_name": "com.my.jtapps.vvin"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "767646115177-tojt9cfj0a1q62o9nk8g4b9pkqq3nodg.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB40ZrZzrCEan6Tp9x6KUkd0kQW3LAIbQU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "767646115177-tojt9cfj0a1q62o9nk8g4b9pkqq3nodg.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
