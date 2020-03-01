@@ -26,7 +26,8 @@ class Noti {
 class Myworks {
   String date, title, link, category, qr, url, urlName, id;
   bool offLine;
-  Myworks({this.date, this.title, this.link, this.category, this.qr, this.url, this.urlName, this.offLine, this.id});
+  List handlers;
+  Myworks({this.date, this.title, this.link, this.category, this.qr, this.url, this.urlName, this.offLine, this.id, this.handlers});
 }
 
 class TopView {

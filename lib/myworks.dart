@@ -23,7 +23,7 @@ import 'package:draggable_scrollbar/draggable_scrollbar.dart';
 import 'package:vvin/mainscreen.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_ml_vision/firebase_ml_vision.dart';
-import 'package:vvin/whatsappForward.dart';
+import 'package:flutter_open_whatsapp/flutter_open_whatsapp.dart';
 
 final ScrollController controller = ScrollController();
 final ScrollController whatsappController = ScrollController();
@@ -50,10 +50,13 @@ class _MyWorksState extends State<MyWorks> {
   GlobalKey<RefreshIndicatorState> refreshKey;
   String filePath = "";
   List<Map> offlineLink;
-  List<String> vtagList = [];
+  List vtagList = [];
+  List seletedVTag = [];
+  List handlerAllList = [];
+  List handlerAllList1 = [];
   Database db;
   int total, startTime, endTime, imageIndex, linkIndex, totalQR, totalLink;
-  bool isOffline, status, connection, nodata, link, image, send;
+  bool isOffline, status, vtagStatus, connection, nodata, link, image;
   String search,
       companyID,
       userID,
@@ -64,14 +67,18 @@ class _MyWorksState extends State<MyWorks> {
       titleInternet,
       linkInternet,
       typeInternet,
-      location;
+      location,
+      base64Image;
   String urlMyWorks = "https://vvinoa.vvin.com/api/myWorks.php";
+  String urlHandler = "https://vvinoa.vvin.com/api/getHandler.php";
+  String assignURL = "https://vvinoa.vvin.com/api/assign.php";
+  String urlVTag = "https://vvinoa.vvin.com/api/vtag.php";
   List<Myworks> myWorks = [];
   List<Myworks> myWorks1 = [];
   SharedPreferences prefs;
   File pickedImage;
   bool isImageLoaded;
-  bool _validate = false;
+  bool _phoneEmpty, _nameEmpty, _phoneInvalid;
   List<String> scanner = [];
   List<String> phoneList = [];
   List<String> otherList = [];
@@ -84,17 +91,17 @@ class _MyWorksState extends State<MyWorks> {
     imageCache.clear();
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
     refreshKey = GlobalKey<RefreshIndicatorState>();
-    vtagList.add("value");
-    vtagList.add("valuedsfgf");
-    vtagList.add("345678");
-    send = true;
+    _phoneEmpty = false;
+    _nameEmpty = false;
+    _phoneInvalid = false;
     isOffline = false;
     status = false;
+    vtagStatus = false;
     connection = false;
     nodata = false;
     link = false;
-    image = false;
     isImageLoaded = false;
+    base64Image = "";
     _phonecontroller.text = "";
     _namecontroller.text = "";
     _companycontroller.text = "";
@@ -105,11 +112,6 @@ class _MyWorksState extends State<MyWorks> {
     imageIndex = 0;
     linkIndex = 0;
     checkConnection();
-    Future.delayed(const Duration(seconds: 2), () {
-      setState(() {
-        send = false;
-      });
-    });
     _firebaseMessaging.configure(
       onMessage: (Map<String, dynamic> message) async {
         bool noti = false;
@@ -196,63 +198,6 @@ class _MyWorksState extends State<MyWorks> {
             padding: EdgeInsets.fromLTRB(0, ScreenUtil().setHeight(20), 0, 0),
             child: Column(
               children: <Widget>[
-                (send == false)
-                    ? Container()
-                    : Container(
-                        margin: EdgeInsets.fromLTRB(
-                            ScreenUtil().setHeight(20),
-                            0,
-                            ScreenUtil().setHeight(20),
-                            ScreenUtil().setHeight(20)),
-                        padding: EdgeInsets.all(ScreenUtil().setHeight(5)),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          border: Border.all(
-                              color: Colors.green, style: BorderStyle.solid),
-                        ),
-                        child: Row(
-                          children: <Widget>[
-                            Container(
-                              padding: EdgeInsets.fromLTRB(
-                                  ScreenUtil().setHeight(10),
-                                  0,
-                                  ScreenUtil().setHeight(20),
-                                  0),
-                              child: Icon(FontAwesomeIcons.checkCircle,
-                                  size: ScreenUtil().setHeight(20),
-                                  color: Colors.green),
-                            ),
-                            Expanded(
-                              child: Column(
-                                children: <Widget>[
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.start,
-                                    children: <Widget>[
-                                      Text(
-                                        "Your recipient should receive the content.",
-                                        style: TextStyle(
-                                            color: Colors.green,
-                                            fontSize: font12),
-                                      ),
-                                    ],
-                                  ),
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.start,
-                                    children: <Widget>[
-                                      Text(
-                                        "Data has been recorded to VData",
-                                        style: TextStyle(
-                                            color: Colors.green,
-                                            fontSize: font12),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            )
-                          ],
-                        ),
-                      ),
                 Row(
                   children: <Widget>[
                     Expanded(
@@ -320,7 +265,7 @@ class _MyWorksState extends State<MyWorks> {
                 SizedBox(
                   height: ScreenUtil().setHeight(10),
                 ),
-                (status == true)
+                (status == true && vtagStatus == true)
                     ? Container(
                         padding: EdgeInsets.all(
                           ScreenUtil().setHeight(10),
@@ -343,7 +288,7 @@ class _MyWorksState extends State<MyWorks> {
                 SizedBox(
                   height: ScreenUtil().setHeight(10),
                 ),
-                (status == true)
+                (status == true && vtagStatus == true)
                     ? (nodata == true)
                         ? Container(
                             height: ScreenUtil().setHeight(200),
@@ -423,44 +368,73 @@ class _MyWorksState extends State<MyWorks> {
                                                             color: Colors.grey,
                                                           ),
                                                         ),
-                                                        itemBuilder: (BuildContext
-                                                                context) =>
-                                                            <
-                                                                PopupMenuEntry<
-                                                                    String>>[
-                                                              PopupMenuItem<
-                                                                  String>(
-                                                                value: "assign",
-                                                                child: Text(
-                                                                  "Assign",
-                                                                  style:
-                                                                      TextStyle(
-                                                                    fontSize:
-                                                                        font14,
+                                                        itemBuilder: (level !=
+                                                                "0")
+                                                            ? (BuildContext
+                                                                    context) =>
+                                                                <
+                                                                    PopupMenuEntry<
+                                                                        String>>[
+                                                                  PopupMenuItem<
+                                                                      String>(
+                                                                    value:
+                                                                        "visit url",
+                                                                    child: Text(
+                                                                      "Visit URL",
+                                                                      style:
+                                                                          TextStyle(
+                                                                        fontSize:
+                                                                            font14,
+                                                                      ),
+                                                                    ),
                                                                   ),
-                                                                ),
-                                                              ),
-                                                              PopupMenuItem<
-                                                                  String>(
-                                                                value:
-                                                                    "visit url",
-                                                                child: Text(
-                                                                  "Visit URL",
-                                                                  style:
-                                                                      TextStyle(
-                                                                    fontSize:
-                                                                        font14,
+                                                                ]
+                                                            : (BuildContext
+                                                                    context) =>
+                                                                <
+                                                                    PopupMenuEntry<
+                                                                        String>>[
+                                                                  PopupMenuItem<
+                                                                      String>(
+                                                                    value:
+                                                                        "assign",
+                                                                    child: Text(
+                                                                      "Assign",
+                                                                      style:
+                                                                          TextStyle(
+                                                                        fontSize:
+                                                                            font14,
+                                                                      ),
+                                                                    ),
                                                                   ),
-                                                                ),
-                                                              ),
-                                                            ],
+                                                                  PopupMenuItem<
+                                                                      String>(
+                                                                    value:
+                                                                        "visit url",
+                                                                    child: Text(
+                                                                      "Visit URL",
+                                                                      style:
+                                                                          TextStyle(
+                                                                        fontSize:
+                                                                            font14,
+                                                                      ),
+                                                                    ),
+                                                                  ),
+                                                                ],
                                                         onSelected:
                                                             (selectedItem) async {
                                                           switch (
                                                               selectedItem) {
                                                             case "assign":
                                                               {
-                                                                _assign();
+                                                                _assign(
+                                                                    myWorks[index]
+                                                                        .handlers,
+                                                                    myWorks[index]
+                                                                            .category +
+                                                                        "-" +
+                                                                        myWorks[index]
+                                                                            .id);
                                                               }
                                                               break;
                                                             case "visit url":
@@ -608,8 +582,12 @@ class _MyWorksState extends State<MyWorks> {
                                                         color: Colors.blue,
                                                       ),
                                                       textColor: Colors.blue,
-                                                      onPressed:
-                                                          _whatsappForward,
+                                                      onPressed: () {
+                                                        _whatsappForward(
+                                                            "new",
+                                                            myWorks[index]
+                                                                .link);
+                                                      },
                                                       padding: EdgeInsets.all(
                                                         ScreenUtil()
                                                             .setHeight(1),
@@ -763,199 +741,276 @@ class _MyWorksState extends State<MyWorks> {
     );
   }
 
-  void _assign() {
-    showModalBottomSheet(
-        isDismissible: false,
-        context: context,
-        builder: (context) {
-          return StatefulBuilder(
-              builder: (BuildContext context, StateSetter setModalState) {
-            return Container(
-              height: MediaQuery.of(context).size.height * 0.5,
-              child: Column(
-                children: <Widget>[
-                  Container(
-                    decoration: BoxDecoration(
-                      border: Border(
-                        bottom:
-                            BorderSide(width: 1, color: Colors.grey.shade300),
+  void _assign(List handlerList, String id) async {
+    var connectivityResult = await (Connectivity().checkConnectivity());
+    if (connectivityResult == ConnectivityResult.wifi ||
+        connectivityResult == ConnectivityResult.mobile) {
+      showModalBottomSheet(
+          isDismissible: false,
+          context: context,
+          builder: (context) {
+            return StatefulBuilder(
+                builder: (BuildContext context, StateSetter setModalState) {
+              return Container(
+                height: MediaQuery.of(context).size.height * 0.5,
+                child: Column(
+                  children: <Widget>[
+                    Container(
+                      decoration: BoxDecoration(
+                        border: Border(
+                          bottom:
+                              BorderSide(width: 1, color: Colors.grey.shade300),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: <Widget>[
+                          Container(
+                            padding: EdgeInsets.all(
+                              ScreenUtil().setHeight(10),
+                            ),
+                            child: Text(
+                              "Assign",
+                              style: TextStyle(
+                                  fontSize: font14,
+                                  fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                          Container(
+                            child: Row(
+                              children: <Widget>[
+                                InkWell(
+                                  borderRadius: BorderRadius.circular(20),
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(100),
+                                    ),
+                                    padding: EdgeInsets.all(
+                                      ScreenUtil().setHeight(20),
+                                    ),
+                                    child: Text(
+                                      "Done",
+                                      style: TextStyle(
+                                        color: Colors.blue,
+                                        fontSize: font14,
+                                      ),
+                                    ),
+                                  ),
+                                  onTap: () {
+                                    _assignDone(handlerList, id);
+                                  },
+                                )
+                              ],
+                            ),
+                          )
+                        ],
                       ),
                     ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: <Widget>[
-                        Container(
-                          padding: EdgeInsets.all(
-                            ScreenUtil().setHeight(10),
+                    Container(
+                      margin: EdgeInsets.all(ScreenUtil().setHeight(10)),
+                      child: Column(
+                        children: <Widget>[
+                          SizedBox(
+                            height: ScreenUtil().setHeight(10),
                           ),
-                          child: Text(
-                            "Assign",
-                            style: TextStyle(
-                                fontSize: font14, fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                        Container(
-                          child: Row(
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.start,
                             children: <Widget>[
-                              InkWell(
-                                borderRadius: BorderRadius.circular(20),
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(100),
-                                  ),
-                                  padding: EdgeInsets.all(
-                                    ScreenUtil().setHeight(20),
-                                  ),
-                                  child: Text(
-                                    "Done",
+                              Flexible(
+                                child: Text(
+                                    "Assign handler for the leads generated by this work",
                                     style: TextStyle(
-                                      color: Colors.blue,
-                                      fontSize: font14,
-                                    ),
-                                  ),
-                                ),
-                                onTap: () {
-                                  Navigator.of(context).pop();
-                                },
-                              )
-                            ],
-                          ),
-                        )
-                      ],
-                    ),
-                  ),
-                  Container(
-                    margin: EdgeInsets.all(ScreenUtil().setHeight(10)),
-                    child: Column(
-                      children: <Widget>[
-                        SizedBox(
-                          height: ScreenUtil().setHeight(10),
-                        ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: <Widget>[
-                            Flexible(
-                              child: Text(
-                                  "Assign handler for the leads generated by this work",
-                                  style: TextStyle(
-                                      color: Colors.grey.shade600,
-                                      fontSize: font13)),
-                            ),
-                          ],
-                        ),
-                        SizedBox(
-                          height: ScreenUtil().setHeight(5),
-                        ),
-                        Container(
-                          padding: EdgeInsets.all(0.5),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(5),
-                            border: Border.all(
-                                color: Colors.grey.shade400,
-                                style: BorderStyle.solid),
-                          ),
-                          child: Row(
-                            children: <Widget>[
-                              Expanded(
-                                child: Container(
-                                  margin: EdgeInsets.fromLTRB(
-                                      ScreenUtil().setHeight(10), 0, 0, 0),
-                                  child: (vtagList.length == 0)
-                                      ? Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.start,
-                                          children: <Widget>[
-                                            Text(
-                                              "Handler",
-                                              style: TextStyle(
-                                                  fontSize: font13,
-                                                  color: Colors.grey),
-                                            )
-                                          ],
-                                        )
-                                      : Wrap(
-                                          direction: Axis.horizontal,
-                                          alignment: WrapAlignment.start,
-                                          children: <Widget>[
-                                            for (int i = 0;
-                                                i < vtagList.length;
-                                                i++)
-                                              Container(
-                                                width: ScreenUtil().setWidth(
-                                                    (vtagList[i].length * 18) +
-                                                        62.8),
-                                                margin: EdgeInsets.all(
-                                                    ScreenUtil().setHeight(5)),
-                                                decoration: BoxDecoration(
-                                                  color: Color.fromRGBO(
-                                                      235, 235, 255, 1),
-                                                  borderRadius:
-                                                      BorderRadius.circular(
-                                                          100),
-                                                ),
-                                                padding: EdgeInsets.all(
-                                                  ScreenUtil().setHeight(10),
-                                                ),
-                                                child: Row(
-                                                  mainAxisAlignment:
-                                                      MainAxisAlignment.center,
-                                                  children: <Widget>[
-                                                    Text(
-                                                      vtagList[i],
-                                                      style: TextStyle(
-                                                        color: Colors.black,
-                                                        fontSize: font13,
-                                                      ),
-                                                    ),
-                                                    SizedBox(
-                                                      width: ScreenUtil()
-                                                          .setHeight(5),
-                                                    ),
-                                                    Icon(
-                                                      FontAwesomeIcons
-                                                          .timesCircle,
-                                                      size: ScreenUtil()
-                                                          .setHeight(30),
-                                                      color: Colors.grey,
-                                                    )
-                                                  ],
-                                                ),
-                                              ),
-                                          ],
-                                        ),
-                                ),
+                                        color: Colors.grey.shade600,
+                                        fontSize: font13)),
                               ),
-                              InkWell(
-                                onTap: () {
-                                  _selectHandler();
-                                },
-                                child: Container(
-                                  height: ScreenUtil().setHeight(60),
-                                  width: ScreenUtil().setHeight(60),
-                                  child: Center(
-                                    child: Icon(
-                                      Icons.arrow_drop_down,
-                                      color: Colors.black,
-                                    ),
-                                  ),
-                                ),
-                              )
                             ],
                           ),
-                        ),
-                      ],
+                          SizedBox(
+                            height: ScreenUtil().setHeight(5),
+                          ),
+                          Container(
+                            padding: EdgeInsets.all(0.5),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(5),
+                              border: Border.all(
+                                  color: Colors.grey.shade400,
+                                  style: BorderStyle.solid),
+                            ),
+                            child: Row(
+                              children: <Widget>[
+                                Expanded(
+                                  child: Container(
+                                    margin: EdgeInsets.fromLTRB(
+                                        ScreenUtil().setHeight(10), 0, 0, 0),
+                                    child: (handlerList.length == 0)
+                                        ? Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.start,
+                                            children: <Widget>[
+                                              Text(
+                                                "Handler",
+                                                style: TextStyle(
+                                                    fontSize: font13,
+                                                    color: Colors.grey),
+                                              )
+                                            ],
+                                          )
+                                        : Wrap(
+                                            direction: Axis.horizontal,
+                                            alignment: WrapAlignment.start,
+                                            children: <Widget>[
+                                              for (int i = 0;
+                                                  i < handlerList.length;
+                                                  i++)
+                                                InkWell(
+                                                  onTap: () {
+                                                    setModalState(() {
+                                                      handlerList.removeAt(i);
+                                                    });
+                                                  },
+                                                  child: Container(
+                                                    width: ScreenUtil()
+                                                        .setWidth((handlerList[
+                                                                        i]
+                                                                    .length *
+                                                                18) +
+                                                            62.8),
+                                                    margin: EdgeInsets.all(
+                                                        ScreenUtil()
+                                                            .setHeight(5)),
+                                                    decoration: BoxDecoration(
+                                                      color: Color.fromRGBO(
+                                                          235, 235, 255, 1),
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              100),
+                                                    ),
+                                                    padding: EdgeInsets.all(
+                                                      ScreenUtil()
+                                                          .setHeight(10),
+                                                    ),
+                                                    child: Row(
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .center,
+                                                      children: <Widget>[
+                                                        Text(
+                                                          handlerList[i],
+                                                          style: TextStyle(
+                                                            color: Colors.black,
+                                                            fontSize: font13,
+                                                          ),
+                                                        ),
+                                                        SizedBox(
+                                                          width: ScreenUtil()
+                                                              .setHeight(5),
+                                                        ),
+                                                        Icon(
+                                                          FontAwesomeIcons
+                                                              .timesCircle,
+                                                          size: ScreenUtil()
+                                                              .setHeight(30),
+                                                          color: Colors.grey,
+                                                        )
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ),
+                                            ],
+                                          ),
+                                  ),
+                                ),
+                                InkWell(
+                                  onTap: () {
+                                    _selectHandler(handlerList, id);
+                                  },
+                                  child: Container(
+                                    height: ScreenUtil().setHeight(60),
+                                    width: ScreenUtil().setHeight(60),
+                                    child: Center(
+                                      child: Icon(
+                                        Icons.arrow_drop_down,
+                                        color: Colors.black,
+                                      ),
+                                    ),
+                                  ),
+                                )
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            );
+                  ],
+                ),
+              );
+            });
           });
-        });
+    } else {
+      Toast.show("This feature need Internet connection", context,
+          duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
+    }
   }
 
-  void _selectHandler() {
+  void _assignDone(List handlerList, String id) async {
+    String handlers = "";
+    for (int j = 0; j < handlerList.length; j++) {
+      for (int i = 0; i < handlerAllList1.length; i++) {
+        if (handlerList[j] == handlerAllList1[i].handler) {
+          if (handlers == "") {
+            handlers = handlerAllList1[i].handlerID;
+          } else {
+            handlers = handlers + "," + handlerAllList1[i].handlerID;
+          }
+        }
+      }
+    }
     Navigator.of(context).pop();
+    var connectivityResult = await (Connectivity().checkConnectivity());
+    if (connectivityResult == ConnectivityResult.wifi ||
+        connectivityResult == ConnectivityResult.mobile) {
+      http.post(assignURL, body: {
+        "companyID": companyID,
+        "userID": userID,
+        "level": level,
+        "user_type": userType,
+        "id": id,
+        "handler": handlers
+      }).then((res) async {
+        if (res.body == "success") {
+          Toast.show("Handler updated", context,
+              duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
+        } else {
+          Toast.show("Something's wrong", context,
+              duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
+        }
+      }).catchError((err) {
+        print("Assign error: " + (err).toString());
+      });
+    } else {
+      Toast.show("No Internet, data can't update", context,
+          duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
+    }
+  }
+
+  void _selectHandler(List handlerList, String id) {
+    String handler = "";
+    List<String> allHandler = [];
+    Navigator.of(context).pop();
+
+    allHandler.clear();
+    for (var data in handlerAllList) {
+      allHandler.add(data.handler);
+    }
+
+    for (int i = 0; i < handlerList.length; i++) {
+      for (int j = 0; j < handlerAllList.length; j++) {
+        if (handlerList[i] == handlerAllList[j].handler) {
+          allHandler.removeAt(j);
+        }
+      }
+    }
     showModalBottomSheet(
       isDismissible: false,
       context: context,
@@ -1006,8 +1061,14 @@ class _MyWorksState extends State<MyWorks> {
                             ),
                           ),
                           onTap: () {
+                            if (handler == "-" || handler == "") {
+                            } else {
+                              setState(() {
+                                handlerList.add(handler);
+                              });
+                            }
                             Navigator.pop(context);
-                            _assign();
+                            _assign(handlerList, id);
                           },
                         ),
                       ],
@@ -1021,8 +1082,18 @@ class _MyWorksState extends State<MyWorks> {
                       itemExtent: 28,
                       scrollController:
                           FixedExtentScrollController(initialItem: 0),
-                      onSelectedItemChanged: (int index) {},
-                      children: <Widget>[],
+                      onSelectedItemChanged: (int index) {
+                        handler = allHandler[index];
+                      },
+                      children: <Widget>[
+                        for (int i = 0; i < allHandler.length; i++)
+                          Text(
+                            allHandler[i],
+                            style: TextStyle(
+                              fontSize: font14,
+                            ),
+                          )
+                      ],
                     ),
                   ))
                 ],
@@ -1034,7 +1105,19 @@ class _MyWorksState extends State<MyWorks> {
     );
   }
 
-  void _whatsappForward() async {
+  void _whatsappForward(String status, String url) async {
+    if (status != "continue") {
+      setState(() {
+        _phoneEmpty = false;
+        _phoneInvalid = false;
+        isImageLoaded = false;
+        seletedVTag.clear();
+        _phonecontroller.text = "";
+        _namecontroller.text = "";
+        _companycontroller.text = "";
+        _remarkcontroller.text = "";
+      });
+    }
     var connectivityResult = await (Connectivity().checkConnectivity());
     if (connectivityResult == ConnectivityResult.wifi ||
         connectivityResult == ConnectivityResult.mobile) {
@@ -1049,83 +1132,6 @@ class _MyWorksState extends State<MyWorks> {
                   height: MediaQuery.of(context).size.height * 0.97,
                   child: Column(
                     children: <Widget>[
-                      Container(
-                        decoration: BoxDecoration(
-                          border: Border(
-                            bottom: BorderSide(
-                                width: 1, color: Colors.grey.shade300),
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: <Widget>[
-                            // Container(
-                            //   padding: EdgeInsets.all(
-                            //     ScreenUtil().setHeight(10),
-                            //   ),
-                            //   child: Text(
-                            //     "WhatsApp Forward",
-                            //     style: TextStyle(
-                            //         fontSize: font14,
-                            //         fontWeight: FontWeight.bold),
-                            //   ),
-                            // ),
-                            // Container(
-                            //   child: Row(
-                            //     children: <Widget>[
-                            //       InkWell(
-                            //         borderRadius: BorderRadius.circular(20),
-                            //         child: Container(
-                            //           decoration: BoxDecoration(
-                            //             borderRadius:
-                            //                 BorderRadius.circular(100),
-                            //           ),
-                            //           padding: EdgeInsets.all(
-                            //             ScreenUtil().setHeight(20),
-                            //           ),
-                            //           child: Text(
-                            //             "Add Name Card",
-                            //             style: TextStyle(
-                            //               color: Colors.blue,
-                            //               fontSize: font14,
-                            //             ),
-                            //           ),
-                            //         ),
-                            //         onTap: _scanner,
-                            //       ),
-                            //       InkWell(
-                            //         borderRadius: BorderRadius.circular(20),
-                            //         child: Container(
-                            //           decoration: BoxDecoration(
-                            //             borderRadius:
-                            //                 BorderRadius.circular(100),
-                            //           ),
-                            //           padding: EdgeInsets.all(
-                            //             ScreenUtil().setHeight(20),
-                            //           ),
-                            //           child: Icon(
-                            //             FontAwesomeIcons.timesCircle,
-                            //             color: Colors.blue,
-                            //             size: ScreenUtil().setHeight(32.2),
-                            //           ),
-                            //           // Text(
-                            //           //   "Cancel",
-                            //           //   style: TextStyle(
-                            //           //     color: Colors.blue,
-                            //           //     fontSize: font14,
-                            //           //   ),
-                            //           // ),
-                            //         ),
-                            //         onTap: () {
-                            //           Navigator.of(context).pop();
-                            //         },
-                            //       )
-                            //     ],
-                            //   ),
-                            // )
-                          ],
-                        ),
-                      ),
                       Flexible(
                         child: Scaffold(
                           resizeToAvoidBottomInset: true,
@@ -1291,7 +1297,9 @@ class _MyWorksState extends State<MyWorks> {
                                                         MainAxisAlignment.start,
                                                     children: <Widget>[
                                                       InkWell(
-                                                          onTap: _scanner,
+                                                          onTap: () {
+                                                            _scanner(url);
+                                                          },
                                                           child: Text(
                                                             "Take Photo",
                                                             style: TextStyle(
@@ -1347,8 +1355,6 @@ class _MyWorksState extends State<MyWorks> {
                                             keyboardType: TextInputType.number,
                                             decoration: InputDecoration(
                                               hintText: "eg. 6012XXXXXXXX",
-                                              // labelText: 'Enter the Value',
-                                              // errorText: _validate ? 'Value Can\'t Be Empty' : null,
                                               border: InputBorder.none,
                                               focusedBorder: InputBorder.none,
                                               contentPadding: EdgeInsets.only(
@@ -1394,6 +1400,34 @@ class _MyWorksState extends State<MyWorks> {
                                       ],
                                     ),
                                   ),
+                                  (_phoneEmpty == true)
+                                      ? Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.start,
+                                          children: <Widget>[
+                                            Text(
+                                              "Phone number can't be empty",
+                                              style: TextStyle(
+                                                  color: Colors.red,
+                                                  fontSize: font12),
+                                            )
+                                          ],
+                                        )
+                                      : Row(),
+                                  (_phoneInvalid == true)
+                                      ? Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.start,
+                                          children: <Widget>[
+                                            Text(
+                                              "Invalid phone number",
+                                              style: TextStyle(
+                                                  color: Colors.red,
+                                                  fontSize: font12),
+                                            )
+                                          ],
+                                        )
+                                      : Row(),
                                   SizedBox(
                                     height: ScreenUtil().setHeight(30),
                                   ),
@@ -1469,6 +1503,20 @@ class _MyWorksState extends State<MyWorks> {
                                       ],
                                     ),
                                   ),
+                                  (_nameEmpty == true)
+                                      ? Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.start,
+                                          children: <Widget>[
+                                            Text(
+                                              "Name can't be empty",
+                                              style: TextStyle(
+                                                  color: Colors.red,
+                                                  fontSize: font12),
+                                            )
+                                          ],
+                                        )
+                                      : Row(),
                                   SizedBox(
                                     height: ScreenUtil().setHeight(30),
                                   ),
@@ -1636,7 +1684,7 @@ class _MyWorksState extends State<MyWorks> {
                                                 0,
                                                 0,
                                                 0),
-                                            child: (vtagList.length == 0)
+                                            child: (seletedVTag.length == 0)
                                                 ? Row(
                                                     mainAxisAlignment:
                                                         MainAxisAlignment.start,
@@ -1656,66 +1704,79 @@ class _MyWorksState extends State<MyWorks> {
                                                         WrapAlignment.start,
                                                     children: <Widget>[
                                                       for (int i = 0;
-                                                          i < vtagList.length;
+                                                          i <
+                                                              seletedVTag
+                                                                  .length;
                                                           i++)
-                                                        Container(
-                                                          width: ScreenUtil()
-                                                              .setWidth((vtagList[
-                                                                              i]
-                                                                          .length *
-                                                                      16.8) +
-                                                                  62.8),
-                                                          margin: EdgeInsets
-                                                              .all(ScreenUtil()
+                                                        InkWell(
+                                                          onTap: () {
+                                                            setModalState(() {
+                                                              seletedVTag
+                                                                  .removeAt(i);
+                                                            });
+                                                          },
+                                                          child: Container(
+                                                            width: ScreenUtil().setWidth(
+                                                                (seletedVTag[i]
+                                                                            .length *
+                                                                        16.8) +
+                                                                    62.8),
+                                                            margin: EdgeInsets
+                                                                .all(ScreenUtil()
+                                                                    .setHeight(
+                                                                        5)),
+                                                            decoration:
+                                                                BoxDecoration(
+                                                              color: Color
+                                                                  .fromRGBO(
+                                                                      235,
+                                                                      235,
+                                                                      255,
+                                                                      1),
+                                                              borderRadius:
+                                                                  BorderRadius
+                                                                      .circular(
+                                                                          100),
+                                                            ),
+                                                            padding:
+                                                                EdgeInsets.all(
+                                                              ScreenUtil()
                                                                   .setHeight(
-                                                                      5)),
-                                                          decoration:
-                                                              BoxDecoration(
-                                                            color:
-                                                                Color.fromRGBO(
-                                                                    235,
-                                                                    235,
-                                                                    255,
-                                                                    1),
-                                                            borderRadius:
-                                                                BorderRadius
-                                                                    .circular(
-                                                                        100),
-                                                          ),
-                                                          padding:
-                                                              EdgeInsets.all(
-                                                            ScreenUtil()
-                                                                .setHeight(10),
-                                                          ),
-                                                          child: Row(
-                                                            mainAxisAlignment:
-                                                                MainAxisAlignment
-                                                                    .center,
-                                                            children: <Widget>[
-                                                              Text(
-                                                                vtagList[i],
-                                                                style:
-                                                                    TextStyle(
-                                                                  color: Colors
-                                                                      .black,
-                                                                  fontSize: 12,
+                                                                      10),
+                                                            ),
+                                                            child: Row(
+                                                              mainAxisAlignment:
+                                                                  MainAxisAlignment
+                                                                      .center,
+                                                              children: <
+                                                                  Widget>[
+                                                                Text(
+                                                                  seletedVTag[
+                                                                      i],
+                                                                  style:
+                                                                      TextStyle(
+                                                                    color: Colors
+                                                                        .black,
+                                                                    fontSize:
+                                                                        12,
+                                                                  ),
                                                                 ),
-                                                              ),
-                                                              SizedBox(
-                                                                width: ScreenUtil()
-                                                                    .setHeight(
-                                                                        5),
-                                                              ),
-                                                              Icon(
-                                                                FontAwesomeIcons
-                                                                    .timesCircle,
-                                                                size: ScreenUtil()
-                                                                    .setHeight(
-                                                                        30),
-                                                                color:
-                                                                    Colors.grey,
-                                                              )
-                                                            ],
+                                                                SizedBox(
+                                                                  width: ScreenUtil()
+                                                                      .setHeight(
+                                                                          5),
+                                                                ),
+                                                                Icon(
+                                                                  FontAwesomeIcons
+                                                                      .timesCircle,
+                                                                  size: ScreenUtil()
+                                                                      .setHeight(
+                                                                          30),
+                                                                  color: Colors
+                                                                      .grey,
+                                                                )
+                                                              ],
+                                                            ),
                                                           ),
                                                         ),
                                                     ],
@@ -1723,7 +1784,9 @@ class _MyWorksState extends State<MyWorks> {
                                           ),
                                         ),
                                         InkWell(
-                                          onTap: () {},
+                                          onTap: () {
+                                            _selectVTag(status, url);
+                                          },
                                           child: Container(
                                             height: ScreenUtil().setHeight(60),
                                             width: ScreenUtil().setHeight(60),
@@ -1769,16 +1832,73 @@ class _MyWorksState extends State<MyWorks> {
                                         ),
                                         child: FlatButton(
                                           onPressed: () {
-                                            // Navigator.of(context)
-                                            //     .pushReplacement(
-                                            //   MaterialPageRoute(
-                                            //     builder: (context) =>
-                                            //         WhatsappForward(),
-                                            //   ),
-                                            // );
-                                            setState(() {
-                                              _phonecontroller.text.isEmpty ? _validate = true : _validate = false;
+                                            bool send = true;
+                                            setModalState(() {
+                                              if (_phonecontroller
+                                                  .text.isEmpty) {
+                                                _phoneEmpty = true;
+                                                send = false;
+                                              } else {
+                                                _phoneEmpty = false;
+                                              }
                                             });
+                                            setModalState(() {
+                                              if (_namecontroller
+                                                  .text.isEmpty) {
+                                                _nameEmpty = true;
+                                                send = false;
+                                              } else {
+                                                _nameEmpty = false;
+                                              }
+                                            });
+                                            if (_phoneEmpty == false) {
+                                              bool _isNumeric(String phoneNo) {
+                                                if (phoneNo.length < 10) {
+                                                  return false;
+                                                }
+                                                return num.tryParse(phoneNo) !=
+                                                    null;
+                                              }
+
+                                              bool valid = _isNumeric(
+                                                  _phonecontroller.text);
+                                              if (valid == false) {
+                                                setModalState(() {
+                                                  _phoneInvalid = true;
+                                                });
+                                              } else {
+                                                setModalState(() {
+                                                  _phoneInvalid = false;
+                                                });
+                                              }
+
+                                              if (valid == true &&
+                                                  send == true) {
+                                                String vtag;
+                                                if (seletedVTag.length == 0) {
+                                                  vtag = "";
+                                                } else {
+                                                  for (int i = 0;
+                                                      i < seletedVTag.length;
+                                                      i++) {
+                                                    if (i == 0) {
+                                                      vtag = seletedVTag[i];
+                                                    } else {
+                                                      vtag = vtag +
+                                                          "," +
+                                                          seletedVTag[i];
+                                                    }
+                                                  }
+                                                }
+                                                _send(
+                                                    _phonecontroller.text,
+                                                    _namecontroller.text,
+                                                    _companycontroller.text,
+                                                    _remarkcontroller.text,
+                                                    vtag,
+                                                    url);
+                                              }
+                                            }
                                           },
                                           child: Text(
                                             'Send',
@@ -1803,6 +1923,157 @@ class _MyWorksState extends State<MyWorks> {
           });
     } else {
       Toast.show("This feature need Internet connection", context,
+          duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
+    }
+  }
+
+  void _send(String phoneNo, String name, String companyName, String remark,
+      String vtag, String url) async {
+    if (phoneNo.substring(0, 1) != "6") {
+      phoneNo = "6" + phoneNo;
+    }
+    var connectivityResult = await (Connectivity().checkConnectivity());
+    if (connectivityResult == ConnectivityResult.wifi ||
+        connectivityResult == ConnectivityResult.mobile) {
+      FlutterOpenWhatsapp.sendSingleMessage(phoneNo,
+          "Hello " + name + "! Reply 'hi' to enable the URL link. " + url);
+      http
+          .post(urlHandler, body: {
+            "companyID": companyID,
+            "userID": userID,
+            "user_type": userType,
+            "level": level,
+            "phoneNo": phoneNo,
+            "name": name,
+            "companyName": companyName,
+            "remark": remark,
+            "vtag": vtag,
+            "url": url,
+            "nameCard": base64Image,
+          })
+          .then((res) {})
+          .catchError((err) {
+            print("WhatsApp Forward error: " + (err).toString());
+          });
+      Navigator.of(context).pop();
+    } else {
+      Toast.show("No Internet Connection", context,
+          duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
+    }
+  }
+
+  void _selectVTag(String status, String url) {
+    String selectedTag = "";
+    if (vtagList.length != 0) {
+      showModalBottomSheet(
+        isDismissible: false,
+        context: context,
+        builder: (context) {
+          return StatefulBuilder(
+            builder: (BuildContext context, StateSetter setModalState) {
+              return Container(
+                height: MediaQuery.of(context).size.height * 0.3,
+                child: Column(
+                  children: <Widget>[
+                    Container(
+                      decoration: BoxDecoration(
+                        border: Border(
+                          bottom:
+                              BorderSide(width: 1, color: Colors.grey.shade300),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: <Widget>[
+                          Container(
+                            padding: EdgeInsets.all(
+                              ScreenUtil().setHeight(20),
+                            ),
+                            child: Text(
+                              "Select",
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: font14,
+                              ),
+                            ),
+                          ),
+                          InkWell(
+                            borderRadius: BorderRadius.circular(20),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(100),
+                              ),
+                              padding: EdgeInsets.all(
+                                ScreenUtil().setHeight(20),
+                              ),
+                              child: Text(
+                                "Done",
+                                style: TextStyle(
+                                  color: Colors.blue,
+                                  fontSize: font14,
+                                ),
+                              ),
+                            ),
+                            onTap: () {
+                              Navigator.pop(context);
+                              if (selectedTag != "") {
+                                if (seletedVTag.length != 0) {
+                                  bool cancelAdd = false;
+                                  for (int i = 0; i < seletedVTag.length; i++) {
+                                    if (selectedTag == seletedVTag[i]) {
+                                      cancelAdd = true;
+                                    }
+                                  }
+                                  if (cancelAdd == false) {
+                                    seletedVTag.add(selectedTag);
+                                  }
+                                } else {
+                                  seletedVTag.add(selectedTag);
+                                }
+                              }
+                              Navigator.pop(context);
+                              _whatsappForward("continue", url);
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                    Flexible(
+                      child: Container(
+                        color: Colors.white,
+                        child: CupertinoPicker(
+                          backgroundColor: Colors.white,
+                          itemExtent: 28,
+                          scrollController:
+                              FixedExtentScrollController(initialItem: 0),
+                          onSelectedItemChanged: (int index) {
+                            if (index != 0) {
+                              setState(() {
+                                selectedTag = vtagList[index];
+                              });
+                            }
+                          },
+                          children: <Widget>[
+                            for (var each in vtagList)
+                              Text(
+                                each,
+                                style: TextStyle(
+                                  fontSize: font14,
+                                ),
+                              )
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          );
+        },
+      );
+    } else {
+      Toast.show("VTag list is empty", context,
           duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
     }
   }
@@ -2021,7 +2292,7 @@ class _MyWorksState extends State<MyWorks> {
     return controller;
   }
 
-  void _scanner() async {
+  void _scanner(String url) async {
     showCupertinoModalPopup(
         context: context,
         builder: (context) {
@@ -2053,8 +2324,9 @@ class _MyWorksState extends State<MyWorks> {
                     setState(() {
                       pickedImage = tempStore;
                       isImageLoaded = true;
+                      base64Image = base64Encode(pickedImage.readAsBytesSync());
                     });
-                    readText();
+                    readText(url);
                   }
                 },
                 child: Text(
@@ -2072,8 +2344,9 @@ class _MyWorksState extends State<MyWorks> {
                   if (tempStore != null) {
                     setState(() {
                       pickedImage = tempStore;
+                      base64Image = base64Encode(pickedImage.readAsBytesSync());
                     });
-                    readText();
+                    readText(url);
                   }
                 },
                 child: Text(
@@ -2088,8 +2361,8 @@ class _MyWorksState extends State<MyWorks> {
         });
   }
 
-  Future readText() async {
-    Navigator.of(context).pop();
+  Future readText(String url) async {
+    // Navigator.of(context).pop();
     otherList.add("-");
     FirebaseVisionImage ourImage = FirebaseVisionImage.fromFile(pickedImage);
     TextRecognizer recognizeText = FirebaseVision.instance.textRecognizer();
@@ -2120,18 +2393,8 @@ class _MyWorksState extends State<MyWorks> {
       isImageLoaded = true;
       _phonecontroller.text = phoneList[0];
     });
-    _whatsappForward();
-  }
-
-  Future pickImage() async {
-    var tempStore = await ImagePicker.pickImage(source: ImageSource.camera);
-    if (tempStore != null) {
-      setState(() {
-        pickedImage = tempStore;
-        isImageLoaded = true;
-      });
-      readText();
-    }
+    Navigator.of(context).pop();
+    _whatsappForward("continue", url);
   }
 
   Future<bool> _onBackPressAppBar() async {
@@ -2140,7 +2403,7 @@ class _MyWorksState extends State<MyWorks> {
   }
 
   void _myWorkfilter() {
-    if (status == true) {
+    if (status == true && vtagStatus == true) {
       showModalBottomSheet(
           isDismissible: false,
           context: context,
@@ -2477,6 +2740,7 @@ class _MyWorksState extends State<MyWorks> {
                   category: myWorks1[i].category,
                   qr: myWorks1[i].qr,
                   id: myWorks1[i].id,
+                  handlers: myWorks1[i].handlers,
                   offLine: false,
                 );
                 myWorks.add(mywork);
@@ -2494,6 +2758,7 @@ class _MyWorksState extends State<MyWorks> {
                       category: myWorks1[i].category,
                       qr: myWorks1[i].qr,
                       id: myWorks1[i].id,
+                      handlers: myWorks1[i].handlers,
                       offLine: false);
                   myWorks.add(mywork);
                 }
@@ -2532,6 +2797,7 @@ class _MyWorksState extends State<MyWorks> {
                     category: myWorks1[i].category,
                     qr: myWorks1[i].qr,
                     id: myWorks1[i].id,
+                    handlers: myWorks1[i].handlers,
                     offLine: false);
                 myWorks.add(mywork);
               } else {
@@ -2549,6 +2815,7 @@ class _MyWorksState extends State<MyWorks> {
                       category: myWorks1[i].category,
                       qr: myWorks1[i].qr,
                       id: myWorks1[i].id,
+                      handlers: myWorks1[i].handlers,
                       offLine: false);
                   myWorks.add(mywork);
                 }
@@ -2590,6 +2857,7 @@ class _MyWorksState extends State<MyWorks> {
                     category: myWorks1[i].category,
                     qr: myWorks1[i].qr,
                     id: myWorks1[i].id,
+                    handlers: myWorks1[i].handlers,
                     offLine: false);
                 myWorks.add(mywork);
               } else {
@@ -2607,6 +2875,7 @@ class _MyWorksState extends State<MyWorks> {
                       category: myWorks1[i].category,
                       qr: myWorks1[i].qr,
                       id: myWorks1[i].id,
+                      handlers: myWorks1[i].handlers,
                       offLine: false);
                   myWorks.add(mywork);
                 }
@@ -2648,6 +2917,7 @@ class _MyWorksState extends State<MyWorks> {
                     category: myWorks1[i].category,
                     qr: myWorks1[i].qr,
                     id: myWorks1[i].id,
+                    handlers: myWorks1[i].handlers,
                     offLine: false);
                 myWorks.add(mywork);
               } else {
@@ -2665,6 +2935,7 @@ class _MyWorksState extends State<MyWorks> {
                       category: myWorks1[i].category,
                       qr: myWorks1[i].qr,
                       id: myWorks1[i].id,
+                      handlers: myWorks1[i].handlers,
                       offLine: false);
                   myWorks.add(mywork);
                 }
@@ -2778,11 +3049,46 @@ class _MyWorksState extends State<MyWorks> {
       myWorks.clear();
       myWorks1.clear();
       getLink();
+      getVTag();
+      getHandlerList();
     } else {
       initialize();
       Toast.show("No Internet, the data shown is not up to date", context,
           duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
     }
+  }
+
+  void getHandlerList() {
+    companyID = companyID;
+    userID = userID;
+    level = level;
+    userType = userType;
+    http.post(urlHandler, body: {
+      "companyID": companyID,
+      "userID": userID,
+      "user_type": userType,
+      "level": level,
+    }).then((res) {
+      if (res.body != "nodata") {
+        var jsonData = json.decode(res.body);
+        for (var data in jsonData) {
+          Handler handler = Handler(
+            handler: data["handler"],
+            position: data["position"],
+            handlerID: data["handlerID"],
+          );
+          handlerAllList.add(handler);
+          handlerAllList1.add(handler);
+        }
+      } else {
+        Toast.show("Something wrong, please contact VVIN IT help desk", context,
+            duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
+      }
+    }).catchError((err) {
+      Toast.show("No Internet Connection", context,
+          duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
+      print("Setup Data error: " + (err).toString());
+    });
   }
 
   void _onLoading() {
@@ -2799,6 +3105,29 @@ class _MyWorksState extends State<MyWorks> {
         ),
       ),
     );
+  }
+
+  void getVTag() {
+    http.post(urlVTag, body: {
+      "companyID": companyID,
+      "userID": userID,
+      "level": level,
+      "user_type": userType,
+      "phone_number": "all",
+    }).then((res) {
+      // print("VTag status:" + (res.statusCode).toString());
+      // print("VTag body: " + res.body);
+      if (res.body != "nodata") {
+        var jsonData = json.decode(res.body);
+        vtagList = jsonData;
+        vtagList.insert(0, "-");
+      }
+      setState(() {
+        vtagStatus = true;
+      });
+    }).catchError((err) {
+      print("Get Link error: " + (err).toString());
+    });
   }
 
   void getLink() {
@@ -2833,6 +3162,7 @@ class _MyWorksState extends State<MyWorks> {
                 category: jsonData[i]['category'],
                 qr: jsonData[i]['qr'],
                 id: jsonData[i]['id'],
+                handlers: jsonData[i]['handler'],
                 offLine: false);
             myWorks.add(mywork);
             myWorks1.add(mywork);
@@ -2857,6 +3187,7 @@ class _MyWorksState extends State<MyWorks> {
                 category: jsonData[i]['category'],
                 qr: jsonData[i]['qr'],
                 id: jsonData[i]['id'],
+                handlers: jsonData[i]['handlers'],
                 offLine: false);
             myWorks.add(mywork);
             myWorks1.add(mywork);
@@ -2989,6 +3320,7 @@ class _MyWorksState extends State<MyWorks> {
                       category: myWorks1[i].category,
                       qr: myWorks1[i].qr,
                       id: myWorks1[i].id,
+                      handlers: myWorks1[i].handlers,
                       offLine: false);
                   myWorks.add(mywork);
                 }
@@ -3025,6 +3357,7 @@ class _MyWorksState extends State<MyWorks> {
                       category: myWorks1[i].category,
                       qr: myWorks1[i].qr,
                       id: myWorks1[i].id,
+                      handlers: myWorks1[i].handlers,
                       offLine: false);
                   myWorks.add(mywork);
                 }
@@ -3063,6 +3396,7 @@ class _MyWorksState extends State<MyWorks> {
                       category: myWorks1[i].category,
                       qr: myWorks1[i].qr,
                       id: myWorks1[i].id,
+                      handlers: myWorks1[i].handlers,
                       offLine: false);
                   myWorks.add(mywork);
                 }
@@ -3101,6 +3435,7 @@ class _MyWorksState extends State<MyWorks> {
                       category: myWorks1[i].category,
                       qr: myWorks1[i].qr,
                       id: myWorks1[i].id,
+                      handlers: myWorks1[i].handlers,
                       offLine: false);
                   myWorks.add(mywork);
                 }

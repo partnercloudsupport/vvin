@@ -41,7 +41,7 @@ class _EditVProfileState extends State<EditVProfile> {
   double font18 = ScreenUtil().setSp(41.4, allowFontScalingSelf: false);
   FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
   int genderIndex, industryIndex, countryIndex, handlerIndex;
-  String handler, email, companyID, userID, level, userType;
+  String handler, email, companyID, userID, level, userType, selectedTag;
   bool saveHandler, saveData, allHandler, allTag;
   String urlHandler = "https://vvinoa.vvin.com/api/getHandler.php";
   String urlVTag = "https://vvinoa.vvin.com/api/vtag.php";
@@ -363,6 +363,7 @@ class _EditVProfileState extends State<EditVProfile> {
     _areaController.text = widget.vprofileData.area;
     handlerIndex = 0;
     handler = "";
+    selectedTag = "";
     saveData = false;
     saveHandler = false;
     allHandler = false;
@@ -1319,44 +1320,51 @@ class _EditVProfileState extends State<EditVProfile> {
                                           for (int i = 0;
                                               i < widget.vtag.length;
                                               i++)
-                                            Container(
-                                              width: ScreenUtil().setWidth(
-                                                  (widget.vtag[i].length * 20) +
-                                                      62.8),
-                                              margin: EdgeInsets.all(
-                                                  ScreenUtil().setHeight(5)),
-                                              decoration: BoxDecoration(
-                                                color: Color.fromRGBO(
-                                                    235, 235, 255, 1),
-                                                borderRadius:
-                                                    BorderRadius.circular(100),
-                                              ),
-                                              padding: EdgeInsets.all(
-                                                ScreenUtil().setHeight(10),
-                                              ),
-                                              child: Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.center,
-                                                children: <Widget>[
-                                                  Text(
-                                                    widget.vtag[i],
-                                                    style: TextStyle(
-                                                      color: Colors.black,
-                                                      fontSize: font14,
+                                            InkWell(
+                                              onTap: () {
+                                                _deleteTag(i);
+                                              },
+                                              child: Container(
+                                                width: ScreenUtil().setWidth(
+                                                    (widget.vtag[i].length *
+                                                            20) +
+                                                        62.8),
+                                                margin: EdgeInsets.all(
+                                                    ScreenUtil().setHeight(5)),
+                                                decoration: BoxDecoration(
+                                                  color: Color.fromRGBO(
+                                                      235, 235, 255, 1),
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          100),
+                                                ),
+                                                padding: EdgeInsets.all(
+                                                  ScreenUtil().setHeight(10),
+                                                ),
+                                                child: Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.center,
+                                                  children: <Widget>[
+                                                    Text(
+                                                      widget.vtag[i],
+                                                      style: TextStyle(
+                                                        color: Colors.black,
+                                                        fontSize: font14,
+                                                      ),
                                                     ),
-                                                  ),
-                                                  SizedBox(
-                                                    width: ScreenUtil()
-                                                        .setHeight(5),
-                                                  ),
-                                                  Icon(
-                                                    FontAwesomeIcons
-                                                        .timesCircle,
-                                                    size: ScreenUtil()
-                                                        .setHeight(30),
-                                                    color: Colors.grey,
-                                                  )
-                                                ],
+                                                    SizedBox(
+                                                      width: ScreenUtil()
+                                                          .setHeight(5),
+                                                    ),
+                                                    Icon(
+                                                      FontAwesomeIcons
+                                                          .timesCircle,
+                                                      size: ScreenUtil()
+                                                          .setHeight(30),
+                                                      color: Colors.grey,
+                                                    )
+                                                  ],
+                                                ),
                                               ),
                                             ),
                                         ],
@@ -1410,6 +1418,14 @@ class _EditVProfileState extends State<EditVProfile> {
     );
   }
 
+  void _deleteTag(int index) {
+    String vtag = widget.vtag[index];
+    setState(() {
+      widget.vtag.removeAt(index);
+      vtagList.insert(1, vtag);
+    });
+  }
+
   void _selectHandler() {
     showModalBottomSheet(
       isDismissible: false,
@@ -1418,7 +1434,7 @@ class _EditVProfileState extends State<EditVProfile> {
         return StatefulBuilder(
           builder: (BuildContext context, StateSetter setModalState) {
             return Container(
-              height: MediaQuery.of(context).size.height * 0.5,
+              height: MediaQuery.of(context).size.height * 0.3,
               child: Column(
                 children: <Widget>[
                   Container(
@@ -1462,7 +1478,17 @@ class _EditVProfileState extends State<EditVProfile> {
                           ),
                           onTap: () {
                             Navigator.pop(context);
-                            // _assign();
+                            if (selectedTag != "") {
+                              for (int j = 0; j < vtagList.length; j++) {
+                                if (vtagList[j] == selectedTag) {
+                                  vtagList.removeAt(j);
+                                }
+                              }
+                              setState(() {
+                                widget.vtag.add(selectedTag);
+                                selectedTag = "";
+                              });
+                            }
                           },
                         ),
                       ],
@@ -1478,7 +1504,7 @@ class _EditVProfileState extends State<EditVProfile> {
                           FixedExtentScrollController(initialItem: 0),
                       onSelectedItemChanged: (int index) {
                         if (index != 0) {
-                          print(vtagList[index]);
+                          selectedTag = vtagList[index];
                         }
                       },
                       children: <Widget>[
@@ -2199,13 +2225,19 @@ class _EditVProfileState extends State<EditVProfile> {
       "user_type": userType,
       "phone_number": "all",
     }).then((res) {
-      vtagList.add("-");
       if (res.body != "nodata") {
         var jsonData = json.decode(res.body);
         vtagList = jsonData;
+        vtagList.insert(0, "-");
       } else {
-        Toast.show("Something wrong, please contact VVIN IT help desk", context,
-            duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
+        vtagList.add("-");
+      }
+      for (int i = 0; i < widget.vtag.length; i++) {
+        for (int j = 0; j < vtagList.length; j++) {
+          if (vtagList[j] == widget.vtag[i]) {
+            vtagList.removeAt(j);
+          }
+        }
       }
       setState(() {
         allTag = true;
@@ -2295,6 +2327,7 @@ class _EditVProfileState extends State<EditVProfile> {
     if (connectivityResult == ConnectivityResult.wifi ||
         connectivityResult == ConnectivityResult.mobile) {
       _onLoading1();
+      String vtag = "";
       if (widget.vprofileData.gender == "-" ||
           widget.vprofileData.gender == "") {
         setState(() {
@@ -2319,6 +2352,14 @@ class _EditVProfileState extends State<EditVProfile> {
           widget.vprofileData.country = "";
         });
       }
+      for (int i = 0; i < widget.vtag.length; i++) {
+        if (i == 0) {
+          vtag = widget.vtag[i];
+        } else {
+          vtag = vtag + "," + widget.vtag[i];
+        }
+      }
+      
 
       http.post(urlSaveEditVProfile, body: {
         "companyID": companyID,
@@ -2338,6 +2379,7 @@ class _EditVProfileState extends State<EditVProfile> {
         "country": widget.vprofileData.country ?? "",
         "state": widget.vprofileData.state ?? "",
         "area": _areaController.text ?? "",
+        "vtag": vtag,
       }).then((res) {
         // print("VProfile data: " + res.body);
         if (res.body == "success") {
