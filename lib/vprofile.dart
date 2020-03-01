@@ -4,7 +4,6 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:toast/toast.dart';
 import 'package:vvin/data.dart';
 import 'package:vvin/loader.dart';
@@ -14,7 +13,9 @@ import 'package:flutter_open_whatsapp/flutter_open_whatsapp.dart';
 import 'package:vvin/mainscreen.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-// import 'package:speech_recognition/speech_recognition.dart';
+import 'dart:async';
+import 'package:speech_to_text/speech_to_text.dart';
+import 'package:speech_to_text/speech_recognition_result.dart';
 
 class VProfile extends StatefulWidget {
   final VDataDetails vdata;
@@ -26,9 +27,7 @@ class VProfile extends StatefulWidget {
 
 class _VProfileState extends State<VProfile>
     with SingleTickerProviderStateMixin, WidgetsBindingObserver {
-  // SpeechRecognition _speechRecognition;
-  // bool _isAvailable = false;
-  // bool _isListening = false;
+  final SpeechToText speech = SpeechToText();
   FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
   final TextEditingController _addRemark = TextEditingController();
   TabController controller;
@@ -37,7 +36,6 @@ class _VProfileState extends State<VProfile>
   List<VProfileData> vProfileDetails = [];
   List<View> vProfileViews = [];
   List<Remarks> vProfileRemarks = [];
-
   String name,
       phoneNo,
       status,
@@ -46,7 +44,10 @@ class _VProfileState extends State<VProfile>
       level,
       userType,
       resultText,
-      fromVAnalytics;
+      fromVAnalytics,
+      speechText;
+  bool hasSpeech = false;
+  bool doneSpoke = false;
   String urlVProfile = "https://vvinoa.vvin.com/api/vprofile.php";
   String urlHandler = "https://vvinoa.vvin.com/api/handler.php";
   String urlVTag = "https://vvinoa.vvin.com/api/vtag.php";
@@ -89,14 +90,14 @@ class _VProfileState extends State<VProfile>
     viewsData = false;
     remarksData = false;
     vTagData = false;
+    speechText = "";
     resultText = "";
     _addRemark.text = "";
     WidgetsBinding.instance.addObserver(this);
     PermissionHandler().checkPermissionStatus(PermissionGroup.microphone);
     // askPermission();
+    initSpeechState();
     checkConnection();
-    // askPermission();
-    // initSpeechRecognizer();
     _firebaseMessaging.configure(
       onMessage: (Map<String, dynamic> message) async {
         bool noti = false;
@@ -151,6 +152,30 @@ class _VProfileState extends State<VProfile>
     super.dispose();
   }
 
+  Future<void> initSpeechState() async {
+    bool hasSpeechs = await speech.initialize();
+    if (!mounted) return;
+    setState(() {
+      hasSpeech = hasSpeechs;
+    });
+  }
+
+  void startListening() {
+    speech.listen(onResult: (SpeechRecognitionResult result) {
+      if (result.finalResult == true) {
+        if (_addRemark.text == "") {
+          setState(() {
+            _addRemark.text = result.recognizedWords;
+          });
+        } else {
+          setState(() {
+            _addRemark.text = _addRemark.text + " " + result.recognizedWords;
+          });
+        }
+      }
+    });
+  }
+
   // void askPermission() {
   //   PermissionHandler().requestPermissions([PermissionGroup.microphone]).then(
   //       _onStatusRequested);
@@ -172,33 +197,6 @@ class _VProfileState extends State<VProfile>
   //     PermissionHandler().checkPermissionStatus(PermissionGroup.microphone);
   //     // .then(_updateStatus);
   //   }
-  // }
-
-  // void initSpeechRecognizer() {
-  //   _speechRecognition = SpeechRecognition();
-
-  //   _speechRecognition.setAvailabilityHandler(
-  //     (bool result) => setState(() => _isAvailable = result),
-  //   );
-
-  //   _speechRecognition.setRecognitionStartedHandler(
-  //     () => setState(() => _isListening = true),
-  //   );
-
-  //   _speechRecognition.setRecognitionResultHandler((String speech) {
-  //     setState(() {
-  //       resultText = speech;
-  //       _addRemark.text = _addRemark.text.toString() + speech.toString();
-  //     });
-  //   });
-
-  //   _speechRecognition.setRecognitionCompleteHandler(
-  //     () => setState(() => _isListening = false),
-  //   );
-
-  //   _speechRecognition.activate().then(
-  //         (result) => setState(() => _isAvailable = result),
-  //       );
   // }
 
   @override
@@ -521,21 +519,18 @@ class _VProfileState extends State<VProfile>
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: <Widget>[
-                        // FloatingActionButton(
-                        //   child: Icon(Icons.mic),
-                        //   mini: true,
-                        //   onPressed: () {
-                        //      askPermission();
-                        //      if (_isAvailable && !_isListening) {
-                        //        _speechRecognition.listen(locale: "en_US");
-                        //        .then((result) => print('$result'));
-                        //      }
-                        //   },
-                        //   backgroundColor: Colors.pink,
-                        // ),
-                        // SizedBox(
-                        //   width: MediaQuery.of(context).size.width * 0.2,
-                        // ),
+                        FloatingActionButton(
+                          child: Icon(Icons.mic),
+                          mini: true,
+                          onPressed: () {
+                            initSpeechState();
+                            startListening();
+                          },
+                          backgroundColor: Colors.pink,
+                        ),
+                        SizedBox(
+                          width: MediaQuery.of(context).size.width * 0.2,
+                        ),
                         FlatButton(
                           onPressed: () {
                             Navigator.of(context).pop();
@@ -596,7 +591,8 @@ class _VProfileState extends State<VProfile>
         created: vProfileDetails[0].created,
         lastActive: vProfileDetails[0].lastActive,
       );
-      Navigator.of(context).push(_createRoute(vprofile, handler, widget.vdata, vTag));
+      Navigator.of(context)
+          .push(_createRoute(vprofile, handler, widget.vdata, vTag));
     } else {
       Toast.show("Please check your Internet connection", context,
           duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);

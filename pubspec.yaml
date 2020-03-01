@@ -42,6 +42,7 @@ dependencies:
   flutter_screenutil: ^1.0.2
   firebase_ml_vision: ^0.9.3+5
   network_to_file_image: ^2.2.4
+  speech_to_text: ^0.8.0
   flutter:
     sdk: flutter
 
