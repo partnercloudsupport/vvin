@@ -5,6 +5,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:progress_indicators/progress_indicators.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:toast/toast.dart';
 import 'package:http/http.dart' as http;
@@ -364,8 +365,7 @@ class _LoginPageState extends State<Login> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
-                Text("Loading... ", style: TextStyle(fontSize: font14),),
-                CupertinoActivityIndicator()
+                JumpingText('Loading...'),
               ],
             ),
           ),
@@ -566,8 +566,7 @@ class _Default extends State<Default> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
-                Text("Loading... ", style: TextStyle(fontSize: font14),),
-                CupertinoActivityIndicator()
+                JumpingText('Loading...'),
               ],
             ),
           ),

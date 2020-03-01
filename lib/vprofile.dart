@@ -4,6 +4,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:progress_indicators/progress_indicators.dart';
 import 'package:toast/toast.dart';
 import 'package:vvin/data.dart';
 import 'package:vvin/loader.dart';
@@ -401,8 +402,7 @@ class _VProfileState extends State<VProfile>
                                 child: Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: <Widget>[
-                                    Text("Data loading..."),
-                                    CupertinoActivityIndicator()
+                                    JumpingText('Loading...'),
                                   ],
                                 ),
                               ),
@@ -414,8 +414,7 @@ class _VProfileState extends State<VProfile>
                                 child: Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: <Widget>[
-                                    Text("Data loading..."),
-                                    CupertinoActivityIndicator()
+                                    JumpingText('Loading...'),
                                   ],
                                 ),
                               ),
@@ -427,8 +426,7 @@ class _VProfileState extends State<VProfile>
                                 child: Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: <Widget>[
-                                    Text("Data loading..."),
-                                    CupertinoActivityIndicator()
+                                    JumpingText('Loading...'),
                                   ],
                                 ),
                               ),

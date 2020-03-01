@@ -146,13 +146,6 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "1.0.2"
-  flutter_statusbarcolor:
-    dependency: "direct main"
-    description:
-      name: flutter_statusbarcolor
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "0.2.3"
   flutter_test:
     dependency: "direct dev"
     description: flutter
@@ -303,13 +296,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "1.0.2"
-  progress_dialog:
+  progress_indicators:
     dependency: "direct main"
     description:
-      name: progress_dialog
+      name: progress_indicators
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "1.2.1"
+    version: "0.1.4"
   quiver:
     dependency: transitive
     description:

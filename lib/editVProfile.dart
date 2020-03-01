@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:http/http.dart' as http;
+import 'package:progress_indicators/progress_indicators.dart';
 import 'package:toast/toast.dart';
 import 'package:vvin/VProfile.dart';
 import 'package:vvin/data.dart';
@@ -2269,6 +2270,7 @@ class _EditVProfileState extends State<EditVProfile> {
   }
 
   void _onLoading1() {
+    
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -2286,8 +2288,7 @@ class _EditVProfileState extends State<EditVProfile> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
-                Text("Data loading..."),
-                CupertinoActivityIndicator()
+                JumpingText('Loading...'),
               ],
             ),
           ),
@@ -2359,7 +2360,6 @@ class _EditVProfileState extends State<EditVProfile> {
           vtag = vtag + "," + widget.vtag[i];
         }
       }
-      
 
       http.post(urlSaveEditVProfile, body: {
         "companyID": companyID,

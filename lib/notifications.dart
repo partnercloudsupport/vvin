@@ -5,6 +5,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
+import 'package:progress_indicators/progress_indicators.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:toast/toast.dart';
@@ -102,8 +103,7 @@ class _NotificationsState extends State<Notifications> {
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: <Widget>[
-                              Text("Data loading..."),
-                              CupertinoActivityIndicator()
+                              JumpingText('Loading...'),
                             ],
                           ),
                         ),
