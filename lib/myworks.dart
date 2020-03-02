@@ -74,6 +74,7 @@ class _MyWorksState extends State<MyWorks> {
   String urlHandler = "https://vvinoa.vvin.com/api/getHandler.php";
   String assignURL = "https://vvinoa.vvin.com/api/assign.php";
   String urlVTag = "https://vvinoa.vvin.com/api/vtag.php";
+  String urlWhatsApp = "https://vvinoa.vvin.com/api/whatsappForward.php";
   List<Myworks> myWorks = [];
   List<Myworks> myWorks1 = [];
   SharedPreferences prefs;
@@ -1952,7 +1953,7 @@ class _MyWorksState extends State<MyWorks> {
       FlutterOpenWhatsapp.sendSingleMessage(phoneNo,
           "Hello " + name + "! Reply 'hi' to enable the URL link. " + url);
       http
-          .post(urlHandler, body: {
+          .post(urlWhatsApp, body: {
             "companyID": companyID,
             "userID": userID,
             "user_type": userType,
@@ -1965,7 +1966,9 @@ class _MyWorksState extends State<MyWorks> {
             "url": url,
             "nameCard": base64Image,
           })
-          .then((res) {})
+          .then((res) {
+            print("Hi" + res.body);
+          })
           .catchError((err) {
             print("WhatsApp Forward error: " + (err).toString());
           });
