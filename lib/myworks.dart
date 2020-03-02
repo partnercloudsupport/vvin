@@ -980,8 +980,7 @@ class _MyWorksState extends State<MyWorks> {
       }
     }
     Navigator.of(context).pop();
-    if (handlers != handlersOld) {
-      var connectivityResult = await (Connectivity().checkConnectivity());
+    var connectivityResult = await (Connectivity().checkConnectivity());
       if (connectivityResult == ConnectivityResult.wifi ||
           connectivityResult == ConnectivityResult.mobile) {
         http.post(assignURL, body: {
@@ -1006,7 +1005,6 @@ class _MyWorksState extends State<MyWorks> {
         Toast.show("No Internet, data can't update", context,
             duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
       }
-    }
   }
 
   void _selectHandler(List handlerList, String id) {
@@ -1967,7 +1965,6 @@ class _MyWorksState extends State<MyWorks> {
             "nameCard": base64Image,
           })
           .then((res) {
-            print("Hi" + res.body);
           })
           .catchError((err) {
             print("WhatsApp Forward error: " + (err).toString());
