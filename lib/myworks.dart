@@ -742,6 +742,18 @@ class _MyWorksState extends State<MyWorks> {
   }
 
   void _assign(List handlerList, String id) async {
+    String handlersOld = "";
+    for (int j = 0; j < handlerList.length; j++) {
+      for (int i = 0; i < handlerAllList1.length; i++) {
+        if (handlerList[j] == handlerAllList1[i].handler) {
+          if (handlersOld == "") {
+            handlersOld = handlerAllList1[i].handlerID;
+          } else {
+            handlersOld = handlersOld + "," + handlerAllList1[i].handlerID;
+          }
+        }
+      }
+    }
     var connectivityResult = await (Connectivity().checkConnectivity());
     if (connectivityResult == ConnectivityResult.wifi ||
         connectivityResult == ConnectivityResult.mobile) {
@@ -797,7 +809,7 @@ class _MyWorksState extends State<MyWorks> {
                                     ),
                                   ),
                                   onTap: () {
-                                    _assignDone(handlerList, id);
+                                    _assignDone(handlersOld, handlerList, id);
                                   },
                                 )
                               ],
@@ -953,7 +965,7 @@ class _MyWorksState extends State<MyWorks> {
     }
   }
 
-  void _assignDone(List handlerList, String id) async {
+  void _assignDone(String handlersOld, List handlerList, String id) async {
     String handlers = "";
     for (int j = 0; j < handlerList.length; j++) {
       for (int i = 0; i < handlerAllList1.length; i++) {
@@ -967,30 +979,32 @@ class _MyWorksState extends State<MyWorks> {
       }
     }
     Navigator.of(context).pop();
-    var connectivityResult = await (Connectivity().checkConnectivity());
-    if (connectivityResult == ConnectivityResult.wifi ||
-        connectivityResult == ConnectivityResult.mobile) {
-      http.post(assignURL, body: {
-        "companyID": companyID,
-        "userID": userID,
-        "level": level,
-        "user_type": userType,
-        "id": id,
-        "handler": handlers
-      }).then((res) async {
-        if (res.body == "success") {
-          Toast.show("Handler updated", context,
-              duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
-        } else {
-          Toast.show("Something's wrong", context,
-              duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
-        }
-      }).catchError((err) {
-        print("Assign error: " + (err).toString());
-      });
-    } else {
-      Toast.show("No Internet, data can't update", context,
-          duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
+    if (handlers != handlersOld) {
+      var connectivityResult = await (Connectivity().checkConnectivity());
+      if (connectivityResult == ConnectivityResult.wifi ||
+          connectivityResult == ConnectivityResult.mobile) {
+        http.post(assignURL, body: {
+          "companyID": companyID,
+          "userID": userID,
+          "level": level,
+          "user_type": userType,
+          "id": id,
+          "handler": handlers
+        }).then((res) async {
+          if (res.body == "success") {
+            Toast.show("Handler updated", context,
+                duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
+          } else {
+            Toast.show("Something's wrong", context,
+                duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
+          }
+        }).catchError((err) {
+          print("Assign error: " + (err).toString());
+        });
+      } else {
+        Toast.show("No Internet, data can't update", context,
+            duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
+      }
     }
   }
 

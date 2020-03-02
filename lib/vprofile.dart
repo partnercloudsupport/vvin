@@ -162,19 +162,21 @@ class _VProfileState extends State<VProfile>
   }
 
   void startListening() {
-    speech.listen(onResult: (SpeechRecognitionResult result) {
-      if (result.finalResult == true) {
-        if (_addRemark.text == "") {
-          setState(() {
-            _addRemark.text = result.recognizedWords;
-          });
-        } else {
-          setState(() {
-            _addRemark.text = _addRemark.text + " " + result.recognizedWords;
-          });
-        }
+    speech.listen(onResult: resultListener);
+  }
+
+  void resultListener(SpeechRecognitionResult result) {
+    if (result.finalResult == true) {
+      if (_addRemark.text == "") {
+        setState(() {
+          _addRemark.text = result.recognizedWords;
+        });
+      } else {
+        setState(() {
+          _addRemark.text = _addRemark.text + " " + result.recognizedWords;
+        });
       }
-    });
+    }
   }
 
   // void askPermission() {
@@ -521,7 +523,7 @@ class _VProfileState extends State<VProfile>
                           child: Icon(Icons.mic),
                           mini: true,
                           onPressed: () {
-                            initSpeechState();
+                            // initSpeechState();
                             startListening();
                           },
                           backgroundColor: Colors.pink,
