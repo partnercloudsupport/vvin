@@ -851,11 +851,10 @@ class _VAnalyticsState extends State<VAnalytics> {
                                       : Container(
                                           // height: ScreenUtil().setHeight(847),
                                           height: (connection == true)
-                                              ? ScreenUtil().setHeight(
-                                                  77 * (topViews.length + 1))
-                                              : ScreenUtil().setHeight(77 *
-                                                  (offlineTopViewData.length +
-                                                      1)),
+                                              ? ScreenUtil().setHeight(85 + 
+                                                  77 * topViews.length)
+                                              : ScreenUtil().setHeight(85 + 77 *
+                                                  offlineTopViewData.length),
                                           child: Stack(
                                             children: <Widget>[
                                               Container(

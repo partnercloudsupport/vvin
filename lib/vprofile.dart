@@ -47,8 +47,6 @@ class _VProfileState extends State<VProfile>
       resultText,
       fromVAnalytics,
       speechText;
-  bool hasSpeech = false;
-  bool doneSpoke = false;
   String urlVProfile = "https://vvinoa.vvin.com/api/vprofile.php";
   String urlHandler = "https://vvinoa.vvin.com/api/handler.php";
   String urlVTag = "https://vvinoa.vvin.com/api/vtag.php";
@@ -56,7 +54,13 @@ class _VProfileState extends State<VProfile>
   String urlRemarks = "https://vvinoa.vvin.com/api/remarks.php";
   String urlChangeStatus = "https://vvinoa.vvin.com/api/vdataChangeStatus.php";
   String urlSaveRemark = "https://vvinoa.vvin.com/api/saveRemark.php";
-  bool vProfileData, handlerData, viewsData, remarksData, vTagData;
+  bool vProfileData,
+      handlerData,
+      viewsData,
+      remarksData,
+      vTagData,
+      hasSpeech,
+      start;
   double font12 = ScreenUtil().setSp(27.6, allowFontScalingSelf: false);
   double font14 = ScreenUtil().setSp(32.2, allowFontScalingSelf: false);
   double font16 = ScreenUtil().setSp(36.8, allowFontScalingSelf: false);
@@ -91,6 +95,8 @@ class _VProfileState extends State<VProfile>
     viewsData = false;
     remarksData = false;
     vTagData = false;
+    hasSpeech = false;
+    start = false;
     speechText = "";
     resultText = "";
     _addRemark.text = "";
@@ -169,6 +175,7 @@ class _VProfileState extends State<VProfile>
     if (result.finalResult == true) {
       if (_addRemark.text == "") {
         setState(() {
+          start = false;
           _addRemark.text = result.recognizedWords;
         });
       } else {
@@ -520,13 +527,23 @@ class _VProfileState extends State<VProfile>
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: <Widget>[
                         FloatingActionButton(
-                          child: Icon(Icons.mic),
+                          child: Icon(
+                            Icons.mic,
+                            // color: (start == false) ? Colors.pink : Colors.grey,
+                          ),
                           mini: true,
                           onPressed: () {
-                            // initSpeechState();
+                            initSpeechState();
                             startListening();
+                            // setState(() {
+                            //   start = true;
+                            // });
                           },
-                          backgroundColor: Colors.pink,
+                          backgroundColor: 
+                          // Colors.pink,
+                          (start == false)
+                          ? Colors.pink
+                          : Colors.grey,
                         ),
                         SizedBox(
                           width: MediaQuery.of(context).size.width * 0.2,

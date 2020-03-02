@@ -98,7 +98,7 @@ class _SettingsState extends State<Settings> {
                             children: <Widget>[
                               Text(
                                 "New Unassign Leads",
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: font14),
                               ),
                             ],
                           ),
@@ -145,7 +145,7 @@ class _SettingsState extends State<Settings> {
                             children: <Widget>[
                               Text(
                                 "Leads assigned to you",
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: font14),
                               ),
                             ],
                           ),
