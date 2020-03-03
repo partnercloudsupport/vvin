@@ -12,11 +12,11 @@ import 'package:vvin/editVProfile.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_open_whatsapp/flutter_open_whatsapp.dart';
 import 'package:vvin/mainscreen.dart';
-import 'package:permission_handler/permission_handler.dart';
+// import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'dart:async';
-import 'package:speech_to_text/speech_to_text.dart';
-import 'package:speech_to_text/speech_recognition_result.dart';
+// import 'package:speech_to_text/speech_to_text.dart';
+// import 'package:speech_to_text/speech_recognition_result.dart';
 
 class VProfile extends StatefulWidget {
   final VDataDetails vdata;
@@ -28,7 +28,7 @@ class VProfile extends StatefulWidget {
 
 class _VProfileState extends State<VProfile>
     with SingleTickerProviderStateMixin, WidgetsBindingObserver {
-  final SpeechToText speech = SpeechToText();
+  // final SpeechToText speech = SpeechToText();
   FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
   final TextEditingController _addRemark = TextEditingController();
   TabController controller;
@@ -101,9 +101,9 @@ class _VProfileState extends State<VProfile>
     resultText = "";
     _addRemark.text = "";
     WidgetsBinding.instance.addObserver(this);
-    PermissionHandler().checkPermissionStatus(PermissionGroup.microphone);
+    // PermissionHandler().checkPermissionStatus(PermissionGroup.microphone);
     // askPermission();
-    initSpeechState();
+    // initSpeechState();
     checkConnection();
     _firebaseMessaging.configure(
       onMessage: (Map<String, dynamic> message) async {
@@ -159,32 +159,32 @@ class _VProfileState extends State<VProfile>
     super.dispose();
   }
 
-  Future<void> initSpeechState() async {
-    bool hasSpeechs = await speech.initialize();
-    if (!mounted) return;
-    setState(() {
-      hasSpeech = hasSpeechs;
-    });
-  }
+  // Future<void> initSpeechState() async {
+  //   bool hasSpeechs = await speech.initialize();
+  //   if (!mounted) return;
+  //   setState(() {
+  //     hasSpeech = hasSpeechs;
+  //   });
+  // }
 
-  void startListening() {
-    speech.listen(onResult: resultListener);
-  }
+  // void startListening() {
+  //   speech.listen(onResult: resultListener);
+  // }
 
-  void resultListener(SpeechRecognitionResult result) {
-    if (result.finalResult == true) {
-      if (_addRemark.text == "") {
-        setState(() {
-          start = false;
-          _addRemark.text = result.recognizedWords;
-        });
-      } else {
-        setState(() {
-          _addRemark.text = _addRemark.text + " " + result.recognizedWords;
-        });
-      }
-    }
-  }
+  // void resultListener(SpeechRecognitionResult result) {
+  //   if (result.finalResult == true) {
+  //     if (_addRemark.text == "") {
+  //       setState(() {
+  //         start = false;
+  //         _addRemark.text = result.recognizedWords;
+  //       });
+  //     } else {
+  //       setState(() {
+  //         _addRemark.text = _addRemark.text + " " + result.recognizedWords;
+  //       });
+  //     }
+  //   }
+  // }
 
   // void askPermission() {
   //   PermissionHandler().requestPermissions([PermissionGroup.microphone]).then(
@@ -524,30 +524,30 @@ class _VProfileState extends State<VProfile>
                   ),
                   actions: <Widget>[
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      mainAxisAlignment: MainAxisAlignment.end,
                       children: <Widget>[
-                        FloatingActionButton(
-                          child: Icon(
-                            Icons.mic,
-                            // color: (start == false) ? Colors.pink : Colors.grey,
-                          ),
-                          mini: true,
-                          onPressed: () {
-                            initSpeechState();
-                            startListening();
-                            // setState(() {
-                            //   start = true;
-                            // });
-                          },
-                          backgroundColor: 
-                          // Colors.pink,
-                          (start == false)
-                          ? Colors.pink
-                          : Colors.grey,
-                        ),
-                        SizedBox(
-                          width: MediaQuery.of(context).size.width * 0.2,
-                        ),
+                        // FloatingActionButton(
+                        //   child: Icon(
+                        //     Icons.mic,
+                        //     // color: (start == false) ? Colors.pink : Colors.grey,
+                        //   ),
+                        //   mini: true,
+                        //   onPressed: () {
+                        //     initSpeechState();
+                        //     startListening();
+                        //     // setState(() {
+                        //     //   start = true;
+                        //     // });
+                        //   },
+                        //   backgroundColor: 
+                        //   // Colors.pink,
+                        //   (start == false)
+                        //   ? Colors.pink
+                        //   : Colors.grey,
+                        // ),
+                        // SizedBox(
+                        //   width: MediaQuery.of(context).size.width * 0.2,
+                        // ),
                         FlatButton(
                           onPressed: () {
                             Navigator.of(context).pop();
