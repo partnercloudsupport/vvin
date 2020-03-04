@@ -25,6 +25,7 @@ import 'package:vvin/mainscreen.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_ml_vision/firebase_ml_vision.dart';
 import 'package:flutter_open_whatsapp/flutter_open_whatsapp.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 final ScrollController controller = ScrollController();
 final ScrollController whatsappController = ScrollController();
@@ -981,30 +982,30 @@ class _MyWorksState extends State<MyWorks> {
     }
     Navigator.of(context).pop();
     var connectivityResult = await (Connectivity().checkConnectivity());
-      if (connectivityResult == ConnectivityResult.wifi ||
-          connectivityResult == ConnectivityResult.mobile) {
-        http.post(assignURL, body: {
-          "companyID": companyID,
-          "userID": userID,
-          "level": level,
-          "user_type": userType,
-          "id": id,
-          "handler": handlers
-        }).then((res) async {
-          if (res.body == "success") {
-            Toast.show("Handler updated", context,
-                duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
-          } else {
-            Toast.show("Something's wrong", context,
-                duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
-          }
-        }).catchError((err) {
-          print("Assign error: " + (err).toString());
-        });
-      } else {
-        Toast.show("No Internet, data can't update", context,
-            duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
-      }
+    if (connectivityResult == ConnectivityResult.wifi ||
+        connectivityResult == ConnectivityResult.mobile) {
+      http.post(assignURL, body: {
+        "companyID": companyID,
+        "userID": userID,
+        "level": level,
+        "user_type": userType,
+        "id": id,
+        "handler": handlers
+      }).then((res) async {
+        if (res.body == "success") {
+          Toast.show("Handler updated", context,
+              duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
+        } else {
+          Toast.show("Something's wrong", context,
+              duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
+        }
+      }).catchError((err) {
+        print("Assign error: " + (err).toString());
+      });
+    } else {
+      Toast.show("No Internet, data can't update", context,
+          duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
+    }
   }
 
   void _selectHandler(List handlerList, String id) {
@@ -1948,27 +1949,26 @@ class _MyWorksState extends State<MyWorks> {
     var connectivityResult = await (Connectivity().checkConnectivity());
     if (connectivityResult == ConnectivityResult.wifi ||
         connectivityResult == ConnectivityResult.mobile) {
+      
+      http.post(urlWhatsApp, body: {
+        "companyID": companyID,
+        "userID": userID,
+        "user_type": userType,
+        "level": level,
+        "phoneNo": phoneNo,
+        "name": name,
+        "companyName": companyName,
+        "remark": remark,
+        "vtag": vtag,
+        "url": url,
+        "nameCard": base64Image,
+      }).then((res) {
+        print(res.body);
+      }).catchError((err) {
+        print("WhatsApp Forward error: " + (err).toString());
+      });
       FlutterOpenWhatsapp.sendSingleMessage(phoneNo,
-          "Hello " + name + "! Reply 'hi' to enable the URL link. " + url);
-      http
-          .post(urlWhatsApp, body: {
-            "companyID": companyID,
-            "userID": userID,
-            "user_type": userType,
-            "level": level,
-            "phoneNo": phoneNo,
-            "name": name,
-            "companyName": companyName,
-            "remark": remark,
-            "vtag": vtag,
-            "url": url,
-            "nameCard": base64Image,
-          })
-          .then((res) {
-          })
-          .catchError((err) {
-            print("WhatsApp Forward error: " + (err).toString());
-          });
+              "Hello " + name + "! Reply 'hi' to enable the URL link. " + url);
       Navigator.of(context).pop();
     } else {
       Toast.show("No Internet Connection", context,

@@ -131,7 +131,9 @@ class _VDataState extends State<VData> {
     _scrollController.addListener(() {
       if (_scrollController.position.pixels ==
           _scrollController.position.maxScrollExtent) {
-        _getMoreVData();
+        if (vDataDetails.length != total) {
+          _getMoreVData();
+        }
       }
     });
     _firebaseMessaging.configure(
@@ -696,7 +698,8 @@ class _VDataState extends State<VData> {
                                                         ),
                                                         decoration:
                                                             BoxDecoration(
-                                                              color: Color.fromRGBO(37, 211, 102, 1),
+                                                          color: Color.fromRGBO(
+                                                              37, 211, 102, 1),
                                                           borderRadius:
                                                               BorderRadius
                                                                   .circular(5),
@@ -2455,7 +2458,7 @@ class _VDataState extends State<VData> {
       "offline": "no"
     }).then((res) {
       // print("VData status:" + (res.statusCode).toString());
-      // print("VData body: " + res.body.toString());
+      // print("Get More VData body: " + res.body.toString());
       if (res.body == "nodata") {
         setState(() {
           connection = true;
