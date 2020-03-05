@@ -14,6 +14,7 @@ import 'package:vvin/loader.dart';
 import 'package:device_info/device_info.dart';
 import 'package:vvin/mainscreen.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 
 final TextEditingController _emcontroller = TextEditingController();
 final TextEditingController _passcontroller = TextEditingController();
@@ -366,6 +367,12 @@ class _LoginPageState extends State<Login> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
                 JumpingText('Loading...'),
+                SizedBox(height: MediaQuery.of(context).size.height * 0.02),
+                              SpinKitRing(
+                                  lineWidth: 3,
+                                  color: Colors.blue,
+                                  size: 30.0,
+                                  duration: Duration(milliseconds: 600),),
               ],
             ),
           ),
@@ -567,6 +574,12 @@ class _Default extends State<Default> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
                 JumpingText('Loading...'),
+                SizedBox(height: MediaQuery.of(context).size.height * 0.02),
+                              SpinKitRing(
+                                  lineWidth: 3,
+                                  color: Colors.blue,
+                                  size: 30.0,
+                                  duration: Duration(milliseconds: 600),),
               ],
             ),
           ),

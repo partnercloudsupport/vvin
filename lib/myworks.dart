@@ -24,6 +24,7 @@ import 'package:draggable_scrollbar/draggable_scrollbar.dart';
 import 'package:vvin/mainscreen.dart';
 import 'package:flutter_open_whatsapp/flutter_open_whatsapp.dart';
 import 'package:vvin/whatsappForward.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 
 final ScrollController controller = ScrollController();
 final ScrollController whatsappController = ScrollController();
@@ -370,7 +371,7 @@ class _MyWorksState extends State<MyWorks> {
                                                           ),
                                                         ),
                                                         itemBuilder: (level !=
-                                                                "0" )
+                                                                "0")
                                                             ? (BuildContext
                                                                     context) =>
                                                                 <
@@ -390,58 +391,63 @@ class _MyWorksState extends State<MyWorks> {
                                                                     ),
                                                                   ),
                                                                 ]
-                                                            : (myWorks[index].category != "VForm")
-                                                            ? (BuildContext
-                                                                    context) =>
-                                                                <
-                                                                    PopupMenuEntry<
-                                                                        String>>[
-                                                                  PopupMenuItem<
-                                                                      String>(
-                                                                    value:
-                                                                        "assign",
-                                                                    child: Text(
-                                                                      "Assign",
-                                                                      style:
-                                                                          TextStyle(
-                                                                        fontSize:
-                                                                            font14,
+                                                            : (myWorks[index]
+                                                                        .category !=
+                                                                    "VForm")
+                                                                ? (BuildContext
+                                                                        context) =>
+                                                                    <
+                                                                        PopupMenuEntry<
+                                                                            String>>[
+                                                                      PopupMenuItem<
+                                                                          String>(
+                                                                        value:
+                                                                            "assign",
+                                                                        child:
+                                                                            Text(
+                                                                          "Assign",
+                                                                          style:
+                                                                              TextStyle(
+                                                                            fontSize:
+                                                                                font14,
+                                                                          ),
+                                                                        ),
                                                                       ),
-                                                                    ),
-                                                                  ),
-                                                                  PopupMenuItem<
-                                                                      String>(
-                                                                    value:
-                                                                        "visit url",
-                                                                    child: Text(
-                                                                      "Visit URL",
-                                                                      style:
-                                                                          TextStyle(
-                                                                        fontSize:
-                                                                            font14,
+                                                                      PopupMenuItem<
+                                                                          String>(
+                                                                        value:
+                                                                            "visit url",
+                                                                        child:
+                                                                            Text(
+                                                                          "Visit URL",
+                                                                          style:
+                                                                              TextStyle(
+                                                                            fontSize:
+                                                                                font14,
+                                                                          ),
+                                                                        ),
                                                                       ),
-                                                                    ),
-                                                                  ),
-                                                                ]
+                                                                    ]
                                                                 : (BuildContext
-                                                                    context) =>
-                                                                <
-                                                                    PopupMenuEntry<
-                                                                        String>>[
-                                                                  PopupMenuItem<
-                                                                      String>(
-                                                                    value:
-                                                                        "visit url",
-                                                                    child: Text(
-                                                                      "Visit URL",
-                                                                      style:
-                                                                          TextStyle(
-                                                                        fontSize:
-                                                                            font14,
+                                                                        context) =>
+                                                                    <
+                                                                        PopupMenuEntry<
+                                                                            String>>[
+                                                                      PopupMenuItem<
+                                                                          String>(
+                                                                        value:
+                                                                            "visit url",
+                                                                        child:
+                                                                            Text(
+                                                                          "Visit URL",
+                                                                          style:
+                                                                              TextStyle(
+                                                                            fontSize:
+                                                                                font14,
+                                                                          ),
+                                                                        ),
                                                                       ),
-                                                                    ),
-                                                                  ),
-                                                                ],
+                                                                    ],
                                                         onSelected:
                                                             (selectedItem) async {
                                                           switch (
@@ -763,6 +769,12 @@ class _MyWorksState extends State<MyWorks> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: <Widget>[
                               JumpingText('Loading...'),
+                              SizedBox(height: MediaQuery.of(context).size.height * 0.02),
+                              SpinKitRing(
+                                  lineWidth: 3,
+                                  color: Colors.blue,
+                                  size: 30.0,
+                                  duration: Duration(milliseconds: 600),),
                             ],
                           ),
                         ),
@@ -2773,7 +2785,7 @@ class _MyWorksState extends State<MyWorks> {
                                           ),
                                         ),
                                         Container(
-                                          width: ScreenUtil().setHeight(155),
+                                          width: ScreenUtil().setHeight(160),
                                           height: ScreenUtil().setHeight(70),
                                           margin: EdgeInsets.fromLTRB(
                                               0,
@@ -2787,26 +2799,22 @@ class _MyWorksState extends State<MyWorks> {
                                             border: Border(
                                               top: BorderSide(
                                                   width: 1,
-                                                  color: (category ==
-                                                          "vform")
+                                                  color: (category == "vform")
                                                       ? Colors.blue
                                                       : Colors.grey.shade300),
                                               right: BorderSide(
                                                   width: 1,
-                                                  color: (category ==
-                                                          "vform")
+                                                  color: (category == "vform")
                                                       ? Colors.blue
                                                       : Colors.grey.shade300),
                                               bottom: BorderSide(
                                                   width: 1,
-                                                  color: (category ==
-                                                          "vform")
+                                                  color: (category == "vform")
                                                       ? Colors.blue
                                                       : Colors.grey.shade300),
                                               left: BorderSide(
                                                   width: 1,
-                                                  color: (category ==
-                                                          "vform")
+                                                  color: (category == "vform")
                                                       ? Colors.blue
                                                       : Colors.grey.shade300),
                                             ),
@@ -2821,10 +2829,9 @@ class _MyWorksState extends State<MyWorks> {
                                               'VForm',
                                               style: TextStyle(
                                                 fontSize: font10,
-                                                color:
-                                                    (category == "vform")
-                                                        ? Colors.white
-                                                        : Colors.grey,
+                                                color: (category == "vform")
+                                                    ? Colors.white
+                                                    : Colors.grey,
                                               ),
                                             ),
                                           ),

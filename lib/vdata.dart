@@ -6,6 +6,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:progress_indicators/progress_indicators.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
@@ -350,7 +351,13 @@ class _VDataState extends State<VData> {
                                   if (connection == true &&
                                       index == vDataDetails.length) {
                                     if (index != total) {
-                                      return CupertinoActivityIndicator();
+                                      // return CupertinoActivityIndicator();
+                                      return SpinKitRing(
+                                          lineWidth: 3,
+                                          color: Colors.blue,
+                                          size: 30.0,
+                                          duration:
+                                              Duration(milliseconds: 600));
                                     } else {
                                       return null;
                                     }
@@ -811,6 +818,12 @@ class _VDataState extends State<VData> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: <Widget>[
                               JumpingText('Loading...'),
+                              SizedBox(height: MediaQuery.of(context).size.height * 0.02),
+                              SpinKitRing(
+                                  lineWidth: 3,
+                                  color: Colors.blue,
+                                  size: 30.0,
+                                  duration: Duration(milliseconds: 600),),
                             ],
                           ),
                         ),

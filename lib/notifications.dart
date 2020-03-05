@@ -15,6 +15,7 @@ import 'package:vvin/loader.dart';
 import 'package:vvin/notiDB.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:draggable_scrollbar/draggable_scrollbar.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 
 final ScrollController controller = ScrollController();
 
@@ -104,6 +105,12 @@ class _NotificationsState extends State<Notifications> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: <Widget>[
                               JumpingText('Loading...'),
+                              SizedBox(height: MediaQuery.of(context).size.height * 0.02),
+                              SpinKitRing(
+                                  lineWidth: 3,
+                                  color: Colors.blue,
+                                  size: 30.0,
+                                  duration: Duration(milliseconds: 600),),
                             ],
                           ),
                         ),
@@ -130,7 +137,13 @@ class _NotificationsState extends State<Notifications> {
                                     if (connection == true &&
                                         index == notifications.length) {
                                       if (index != total) {
-                                        return CupertinoActivityIndicator();
+                                        // return CupertinoActivityIndicator();
+                                        return SpinKitRing(
+                                            lineWidth: 3,
+                                            color: Colors.blue,
+                                            size: 30.0,
+                                            duration:
+                                                Duration(milliseconds: 600));
                                       } else {
                                         return null;
                                       }
@@ -188,25 +201,22 @@ class _NotificationsState extends State<Notifications> {
                                           if (notifications[index].status ==
                                                   "0" &&
                                               connection == true) {
-                                            http
-                                                .post(urlNotiChangeStatus,
-                                                    body: {
-                                                      "userID": userID,
-                                                      "companyID": companyID,
-                                                      "level": level,
-                                                      "user_type": userType,
-                                                      "id": notifications[index]
-                                                          .notiID,
-                                                      "actionType": "read",
-                                                    })
-                                                .then((res) {
-                                                  print(res.body);
-                                                })
-                                                .catchError((err) {
-                                                  print(
-                                                      "Notification change status error: " +
-                                                          (err).toString());
-                                                });
+                                            http.post(urlNotiChangeStatus,
+                                                body: {
+                                                  "userID": userID,
+                                                  "companyID": companyID,
+                                                  "level": level,
+                                                  "user_type": userType,
+                                                  "id": notifications[index]
+                                                      .notiID,
+                                                  "actionType": "read",
+                                                }).then((res) {
+                                              print(res.body);
+                                            }).catchError((err) {
+                                              print(
+                                                  "Notification change status error: " +
+                                                      (err).toString());
+                                            });
                                           }
                                         } else {
                                           Toast.show(
@@ -457,7 +467,7 @@ class _NotificationsState extends State<Notifications> {
           } else {
             subtitle = jsonData[i]['subtitle'];
           }
-          
+
           Noti notification = Noti(
               title: jsonData[i]['title'],
               subtitle: subtitle,
@@ -496,7 +506,7 @@ class _NotificationsState extends State<Notifications> {
         "count": notifications.length.toString(),
       }).then((res) {
         var jsonData = json.decode(res.body);
-        
+
         // print("Notifications body: " + jsonData.toString());
         String subtitle, subtitle1;
         String subtitle2 = "";

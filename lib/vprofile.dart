@@ -17,6 +17,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'dart:async';
 // import 'package:speech_to_text/speech_to_text.dart';
 // import 'package:speech_to_text/speech_recognition_result.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 
 class VProfile extends StatefulWidget {
   final VDataDetails vdata;
@@ -412,6 +413,16 @@ class _VProfileState extends State<VProfile>
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: <Widget>[
                                     JumpingText('Loading...'),
+                                    SizedBox(
+                                        height:
+                                            MediaQuery.of(context).size.height *
+                                                0.02),
+                                    SpinKitRing(
+                                      lineWidth: 3,
+                                      color: Colors.blue,
+                                      size: 30.0,
+                                      duration: Duration(milliseconds: 600),
+                                    ),
                                   ],
                                 ),
                               ),
@@ -424,6 +435,16 @@ class _VProfileState extends State<VProfile>
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: <Widget>[
                                     JumpingText('Loading...'),
+                                    SizedBox(
+                                        height:
+                                            MediaQuery.of(context).size.height *
+                                                0.02),
+                                    SpinKitRing(
+                                      lineWidth: 3,
+                                      color: Colors.blue,
+                                      size: 30.0,
+                                      duration: Duration(milliseconds: 600),
+                                    ),
                                   ],
                                 ),
                               ),
@@ -436,6 +457,16 @@ class _VProfileState extends State<VProfile>
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: <Widget>[
                                     JumpingText('Loading...'),
+                                    SizedBox(
+                                        height:
+                                            MediaQuery.of(context).size.height *
+                                                0.02),
+                                    SpinKitRing(
+                                      lineWidth: 3,
+                                      color: Colors.blue,
+                                      size: 30.0,
+                                      duration: Duration(milliseconds: 600),
+                                    ),
                                   ],
                                 ),
                               ),
@@ -539,7 +570,7 @@ class _VProfileState extends State<VProfile>
                         //     //   start = true;
                         //     // });
                         //   },
-                        //   backgroundColor: 
+                        //   backgroundColor:
                         //   // Colors.pink,
                         //   (start == false)
                         //   ? Colors.pink

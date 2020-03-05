@@ -22,6 +22,7 @@ import 'package:vvin/vanalyticsDB.dart';
 import 'package:vvin/vdataNoHandler.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:vvin/vprofile.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 
 final ScrollController controller = ScrollController();
 
@@ -2110,6 +2111,12 @@ class _VAnalyticsState extends State<VAnalytics> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: <Widget>[
                               JumpingText('Loading...'),
+                              SizedBox(height: MediaQuery.of(context).size.height * 0.02),
+                              SpinKitRing(
+                                  lineWidth: 3,
+                                  color: Colors.blue,
+                                  size: 30.0,
+                                  duration: Duration(milliseconds: 600),),
                             ],
                           ),
                         ),

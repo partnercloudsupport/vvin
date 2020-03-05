@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 import 'package:connectivity/connectivity.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -13,6 +14,7 @@ import 'package:vvin/data.dart';
 import 'package:vvin/mainscreen.dart';
 import 'package:firebase_ml_vision/firebase_ml_vision.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 
 class WhatsAppForward extends StatefulWidget {
   final WhatsappForward whatsappForward;
@@ -38,7 +40,7 @@ class _WhatsAppForwardState extends State<WhatsAppForward> {
   List<String> phoneList = [];
   List<String> otherList = [];
   List seletedVTag = [];
-  String pathName, base64Image, tempText;
+  String pathName, base64Image, tempText, number;
 
   @override
   void initState() {
@@ -46,6 +48,7 @@ class _WhatsAppForwardState extends State<WhatsAppForward> {
     isImageLoaded = false;
     tempText = "";
     base64Image = "";
+    number = "";
     super.initState();
   }
 
@@ -824,42 +827,39 @@ class _WhatsAppForwardState extends State<WhatsAppForward> {
         if (_phonecontroller.text.substring(0, 1) != "6") {
           _phonecontroller.text = "6" + _phonecontroller.text;
         }
-        http.post(urlWhatsApp, body: {
-          "companyID": widget.whatsappForward.companyID,
-          "userID": widget.whatsappForward.userID,
-          "user_type": widget.whatsappForward.userType,
-          "level": widget.whatsappForward.level,
-          "phoneNo": _phonecontroller.text,
-          "name": _namecontroller.text,
-          "companyName": _companycontroller.text,
-          "remark": _remarkcontroller.text,
-          "vtag": vtag,
-          "url": widget.whatsappForward.url,
-          "nameCard": base64Image,
-        }).then((res) {
-          if (res.body == "success") {
-            FlutterOpenWhatsapp.sendSingleMessage(
-                _phonecontroller.text,
-                "Hello " +
-                    _namecontroller.text +
-                    "! Reply 'hi' to enable the URL link. " +
-                    widget.whatsappForward.url);
-            CurrentIndex index = new CurrentIndex(index: 2);
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute(
-                builder: (context) => MainScreen(
-                  index: index,
-                ),
-              ),
-            );
-          } else {
-            Toast.show(
-                "Something's wrong, please contact VVIN help desk", context,
-                duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
-          }
-        }).catchError((err) {
-          print("WhatsApp Forward error: " + (err).toString());
-        });
+        http
+            .post(urlWhatsApp, body: {
+              "companyID": widget.whatsappForward.companyID,
+              "userID": widget.whatsappForward.userID,
+              "user_type": widget.whatsappForward.userType,
+              "level": widget.whatsappForward.level,
+              "phoneNo": _phonecontroller.text,
+              "name": _namecontroller.text,
+              "companyName": _companycontroller.text,
+              "remark": _remarkcontroller.text,
+              "vtag": vtag,
+              "url": widget.whatsappForward.url,
+              "nameCard": "",
+              "number": widget.whatsappForward.userID + "_" + number,
+            })
+            .then((res) {})
+            .catchError((err) {
+              print("WhatsApp Forward error: " + (err).toString());
+            });
+        FlutterOpenWhatsapp.sendSingleMessage(
+            _phonecontroller.text,
+            "Hello " +
+                _namecontroller.text +
+                "! Reply 'hi' to enable the URL link. " +
+                widget.whatsappForward.url);
+        CurrentIndex index = new CurrentIndex(index: 2);
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (context) => MainScreen(
+              index: index,
+            ),
+          ),
+        );
       }
     } else {
       Toast.show("No Internet Connection", context,
@@ -886,10 +886,16 @@ class _WhatsAppForwardState extends State<WhatsAppForward> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
                 JumpingText('Loading...'),
+                SizedBox(height: MediaQuery.of(context).size.height * 0.02),
+                SpinKitRing(
+                  lineWidth: 3,
+                  color: Colors.blue,
+                  size: 30.0,
+                  duration: Duration(milliseconds: 600),
+                ),
               ],
             ),
           ),
-
         ),
       ),
     );
@@ -1295,6 +1301,21 @@ class _WhatsAppForwardState extends State<WhatsAppForward> {
   }
 
   Future readText() async {
+    number = Random().nextInt(200).toString();
+    http
+        .post(urlWhatsApp, body: {
+          "companyID": widget.whatsappForward.companyID,
+          "userID": widget.whatsappForward.userID,
+          "user_type": widget.whatsappForward.userType,
+          "level": widget.whatsappForward.level,
+          "number": widget.whatsappForward.userID + "_" + number,
+          "url": widget.whatsappForward.url,
+          "nameCard": base64Image,
+        })
+        .then((res) {})
+        .catchError((err) {
+          print("WhatsApp Forward Save Image error: " + (err).toString());
+        });
     otherList.add("-");
     FirebaseVisionImage ourImage = FirebaseVisionImage.fromFile(pickedImage);
     TextRecognizer recognizeText = FirebaseVision.instance.textRecognizer();
@@ -1304,7 +1325,6 @@ class _WhatsAppForwardState extends State<WhatsAppForward> {
     RegExp regExp = new RegExp(patttern);
     for (TextBlock block in readText.blocks) {
       for (TextLine line in block.lines) {
-        print("Hi: " + line.text);
         String temPhone = "";
         for (int i = 0; i < line.text.length; i++) {
           if (regExp.hasMatch(line.text[i])) {

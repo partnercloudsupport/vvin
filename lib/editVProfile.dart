@@ -13,6 +13,7 @@ import 'package:vvin/data.dart';
 import 'package:vvin/loader.dart';
 import 'package:vvin/mainscreen.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 
 final ScrollController controller = ScrollController();
 final TextEditingController _nameController = TextEditingController();
@@ -2289,6 +2290,12 @@ class _EditVProfileState extends State<EditVProfile> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
                 JumpingText('Loading...'),
+                SizedBox(height: MediaQuery.of(context).size.height * 0.02),
+                              SpinKitRing(
+                                  lineWidth: 3,
+                                  color: Colors.blue,
+                                  size: 30.0,
+                                  duration: Duration(milliseconds: 600),),
               ],
             ),
           ),

@@ -19,6 +19,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_open_whatsapp/flutter_open_whatsapp.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:draggable_scrollbar/draggable_scrollbar.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 
 class VDataNoHandler extends StatefulWidget {
   final VDataFilter vDataFilter;
@@ -964,6 +965,12 @@ class _VDataNoHandlerState extends State<VDataNoHandler> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: <Widget>[
                               JumpingText('Loading...'),
+                              SizedBox(height: MediaQuery.of(context).size.height * 0.02),
+                              SpinKitRing(
+                                  lineWidth: 3,
+                                  color: Colors.blue,
+                                  size: 30.0,
+                                  duration: Duration(milliseconds: 600),),
                             ],
                           ),
                         ),
