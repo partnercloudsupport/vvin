@@ -24,10 +24,10 @@ class Noti {
 }
 
 class Myworks {
-  String date, title, link, category, qr, url, urlName, id;
+  String date, title, link, category, qr, url, urlName, id, priority;
   bool offLine;
   List handlers;
-  Myworks({this.date, this.title, this.link, this.category, this.qr, this.url, this.urlName, this.offLine, this.id, this.handlers});
+  Myworks({this.date, this.title, this.link, this.category, this.qr, this.url, this.urlName, this.offLine, this.id, this.handlers, this.priority});
 }
 
 class TopView {
@@ -174,4 +174,10 @@ class VDataFilter{
 class Setting{
   String assign, unassign, userID, companyID, level, userType;
   Setting({this.assign, this.unassign, this.userID, this.companyID, this.level, this.userType});
+}
+
+class WhatsappForward{
+  String url, userID, companyID, level, userType;
+  List vtagList;
+  WhatsappForward({this.url, this.userID, this.companyID, this.level, this.userType, this.vtagList});
 }

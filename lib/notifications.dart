@@ -199,7 +199,9 @@ class _NotificationsState extends State<Notifications> {
                                                           .notiID,
                                                       "actionType": "read",
                                                     })
-                                                .then((res) {})
+                                                .then((res) {
+                                                  print(res.body);
+                                                })
                                                 .catchError((err) {
                                                   print(
                                                       "Notification change status error: " +
@@ -455,7 +457,7 @@ class _NotificationsState extends State<Notifications> {
           } else {
             subtitle = jsonData[i]['subtitle'];
           }
-
+          
           Noti notification = Noti(
               title: jsonData[i]['title'],
               subtitle: subtitle,
@@ -494,6 +496,7 @@ class _NotificationsState extends State<Notifications> {
         "count": notifications.length.toString(),
       }).then((res) {
         var jsonData = json.decode(res.body);
+        
         // print("Notifications body: " + jsonData.toString());
         String subtitle, subtitle1;
         String subtitle2 = "";
@@ -553,7 +556,7 @@ class _NotificationsState extends State<Notifications> {
               title: jsonData[i]['title'],
               subtitle: subtitle,
               date: jsonData[i]['date'],
-              notiID: "00",
+              notiID: jsonData[i]['id'],
               status: jsonData[i]['status']);
           notifications.add(notification);
         }
