@@ -817,6 +817,9 @@ class _WhatsAppForwardState extends State<WhatsAppForward> {
     if (connectivityResult == ConnectivityResult.wifi ||
         connectivityResult == ConnectivityResult.mobile) {
       // _onLoading();
+      setState(() {
+        isSend  = true;
+      });
       if (_phonecontroller.text.substring(0, 1) != "6") {
         _phonecontroller.text = "6" + _phonecontroller.text;
       }
