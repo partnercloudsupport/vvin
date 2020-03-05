@@ -724,8 +724,8 @@ class _WhatsAppForwardState extends State<WhatsAppForward> {
                                     ),
                                     child: FlatButton(
                                       color: (isSend == false)
-                                      ? Colors.blue
-                                      : Colors.grey,
+                                          ? Colors.blue
+                                          : Colors.grey,
                                       onPressed: () {
                                         bool send = true;
                                         setState(() {
@@ -817,48 +817,50 @@ class _WhatsAppForwardState extends State<WhatsAppForward> {
     if (connectivityResult == ConnectivityResult.wifi ||
         connectivityResult == ConnectivityResult.mobile) {
       // _onLoading();
-      setState(() {
-        isSend  = true;
-      });
-      if (_phonecontroller.text.substring(0, 1) != "6") {
-        _phonecontroller.text = "6" + _phonecontroller.text;
-      }
-      http.post(urlWhatsApp, body: {
-        "companyID": widget.whatsappForward.companyID,
-        "userID": widget.whatsappForward.userID,
-        "user_type": widget.whatsappForward.userType,
-        "level": widget.whatsappForward.level,
-        "phoneNo": _phonecontroller.text,
-        "name": _namecontroller.text,
-        "companyName": _companycontroller.text,
-        "remark": _remarkcontroller.text,
-        "vtag": vtag,
-        "url": widget.whatsappForward.url,
-        "nameCard": base64Image,
-      }).then((res) {
-        if (res.body == "success") {
-          FlutterOpenWhatsapp.sendSingleMessage(
-              _phonecontroller.text,
-              "Hello " +
-                  _namecontroller.text +
-                  "! Reply 'hi' to enable the URL link. " +
-                  widget.whatsappForward.url);
-          CurrentIndex index = new CurrentIndex(index: 2);
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(
-              builder: (context) => MainScreen(
-                index: index,
-              ),
-            ),
-          );
-        } else {
-          Toast.show(
-              "Something's wrong, please contact VVIN help desk", context,
-              duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
+      if (isSend == false) {
+        setState(() {
+          isSend = true;
+        });
+        if (_phonecontroller.text.substring(0, 1) != "6") {
+          _phonecontroller.text = "6" + _phonecontroller.text;
         }
-      }).catchError((err) {
-        print("WhatsApp Forward error: " + (err).toString());
-      });
+        http.post(urlWhatsApp, body: {
+          "companyID": widget.whatsappForward.companyID,
+          "userID": widget.whatsappForward.userID,
+          "user_type": widget.whatsappForward.userType,
+          "level": widget.whatsappForward.level,
+          "phoneNo": _phonecontroller.text,
+          "name": _namecontroller.text,
+          "companyName": _companycontroller.text,
+          "remark": _remarkcontroller.text,
+          "vtag": vtag,
+          "url": widget.whatsappForward.url,
+          "nameCard": base64Image,
+        }).then((res) {
+          if (res.body == "success") {
+            FlutterOpenWhatsapp.sendSingleMessage(
+                _phonecontroller.text,
+                "Hello " +
+                    _namecontroller.text +
+                    "! Reply 'hi' to enable the URL link. " +
+                    widget.whatsappForward.url);
+            CurrentIndex index = new CurrentIndex(index: 2);
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(
+                builder: (context) => MainScreen(
+                  index: index,
+                ),
+              ),
+            );
+          } else {
+            Toast.show(
+                "Something's wrong, please contact VVIN help desk", context,
+                duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
+          }
+        }).catchError((err) {
+          print("WhatsApp Forward error: " + (err).toString());
+        });
+      }
     } else {
       Toast.show("No Internet Connection", context,
           duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
@@ -887,6 +889,7 @@ class _WhatsAppForwardState extends State<WhatsAppForward> {
               ],
             ),
           ),
+
         ),
       ),
     );
@@ -1269,7 +1272,7 @@ class _WhatsAppForwardState extends State<WhatsAppForward> {
                 onPressed: () async {
                   Navigator.of(context).pop();
                   var tempStore =
-                      await ImagePicker.pickImage(source: ImageSource.gallery);
+                      await ImagePicker.pickImage(source: ImageSource.camera);
                   if (tempStore != null) {
                     setState(() {
                       pickedImage = tempStore;
@@ -1293,7 +1296,7 @@ class _WhatsAppForwardState extends State<WhatsAppForward> {
 
   Future readText() async {
     otherList.add("-");
-    FirebaseVisionImage ourImage = FirebaseVisionImage.fromFile(File(pathName));
+    FirebaseVisionImage ourImage = FirebaseVisionImage.fromFile(pickedImage);
     TextRecognizer recognizeText = FirebaseVision.instance.textRecognizer();
     VisionText readText = await recognizeText.processImage(ourImage);
 

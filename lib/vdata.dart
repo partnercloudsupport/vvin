@@ -105,6 +105,7 @@ class _VDataState extends State<VData> {
     "VCatalogue",
     "VFlex",
     "VHome",
+    "VForm",
   ];
   ScrollController _scrollController = ScrollController();
   final _itemExtent = ScreenUtil().setHeight(260);

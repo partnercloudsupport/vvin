@@ -22,8 +22,6 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_web_browser/flutter_web_browser.dart';
 import 'package:draggable_scrollbar/draggable_scrollbar.dart';
 import 'package:vvin/mainscreen.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:firebase_ml_vision/firebase_ml_vision.dart';
 import 'package:flutter_open_whatsapp/flutter_open_whatsapp.dart';
 import 'package:vvin/whatsappForward.dart';
 
@@ -372,7 +370,7 @@ class _MyWorksState extends State<MyWorks> {
                                                           ),
                                                         ),
                                                         itemBuilder: (level !=
-                                                                "0")
+                                                                "0" )
                                                             ? (BuildContext
                                                                     context) =>
                                                                 <
@@ -392,7 +390,8 @@ class _MyWorksState extends State<MyWorks> {
                                                                     ),
                                                                   ),
                                                                 ]
-                                                            : (BuildContext
+                                                            : (myWorks[index].category != "VForm")
+                                                            ? (BuildContext
                                                                     context) =>
                                                                 <
                                                                     PopupMenuEntry<
@@ -410,6 +409,25 @@ class _MyWorksState extends State<MyWorks> {
                                                                       ),
                                                                     ),
                                                                   ),
+                                                                  PopupMenuItem<
+                                                                      String>(
+                                                                    value:
+                                                                        "visit url",
+                                                                    child: Text(
+                                                                      "Visit URL",
+                                                                      style:
+                                                                          TextStyle(
+                                                                        fontSize:
+                                                                            font14,
+                                                                      ),
+                                                                    ),
+                                                                  ),
+                                                                ]
+                                                                : (BuildContext
+                                                                    context) =>
+                                                                <
+                                                                    PopupMenuEntry<
+                                                                        String>>[
                                                                   PopupMenuItem<
                                                                       String>(
                                                                     value:
@@ -2754,6 +2772,63 @@ class _MyWorksState extends State<MyWorks> {
                                             ),
                                           ),
                                         ),
+                                        Container(
+                                          width: ScreenUtil().setHeight(155),
+                                          height: ScreenUtil().setHeight(70),
+                                          margin: EdgeInsets.fromLTRB(
+                                              0,
+                                              ScreenUtil().setHeight(10),
+                                              ScreenUtil().setHeight(10),
+                                              0),
+                                          decoration: BoxDecoration(
+                                            color: (category == "vform")
+                                                ? Colors.blue
+                                                : Colors.white,
+                                            border: Border(
+                                              top: BorderSide(
+                                                  width: 1,
+                                                  color: (category ==
+                                                          "vform")
+                                                      ? Colors.blue
+                                                      : Colors.grey.shade300),
+                                              right: BorderSide(
+                                                  width: 1,
+                                                  color: (category ==
+                                                          "vform")
+                                                      ? Colors.blue
+                                                      : Colors.grey.shade300),
+                                              bottom: BorderSide(
+                                                  width: 1,
+                                                  color: (category ==
+                                                          "vform")
+                                                      ? Colors.blue
+                                                      : Colors.grey.shade300),
+                                              left: BorderSide(
+                                                  width: 1,
+                                                  color: (category ==
+                                                          "vform")
+                                                      ? Colors.blue
+                                                      : Colors.grey.shade300),
+                                            ),
+                                          ),
+                                          child: FlatButton(
+                                            onPressed: () {
+                                              setModalState(() {
+                                                category = "vform";
+                                              });
+                                            },
+                                            child: Text(
+                                              'VForm',
+                                              style: TextStyle(
+                                                fontSize: font10,
+                                                color:
+                                                    (category == "vform")
+                                                        ? Colors.white
+                                                        : Colors.grey,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
                                       ],
                                     ),
                                   ),
@@ -3013,6 +3088,66 @@ class _MyWorksState extends State<MyWorks> {
           }
         }
         break;
+
+      case "vform":
+        {
+          Navigator.pop(context);
+          myWorks.clear();
+          if (connection == true) {
+            for (int i = 0; i < myWorks1.length; i++) {
+              if (search == "" && myWorks1[i].category == "VForm") {
+                Myworks mywork = Myworks(
+                    date: myWorks1[i].date,
+                    title: myWorks1[i].title,
+                    url: myWorks1[i].url,
+                    urlName: myWorks1[i].urlName,
+                    link: myWorks1[i].link,
+                    category: myWorks1[i].category,
+                    qr: myWorks1[i].qr,
+                    id: myWorks1[i].id,
+                    handlers: myWorks1[i].handlers,
+                    offLine: false);
+                myWorks.add(mywork);
+              } else {
+                if (myWorks1[i]
+                        .title
+                        .toLowerCase()
+                        .contains(search.toLowerCase()) &&
+                    myWorks1[i].category == "VForm") {
+                  Myworks mywork = Myworks(
+                      date: myWorks1[i].date,
+                      title: myWorks1[i].title,
+                      url: myWorks1[i].url,
+                      urlName: myWorks1[i].urlName,
+                      link: myWorks1[i].link,
+                      category: myWorks1[i].category,
+                      qr: myWorks1[i].qr,
+                      id: myWorks1[i].id,
+                      handlers: myWorks1[i].handlers,
+                      offLine: false);
+                  myWorks.add(mywork);
+                }
+              }
+            }
+            setState(() {
+              connection = true;
+            });
+          } else {
+            if (search == "") {
+              offlineLink = await db
+                  .rawQuery("SELECT * FROM myworks WHERE type = 'VForm'");
+            } else {
+              offlineLink = await db.rawQuery(
+                  "SELECT * FROM myworks WHERE type = 'VForm' AND title LIKE '%" +
+                      search +
+                      "%'");
+            }
+            setState(() {
+              connection = false;
+            });
+          }
+        }
+        break;
     }
   }
 
@@ -3192,7 +3327,7 @@ class _MyWorksState extends State<MyWorks> {
       "count": myWorks.length.toString(),
     }).then((res) {
       // print("MyWorks status:" + (res.statusCode).toString());
-      // print("MyWorks body: " + res.body);
+      print("MyWorks body: " + res.body);
       if (res.body == "nodata") {
         nodata = true;
         status = true;
