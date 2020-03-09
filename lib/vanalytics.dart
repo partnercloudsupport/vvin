@@ -2779,6 +2779,7 @@ class _VAnalyticsState extends State<VAnalytics> {
         );
         leadsDatas.add(leadsData);
       } else {
+        print(res.body);
         var jsonData = json.decode(res.body);
         leadsDatas.clear();
         for (var data in jsonData) {
@@ -2825,7 +2826,9 @@ class _VAnalyticsState extends State<VAnalytics> {
     }).then((res) {
       // print("VAnalytics status:" + (res.statusCode).toString());
       // print("VAnalytics body: " + res.body);
-      if (res.body == "nodata") {
+      var jsonData = json.decode(res.body);
+      if (jsonData[0] == "nodata") {
+        newVersion = jsonData[1];
         totalLeads = "0";
         totalLeadsPercentage = "0";
         unassignedLeads = "0";
@@ -2849,8 +2852,6 @@ class _VAnalyticsState extends State<VAnalytics> {
         contactForm = "0";
         minimumDate = "2017-12-01";
       } else {
-        var jsonData = json.decode(res.body);
-
         for (var data in jsonData) {
           totalLeads = data["total_leads"];
           totalLeadsPercentage =
@@ -2881,6 +2882,11 @@ class _VAnalyticsState extends State<VAnalytics> {
             positive = false;
           }
         }
+      }
+      try {
+        versionCheck(context);
+      } catch (e) {
+        print("VersionCheck error: " + e.toString());
       }
       setState(() {
         vanalytic = true;
@@ -3014,8 +3020,6 @@ class _VAnalyticsState extends State<VAnalytics> {
   versionCheck(context) async {
     final PackageInfo info = await PackageInfo.fromPlatform();
     currentVersion = info.version.trim();
-    // double currentVersion =
-    //     double.parse(info.version.trim().replaceAll(".", ""));
     if (newVersion != currentVersion) {
       _showVersionDialog(context);
     }
