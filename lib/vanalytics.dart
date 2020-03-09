@@ -2457,11 +2457,6 @@ class _VAnalyticsState extends State<VAnalytics> {
     if (connectivityResult == ConnectivityResult.wifi ||
         connectivityResult == ConnectivityResult.mobile) {
       // _onLoading();
-      try {
-        versionCheck(context);
-      } catch (e) {
-        print("VersionCheck error: " + e.toString());
-      }
       startTime = (DateTime.now()).millisecondsSinceEpoch;
       getPreference();
     } else {
@@ -2853,6 +2848,7 @@ class _VAnalyticsState extends State<VAnalytics> {
         minimumDate = "2017-12-01";
       } else {
         for (var data in jsonData) {
+          newVersion = data["version"];
           totalLeads = data["total_leads"];
           totalLeadsPercentage =
               calculatePercentage(data["total_leads_percentage"].toString());
