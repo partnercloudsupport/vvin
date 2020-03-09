@@ -1,7 +1,5 @@
-import 'package:connectivity/connectivity.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'login.dart';
 import 'mainscreen.dart';
@@ -26,7 +24,6 @@ class Checking extends StatefulWidget {
 }
 
 class _CheckingState extends State<Checking> {
-  String urlWait = "https://vvinoa.vvin.com/api/main.php";
 
   @override
   void initState() {
@@ -36,7 +33,6 @@ class _CheckingState extends State<Checking> {
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
     Future.delayed(const Duration(seconds: 1), () => mainScreen()
         );
-    // checkConnection();
     super.initState();
   }
 
@@ -71,22 +67,6 @@ class _CheckingState extends State<Checking> {
     );
   }
 
-  // void checkConnection() async {
-  //   var connectivityResult = await (Connectivity().checkConnectivity());
-  //   if (connectivityResult == ConnectivityResult.wifi ||
-  //       connectivityResult == ConnectivityResult.mobile) {
-  //     http.get(urlWait).then((res) {
-  //       if (res.body == "success") {
-  //         mainScreen();
-  //       }
-  //     }).catchError((err) {
-  //       print("Splash screen error: " + (err).toString());
-  //     });
-  //   } else {
-  //     mainScreen();
-  //   }
-  // }
-
   Future<void> mainScreen() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     if (prefs.getString('userID') != null) {
@@ -95,6 +75,6 @@ class _CheckingState extends State<Checking> {
     } else {
       Navigator.push(context, MaterialPageRoute(builder: (context) => Login()));
     }
-    // Navigator.push(context, MaterialPageRoute(builder: (context) => Login()));
+    // Navigator.push(context, MaterialPageRoute(builder: (context) => Convert()));
   }
 }
