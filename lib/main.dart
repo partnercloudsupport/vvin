@@ -14,7 +14,7 @@ class SplashScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(fontFamily: 'Roboto Regular'),
+      theme: ThemeData(fontFamily: 'Roboto'),
       home: Checking(),
     );
   }
@@ -61,7 +61,7 @@ class _CheckingState extends State<Checking> {
               style: TextStyle(
                 fontStyle: FontStyle.italic,
                 color: Colors.blue,
-                fontFamily: 'Roboto Regular',
+                fontFamily: 'Roboto',
                 fontSize: ScreenUtil().setSp(45, allowFontScalingSelf: false),
               ),
             ),

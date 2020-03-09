@@ -186,4 +186,9 @@ class _NotiDetailState extends State<NotiDetail> {
     );
     return Future.value(false);
   }
+
+  // Future<bool> _onBackPressAppBar() async {
+  //   Navigator.pop(context);
+  //   return Future.value(false);
+  // }
 }

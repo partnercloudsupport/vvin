@@ -2271,7 +2271,6 @@ class _EditVProfileState extends State<EditVProfile> {
   }
 
   void _onLoading1() {
-    
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -2291,11 +2290,12 @@ class _EditVProfileState extends State<EditVProfile> {
               children: <Widget>[
                 JumpingText('Loading...'),
                 SizedBox(height: MediaQuery.of(context).size.height * 0.02),
-                              SpinKitRing(
-                                  lineWidth: 3,
-                                  color: Colors.blue,
-                                  size: 30.0,
-                                  duration: Duration(milliseconds: 600),),
+                SpinKitRing(
+                  lineWidth: 3,
+                  color: Colors.blue,
+                  size: 30.0,
+                  duration: Duration(milliseconds: 600),
+                ),
               ],
             ),
           ),

@@ -505,72 +505,6 @@ class _WhatsAppForwardState extends State<WhatsAppForward> {
                               ),
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.start,
-                                children: <Widget>[Text("Remark")],
-                              ),
-                              SizedBox(
-                                height: ScreenUtil().setHeight(5),
-                              ),
-                              Container(
-                                height: ScreenUtil().setHeight(60),
-                                padding: EdgeInsets.all(0.5),
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(5),
-                                  border: Border.all(
-                                      color: Colors.grey.shade400,
-                                      style: BorderStyle.solid),
-                                ),
-                                child: Row(
-                                  children: <Widget>[
-                                    Expanded(
-                                      child: TextField(
-                                        controller: _remarkcontroller,
-                                        style: TextStyle(
-                                          height: 1,
-                                          fontSize: font14,
-                                        ),
-                                        keyboardType: TextInputType.text,
-                                        decoration: InputDecoration(
-                                          hintText: "eg. from KLCC exhibition",
-                                          border: InputBorder.none,
-                                          focusedBorder: InputBorder.none,
-                                          contentPadding: EdgeInsets.only(
-                                              left: ScreenUtil().setHeight(10),
-                                              bottom:
-                                                  ScreenUtil().setHeight(20),
-                                              top: ScreenUtil().setHeight(-15),
-                                              right:
-                                                  ScreenUtil().setHeight(20)),
-                                        ),
-                                      ),
-                                    ),
-                                    (isImageLoaded == true)
-                                        ? InkWell(
-                                            onTap: () {
-                                              _showBottomSheet(
-                                                  "_remarkcontroller");
-                                            },
-                                            child: Container(
-                                              height:
-                                                  ScreenUtil().setHeight(60),
-                                              width: ScreenUtil().setHeight(60),
-                                              child: Center(
-                                                child: Icon(
-                                                  Icons.arrow_drop_down,
-                                                  color: Colors.black,
-                                                ),
-                                              ),
-                                            ),
-                                          )
-                                        : Container()
-                                  ],
-                                ),
-                              ),
-                              SizedBox(
-                                height: ScreenUtil().setHeight(30),
-                              ),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.start,
                                 children: <Widget>[Text("VTag")],
                               ),
                               SizedBox(
@@ -698,6 +632,72 @@ class _WhatsAppForwardState extends State<WhatsAppForward> {
                                 ),
                               ),
                               SizedBox(
+                                height: ScreenUtil().setHeight(30),
+                              ),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                children: <Widget>[Text("Remark")],
+                              ),
+                              SizedBox(
+                                height: ScreenUtil().setHeight(5),
+                              ),
+                              Container(
+                                height: ScreenUtil().setHeight(60),
+                                padding: EdgeInsets.all(0.5),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(5),
+                                  border: Border.all(
+                                      color: Colors.grey.shade400,
+                                      style: BorderStyle.solid),
+                                ),
+                                child: Row(
+                                  children: <Widget>[
+                                    Expanded(
+                                      child: TextField(
+                                        controller: _remarkcontroller,
+                                        style: TextStyle(
+                                          height: 1,
+                                          fontSize: font14,
+                                        ),
+                                        keyboardType: TextInputType.text,
+                                        decoration: InputDecoration(
+                                          hintText: "eg. from KLCC exhibition",
+                                          border: InputBorder.none,
+                                          focusedBorder: InputBorder.none,
+                                          contentPadding: EdgeInsets.only(
+                                              left: ScreenUtil().setHeight(10),
+                                              bottom:
+                                                  ScreenUtil().setHeight(20),
+                                              top: ScreenUtil().setHeight(-15),
+                                              right:
+                                                  ScreenUtil().setHeight(20)),
+                                        ),
+                                      ),
+                                    ),
+                                    (isImageLoaded == true)
+                                        ? InkWell(
+                                            onTap: () {
+                                              _showBottomSheet(
+                                                  "_remarkcontroller");
+                                            },
+                                            child: Container(
+                                              height:
+                                                  ScreenUtil().setHeight(60),
+                                              width: ScreenUtil().setHeight(60),
+                                              child: Center(
+                                                child: Icon(
+                                                  Icons.arrow_drop_down,
+                                                  color: Colors.black,
+                                                ),
+                                              ),
+                                            ),
+                                          )
+                                        : Container()
+                                  ],
+                                ),
+                              ),
+                              SizedBox(
                                 height: ScreenUtil().setHeight(50),
                               ),
                               Row(
@@ -815,6 +815,40 @@ class _WhatsAppForwardState extends State<WhatsAppForward> {
     );
   }
 
+  void _onLoading1() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => Dialog(
+        elevation: 0.0,
+        backgroundColor: Colors.transparent,
+        child: Container(
+          height: MediaQuery.of(context).size.height * 0.1,
+          width: MediaQuery.of(context).size.width * 0.1,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                JumpingText('Sending...'),
+                SizedBox(height: MediaQuery.of(context).size.height * 0.02),
+                SpinKitRing(
+                  lineWidth: 3,
+                  color: Colors.blue,
+                  size: 30.0,
+                  duration: Duration(milliseconds: 600),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   void _send(String vtag) async {
     var connectivityResult = await (Connectivity().checkConnectivity());
     if (connectivityResult == ConnectivityResult.wifi ||
@@ -824,6 +858,7 @@ class _WhatsAppForwardState extends State<WhatsAppForward> {
         setState(() {
           isSend = true;
         });
+        _onLoading1();
         if (_phonecontroller.text.substring(0, 1) != "6") {
           _phonecontroller.text = "6" + _phonecontroller.text;
         }
@@ -846,6 +881,7 @@ class _WhatsAppForwardState extends State<WhatsAppForward> {
             .catchError((err) {
               print("WhatsApp Forward error: " + (err).toString());
             });
+        Navigator.pop(context);
         FlutterOpenWhatsapp.sendSingleMessage(
             _phonecontroller.text,
             "Hello " +

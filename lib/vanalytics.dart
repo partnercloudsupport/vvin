@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:async';
 import 'dart:convert';
 import 'package:connectivity/connectivity.dart';
@@ -23,8 +24,12 @@ import 'package:vvin/vdataNoHandler.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:vvin/vprofile.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:package_info/package_info.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 final ScrollController controller = ScrollController();
+const PLAY_STORE_URL =
+    'https://play.google.com/store/apps/details?id=com.my.jtapps.vvin';
 
 class VAnalytics extends StatefulWidget {
   const VAnalytics({Key key}) : super(key: key);
@@ -74,7 +79,9 @@ class _VAnalyticsState extends State<VAnalytics> {
       import,
       contactForm,
       minimumDate,
-      dateBannerLocal;
+      dateBannerLocal,
+      currentVersion,
+      newVersion;
 
   String urlVAnalytics = "https://vvinoa.vvin.com/api/vanalytics.php";
   String urlTopViews = "https://vvinoa.vvin.com/api/topview.php";
@@ -98,6 +105,7 @@ class _VAnalyticsState extends State<VAnalytics> {
   void initState() {
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
     refreshKey = GlobalKey<RefreshIndicatorState>();
+    newVersion = "";
     connection = false;
     nodata = false;
     refresh = false;
@@ -852,10 +860,12 @@ class _VAnalyticsState extends State<VAnalytics> {
                                       : Container(
                                           // height: ScreenUtil().setHeight(847),
                                           height: (connection == true)
-                                              ? ScreenUtil().setHeight(85 + 
-                                                  77 * topViews.length)
-                                              : ScreenUtil().setHeight(85 + 77 *
-                                                  offlineTopViewData.length),
+                                              ? ScreenUtil().setHeight(
+                                                  85 + 77 * topViews.length)
+                                              : ScreenUtil().setHeight(85 +
+                                                  77 *
+                                                      offlineTopViewData
+                                                          .length),
                                           child: Stack(
                                             children: <Widget>[
                                               Container(
@@ -937,13 +947,13 @@ class _VAnalyticsState extends State<VAnalytics> {
                                                                     },
                                                                     child:
                                                                         Container(
-                                                                      height: (i == topViews.length)
-                                                                      ? ScreenUtil()
-                                                                          .setHeight(
+                                                                      height: (i ==
+                                                                              topViews
+                                                                                  .length)
+                                                                          ? ScreenUtil().setHeight(
                                                                               80)
-                                                                      : ScreenUtil()
-                                                                          .setHeight(
-                                                                              77),
+                                                                          : ScreenUtil()
+                                                                              .setHeight(77),
                                                                       decoration:
                                                                           BoxDecoration(
                                                                         border:
@@ -1031,13 +1041,14 @@ class _VAnalyticsState extends State<VAnalytics> {
                                                                     ],
                                                                   )
                                                                 : Container(
-                                                                    height: (i == offlineTopViewData.length)
-                                                                    ? ScreenUtil()
-                                                                        .setHeight(
-                                                                            80)
-                                                                    : ScreenUtil()
-                                                                        .setHeight(
-                                                                            77),
+                                                                    height: (i ==
+                                                                            offlineTopViewData
+                                                                                .length)
+                                                                        ? ScreenUtil()
+                                                                            .setHeight(
+                                                                                80)
+                                                                        : ScreenUtil()
+                                                                            .setHeight(77),
                                                                     decoration:
                                                                         BoxDecoration(
                                                                       border:
@@ -2111,12 +2122,15 @@ class _VAnalyticsState extends State<VAnalytics> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: <Widget>[
                               JumpingText('Loading...'),
-                              SizedBox(height: MediaQuery.of(context).size.height * 0.02),
+                              SizedBox(
+                                  height: MediaQuery.of(context).size.height *
+                                      0.02),
                               SpinKitRing(
-                                  lineWidth: 3,
-                                  color: Colors.blue,
-                                  size: 30.0,
-                                  duration: Duration(milliseconds: 600),),
+                                lineWidth: 3,
+                                color: Colors.blue,
+                                size: 30.0,
+                                duration: Duration(milliseconds: 600),
+                              ),
                             ],
                           ),
                         ),
@@ -2443,6 +2457,11 @@ class _VAnalyticsState extends State<VAnalytics> {
     if (connectivityResult == ConnectivityResult.wifi ||
         connectivityResult == ConnectivityResult.mobile) {
       // _onLoading();
+      try {
+        versionCheck(context);
+      } catch (e) {
+        print("VersionCheck error: " + e.toString());
+      }
       startTime = (DateTime.now()).millisecondsSinceEpoch;
       getPreference();
     } else {
@@ -2989,6 +3008,69 @@ class _VAnalyticsState extends State<VAnalytics> {
     } else {
       Toast.show("No Internet connection, data can't load", context,
           duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
+    }
+  }
+
+  versionCheck(context) async {
+    final PackageInfo info = await PackageInfo.fromPlatform();
+    currentVersion = info.version.trim();
+    // double currentVersion =
+    //     double.parse(info.version.trim().replaceAll(".", ""));
+    if (newVersion != currentVersion) {
+      _showVersionDialog(context);
+    }
+  }
+
+  _showVersionDialog(context) async {
+    await showDialog<String>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        String title = "New Update Available";
+        String message =
+            "There is a newer version of app available please update it now.";
+        String btnLabel = "Update Now";
+        // String btnLabelCancel = "Later";
+        return Platform.isIOS
+            ? new CupertinoAlertDialog(
+                title: Text(title),
+                content: Text(message),
+                actions: <Widget>[
+                  FlatButton(
+                    child: Text(btnLabel),
+                    onPressed: () => _launchURL(
+                        'https://play.google.com/store/apps/details?id=com.my.jtapps.vvin'),
+                  ),
+                  // FlatButton(
+                  //   child: Text(btnLabelCancel),
+                  //   onPressed: () => Navigator.pop(context),
+                  // ),
+                ],
+              )
+            : new AlertDialog(
+                title: Text(title),
+                content: Text(message),
+                actions: <Widget>[
+                  FlatButton(
+                    child: Text(btnLabel),
+                    onPressed: () => _launchURL(
+                        'https://play.google.com/store/apps/details?id=com.my.jtapps.vvin'),
+                  ),
+                  // FlatButton(
+                  //   child: Text(btnLabelCancel),
+                  //   onPressed: () => Navigator.pop(context),
+                  // ),
+                ],
+              );
+      },
+    );
+  }
+
+  _launchURL(String url) async {
+    if (await canLaunch(url)) {
+      await launch(url);
+    } else {
+      throw 'Could not launch $url';
     }
   }
 }

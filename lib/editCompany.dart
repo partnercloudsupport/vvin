@@ -83,6 +83,7 @@ class _EditCompanyState extends State<EditCompany> {
                       "You have 1 new notification",
                       style: TextStyle(
                         fontSize: font14,
+                        fontFamily: 'Roboto',
                       ),
                     ),
                     actions: <Widget>[
@@ -154,6 +155,7 @@ class _EditCompanyState extends State<EditCompany> {
             title: Text(
               "Edit Profile",
               style: TextStyle(
+                  fontFamily: 'Roboto',
                   color: Colors.black,
                   fontSize: font18,
                   fontWeight: FontWeight.bold),
@@ -250,7 +252,9 @@ class _EditCompanyState extends State<EditCompany> {
                         Text(
                           "Name",
                           style: TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: font14),
+                              fontFamily: 'Roboto',
+                              fontWeight: FontWeight.bold,
+                              fontSize: font14),
                         )
                       ],
                     ),
@@ -262,6 +266,7 @@ class _EditCompanyState extends State<EditCompany> {
                       color: Color.fromRGBO(235, 235, 255, 1),
                       child: TextField(
                         style: TextStyle(
+                          fontFamily: 'Roboto',
                           // height: ScreenUtil().setHeight(2),
                           height: 1,
                           fontSize: font15,
@@ -285,6 +290,7 @@ class _EditCompanyState extends State<EditCompany> {
                         Text(
                           "Phone",
                           style: TextStyle(
+                            fontFamily: 'Roboto',
                             fontWeight: FontWeight.bold,
                             fontSize: font14,
                           ),
@@ -300,6 +306,7 @@ class _EditCompanyState extends State<EditCompany> {
                       color: Color.fromRGBO(235, 235, 255, 1),
                       child: TextField(
                         style: TextStyle(
+                          fontFamily: 'Roboto',
                           height: 1,
                           fontSize: font15,
                         ),
@@ -322,6 +329,7 @@ class _EditCompanyState extends State<EditCompany> {
                         Text(
                           "Email",
                           style: TextStyle(
+                            fontFamily: 'Roboto',
                             fontWeight: FontWeight.bold,
                             fontSize: font14,
                           ),
@@ -337,6 +345,7 @@ class _EditCompanyState extends State<EditCompany> {
                       color: Color.fromRGBO(235, 235, 255, 1),
                       child: TextField(
                         style: TextStyle(
+                          fontFamily: 'Roboto',
                           height: 1,
                           fontSize: font15,
                         ),
@@ -359,6 +368,7 @@ class _EditCompanyState extends State<EditCompany> {
                         Text(
                           "Website",
                           style: TextStyle(
+                            fontFamily: 'Roboto',
                             fontWeight: FontWeight.bold,
                             fontSize: font14,
                           ),
@@ -373,6 +383,7 @@ class _EditCompanyState extends State<EditCompany> {
                       color: Color.fromRGBO(235, 235, 255, 1),
                       child: TextField(
                         style: TextStyle(
+                          fontFamily: 'Roboto',
                           height: 1,
                           fontSize: font15,
                         ),
@@ -395,6 +406,7 @@ class _EditCompanyState extends State<EditCompany> {
                         Text(
                           "Address",
                           style: TextStyle(
+                            fontFamily: 'Roboto',
                             fontWeight: FontWeight.bold,
                             fontSize: font14,
                           ),
@@ -414,6 +426,7 @@ class _EditCompanyState extends State<EditCompany> {
                       child: TextField(
                         maxLines: 5,
                         style: TextStyle(
+                          fontFamily: 'Roboto',
                           height: ScreenUtil().setHeight(2),
                           fontSize: font15,
                         ),
@@ -436,6 +449,7 @@ class _EditCompanyState extends State<EditCompany> {
                       child: Text(
                         'Save',
                         style: TextStyle(
+                          fontFamily: 'Roboto',
                           fontSize: font15,
                         ),
                       ),
@@ -474,6 +488,7 @@ class _EditCompanyState extends State<EditCompany> {
               title: Text(
                 "Action",
                 style: TextStyle(
+                  fontFamily: 'Roboto',
                   fontSize: font13,
                 ),
               ),
@@ -484,6 +499,7 @@ class _EditCompanyState extends State<EditCompany> {
                 child: Text(
                   "Cancel",
                   style: TextStyle(
+                    fontFamily: 'Roboto',
                     fontSize: font20,
                   ),
                 ),
@@ -499,6 +515,7 @@ class _EditCompanyState extends State<EditCompany> {
                   child: Text(
                     "Browse Gallery",
                     style: TextStyle(
+                      fontFamily: 'Roboto',
                       fontSize: font20,
                     ),
                   ),
@@ -513,6 +530,7 @@ class _EditCompanyState extends State<EditCompany> {
                   child: Text(
                     "Take Photo",
                     style: TextStyle(
+                      fontFamily: 'Roboto',
                       fontSize: font20,
                     ),
                   ),
