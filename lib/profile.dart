@@ -18,7 +18,6 @@ import 'package:vvin/mainscreen.dart';
 import 'package:vvin/mainscreenNotiDB.dart';
 import 'package:vvin/myworksDB.dart';
 import 'package:vvin/notiDB.dart';
-import 'package:vvin/scan.dart';
 import 'package:vvin/topViewDB.dart';
 import 'package:vvin/vDataDB.dart';
 import 'package:vvin/vanalyticsDB.dart';
@@ -722,32 +721,6 @@ class _ProfileState extends State<Profile> {
                             ),
                           ),
                           onPressed: _logout,
-                          borderSide: BorderSide(
-                            style: BorderStyle.solid,
-                            color: Colors.blue,
-                          ),
-                          textColor: Colors.blue,
-                        ),
-                      ),
-                      Container(
-                        width: btnWidth,
-                        height: ScreenUtil().setHeight(80),
-                        color: Colors.white,
-                        child: OutlineButton(
-                          color: Colors.white,
-                          child: Text(
-                            'test',
-                            style: TextStyle(
-                              fontSize: font14,
-                            ),
-                          ),
-                          onPressed: () {
-                            Navigator.of(context).pushReplacement(
-                              MaterialPageRoute(
-                                builder: (context) => Test(),
-                              ),
-                            );
-                          },
                           borderSide: BorderSide(
                             style: BorderStyle.solid,
                             color: Colors.blue,

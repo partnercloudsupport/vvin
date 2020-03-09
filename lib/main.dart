@@ -75,6 +75,6 @@ class _CheckingState extends State<Checking> {
     } else {
       Navigator.push(context, MaterialPageRoute(builder: (context) => Login()));
     }
-    // Navigator.push(context, MaterialPageRoute(builder: (context) => Convert()));
+    // Navigator.push(context, MaterialPageRoute(builder: (context) => Test()));
   }
 }
