@@ -15,6 +15,7 @@ import 'package:vvin/mainscreen.dart';
 import 'package:firebase_ml_vision/firebase_ml_vision.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:flutter_native_image/flutter_native_image.dart';
 
 class WhatsAppForward extends StatefulWidget {
   final WhatsappForward whatsappForward;
@@ -1298,7 +1299,7 @@ class _WhatsAppForwardState extends State<WhatsAppForward> {
                     setState(() {
                       pickedImage = tempStore;
                       isImageLoaded = true;
-                      base64Image = base64Encode(pickedImage.readAsBytesSync());
+                      // base64Image = base64Encode(pickedImage.readAsBytesSync());
                     });
                     readText();
                   }
@@ -1319,7 +1320,7 @@ class _WhatsAppForwardState extends State<WhatsAppForward> {
                     setState(() {
                       pickedImage = tempStore;
                       isImageLoaded = true;
-                      base64Image = base64Encode(pickedImage.readAsBytesSync());
+                      // base64Image = base64Encode(pickedImage.readAsBytesSync());
                     });
                     readText();
                   }
@@ -1337,6 +1338,9 @@ class _WhatsAppForwardState extends State<WhatsAppForward> {
   }
 
   Future readText() async {
+    pickedImage = await FlutterNativeImage.compressImage(pickedImage.path,
+        quality: 1, percentage: 30);
+    base64Image = base64Encode(pickedImage.readAsBytesSync());
     number = Random().nextInt(200).toString();
     http
         .post(urlWhatsApp, body: {
