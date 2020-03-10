@@ -2879,11 +2879,11 @@ class _VAnalyticsState extends State<VAnalytics> {
           }
         }
       }
-      try {
-        versionCheck(context);
-      } catch (e) {
-        print("VersionCheck error: " + e.toString());
-      }
+      // try {
+      //   versionCheck(context);
+      // } catch (e) {
+      //   print("VersionCheck error: " + e.toString());
+      // }
       setState(() {
         vanalytic = true;
         connection = true;
