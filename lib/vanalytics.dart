@@ -3029,22 +3029,20 @@ class _VAnalyticsState extends State<VAnalytics> {
         String title = "New Update Available";
         String message =
             "There is a newer version of app available please update it now.";
-        String btnLabel = "Update Now";
-        // String btnLabelCancel = "Later";
         return Platform.isIOS
             ? new CupertinoAlertDialog(
                 title: Text(title),
                 content: Text(message),
                 actions: <Widget>[
                   FlatButton(
-                    child: Text(btnLabel),
+                    child: Text("Update Now"),
                     onPressed: () => _launchURL(
                         'https://play.google.com/store/apps/details?id=com.my.jtapps.vvin'),
                   ),
-                  // FlatButton(
-                  //   child: Text(btnLabelCancel),
-                  //   onPressed: () => Navigator.pop(context),
-                  // ),
+                  FlatButton(
+                    child: Text("Later"),
+                    onPressed: () => Navigator.pop(context),
+                  ),
                 ],
               )
             : new AlertDialog(
@@ -3052,14 +3050,14 @@ class _VAnalyticsState extends State<VAnalytics> {
                 content: Text(message),
                 actions: <Widget>[
                   FlatButton(
-                    child: Text(btnLabel),
+                    child: Text("Update Now"),
                     onPressed: () => _launchURL(
                         'https://play.google.com/store/apps/details?id=com.my.jtapps.vvin'),
                   ),
-                  // FlatButton(
-                  //   child: Text(btnLabelCancel),
-                  //   onPressed: () => Navigator.pop(context),
-                  // ),
+                  FlatButton(
+                    child: Text("Later"),
+                    onPressed: () => Navigator.pop(context),
+                  ),
                 ],
               );
       },
