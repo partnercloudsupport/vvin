@@ -105,12 +105,15 @@ class _NotificationsState extends State<Notifications> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: <Widget>[
                               JumpingText('Loading...'),
-                              SizedBox(height: MediaQuery.of(context).size.height * 0.02),
+                              SizedBox(
+                                  height: MediaQuery.of(context).size.height *
+                                      0.02),
                               SpinKitRing(
-                                  lineWidth: 3,
-                                  color: Colors.blue,
-                                  size: 30.0,
-                                  duration: Duration(milliseconds: 600),),
+                                lineWidth: 3,
+                                color: Colors.blue,
+                                size: 30.0,
+                                duration: Duration(milliseconds: 600),
+                              ),
                             ],
                           ),
                         ),
@@ -382,7 +385,11 @@ class _NotificationsState extends State<Notifications> {
       "count": "0",
     }).then((res) async {
       if (res.body == "nodata") {
-        Navigator.pop(context);
+        setState(() {
+          nodata = true;
+          status = true;
+          connection = true;
+        });
         Toast.show("No Data", context,
             duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
       } else {
@@ -476,7 +483,6 @@ class _NotificationsState extends State<Notifications> {
               status: jsonData[i]['status']);
           notifications.add(notification);
         }
-
         // Navigator.pop(context);
         setState(() {
           status = true;

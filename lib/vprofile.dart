@@ -240,7 +240,7 @@ class _VProfileState extends State<VProfile>
                     fontWeight: FontWeight.bold),
               ),
               actions: <Widget>[
-                popupMenuButton(),
+                (vProfileData == true) ? popupMenuButton() : Text("")
               ],
             ),
           ),
@@ -501,26 +501,56 @@ class _VProfileState extends State<VProfile>
         size: ScreenUtil().setWidth(40),
         color: Colors.grey,
       ),
-      itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-        PopupMenuItem<String>(
-          value: "add remark",
-          child: Text(
-            "Add Remark",
-            style: TextStyle(
-              fontSize: font14,
-            ),
-          ),
-        ),
-        PopupMenuItem<String>(
-          value: "edit",
-          child: Text(
-            "Edit",
-            style: TextStyle(
-              fontSize: font14,
-            ),
-          ),
-        )
-      ],
+      itemBuilder: (vProfileDetails[0].img == "")
+          ? (BuildContext context) => <PopupMenuEntry<String>>[
+                PopupMenuItem<String>(
+                  value: "add remark",
+                  child: Text(
+                    "Add Remark",
+                    style: TextStyle(
+                      fontSize: font14,
+                    ),
+                  ),
+                ),
+                PopupMenuItem<String>(
+                  value: "edit",
+                  child: Text(
+                    "Edit",
+                    style: TextStyle(
+                      fontSize: font14,
+                    ),
+                  ),
+                ),
+              ]
+          : (BuildContext context) => <PopupMenuEntry<String>>[
+                PopupMenuItem<String>(
+                  value: "add remark",
+                  child: Text(
+                    "Add Remark",
+                    style: TextStyle(
+                      fontSize: font14,
+                    ),
+                  ),
+                ),
+                PopupMenuItem<String>(
+                  value: "edit",
+                  child: Text(
+                    "Edit",
+                    style: TextStyle(
+                      fontSize: font14,
+                    ),
+                  ),
+                ),
+                PopupMenuItem<String>(
+                  value: "name card",
+                  child: Text(
+                    "Name Card",
+                    style: TextStyle(
+                      fontSize: font14,
+                    ),
+                  ),
+                ),
+              ],
       onSelected: (selectedItem) {
         switch (selectedItem) {
           case "add remark":
@@ -612,8 +642,58 @@ class _VProfileState extends State<VProfile>
               _editVProfile();
             }
             break;
+
+          case "name card":
+            {
+              _showNameCard();
+            }
+            break;
         }
       },
+    );
+  }
+
+  void _showNameCard() {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (_) => Dialog(
+        elevation: 0.0,
+        backgroundColor: Colors.transparent,
+        child: Stack(
+          children: <Widget>[
+            Container(
+              height: MediaQuery.of(context).size.height * 0.5,
+              width: MediaQuery.of(context).size.width,
+              decoration: BoxDecoration(
+                shape: BoxShape.rectangle,
+                color: Colors.white,
+                borderRadius: BorderRadius.all(Radius.circular(10.0)),
+                image: DecorationImage(
+                  fit: BoxFit.fitWidth,
+                  image: NetworkImage(vProfileDetails[0].img),
+                ),
+              ),
+            ),
+            Positioned(
+              right: 0.0,
+              child: GestureDetector(
+                onTap: () {
+                  Navigator.of(context).pop();
+                },
+                child: Align(
+                  alignment: Alignment.topRight,
+                  child: CircleAvatar(
+                    radius: 14.0,
+                    backgroundColor: Colors.white,
+                    child: Icon(Icons.close, color: Colors.red),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -765,7 +845,7 @@ class _VProfileState extends State<VProfile>
       "phone_number": phoneNo,
     }).then((res) {
       // print("VProfile status:" + (res.statusCode).toString());
-      // print("VProfile body: " + res.body);
+      print("VProfile body: " + res.body);
       if (res.body == "nodata") {
         VProfileData vprofile = VProfileData(
           name: name,
@@ -784,6 +864,7 @@ class _VProfileState extends State<VProfile>
           channel: "",
           created: "",
           lastActive: "",
+          img: "",
         );
         vProfileDetails.add(vprofile);
       } else {
@@ -807,6 +888,7 @@ class _VProfileState extends State<VProfile>
             channel: data['channel'] ?? "",
             created: data['created'].toString().substring(0, 10) ?? "",
             lastActive: data['lastActive'] ?? "",
+            img: data['img'] ?? "",
           );
           vProfileDetails.add(vprofile);
         }

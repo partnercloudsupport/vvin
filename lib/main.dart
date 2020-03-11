@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:vvin/vanalytics.dart';
+import 'package:vvin/vdata.dart';
 import 'login.dart';
 import 'mainscreen.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -70,8 +72,12 @@ class _CheckingState extends State<Checking> {
   Future<void> mainScreen() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     if (prefs.getString('userID') != null) {
-      Navigator.push(
-          context, MaterialPageRoute(builder: (context) => MainScreen()));
+      if (prefs.getString('level') == "0") {
+        Navigator.push(context, MaterialPageRoute(builder: (context) => VAnalytics()));
+      } else {
+        Navigator.push(context, MaterialPageRoute(builder: (context) => VData()));
+      }
+      
     } else {
       Navigator.push(context, MaterialPageRoute(builder: (context) => Login()));
     }

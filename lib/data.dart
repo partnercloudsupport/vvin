@@ -95,7 +95,8 @@ class VProfileData {
       app,
       channel,
       created,
-      lastActive;
+      lastActive,
+      img;
   VProfileData(
       {this.name, 
       this.email,
@@ -112,7 +113,8 @@ class VProfileData {
       this.app,
       this.channel,
       this.created,
-      this.lastActive});
+      this.lastActive,
+      this.img});
 }
 
 class View{

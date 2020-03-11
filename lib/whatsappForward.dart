@@ -854,12 +854,12 @@ class _WhatsAppForwardState extends State<WhatsAppForward> {
     var connectivityResult = await (Connectivity().checkConnectivity());
     if (connectivityResult == ConnectivityResult.wifi ||
         connectivityResult == ConnectivityResult.mobile) {
-      // _onLoading();
+      _onLoading1();
       if (isSend == false) {
         setState(() {
           isSend = true;
         });
-        _onLoading1();
+        // _onLoading1();
         if (_phonecontroller.text.substring(0, 1) != "6") {
           _phonecontroller.text = "6" + _phonecontroller.text;
         }
