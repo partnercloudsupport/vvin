@@ -10,6 +10,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:progress_indicators/progress_indicators.dart';
 import 'package:toast/toast.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:vvin/data.dart';
 import 'package:vvin/mainscreen.dart';
 import 'package:firebase_ml_vision/firebase_ml_vision.dart';
@@ -72,7 +73,7 @@ class _WhatsAppForwardState extends State<WhatsAppForward> {
                       resizeToAvoidBottomInset: true,
                       body: SingleChildScrollView(
                         physics: ScrollPhysics(),
-                        controller: whatsappController,
+                        controller: whatsappController, 
                         child: Container(
                           margin: EdgeInsets.fromLTRB(
                               ScreenUtil().setHeight(30),
@@ -863,40 +864,33 @@ class _WhatsAppForwardState extends State<WhatsAppForward> {
         if (_phonecontroller.text.substring(0, 1) != "6") {
           _phonecontroller.text = "6" + _phonecontroller.text;
         }
-        http
-            .post(urlWhatsApp, body: {
-              "companyID": widget.whatsappForward.companyID,
-              "userID": widget.whatsappForward.userID,
-              "user_type": widget.whatsappForward.userType,
-              "level": widget.whatsappForward.level,
-              "phoneNo": _phonecontroller.text,
-              "name": _namecontroller.text,
-              "companyName": _companycontroller.text,
-              "remark": _remarkcontroller.text,
-              "vtag": vtag,
-              "url": widget.whatsappForward.url,
-              "nameCard": "",
-              "number": widget.whatsappForward.userID + "_" + number,
-            })
-            .then((res) {})
-            .catchError((err) {
-              print("WhatsApp Forward error: " + (err).toString());
-            });
-        Navigator.pop(context);
-        FlutterOpenWhatsapp.sendSingleMessage(
-            _phonecontroller.text,
-            "Hello " +
-                _namecontroller.text +
-                "! Reply 'hi' to enable the URL link. " +
-                widget.whatsappForward.url);
-        CurrentIndex index = new CurrentIndex(index: 2);
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder: (context) => MainScreen(
-              index: index,
+        http.post(urlWhatsApp, body: {
+          "companyID": widget.whatsappForward.companyID,
+          "userID": widget.whatsappForward.userID,
+          "user_type": widget.whatsappForward.userType,
+          "level": widget.whatsappForward.level,
+          "phoneNo": _phonecontroller.text,
+          "name": _namecontroller.text,
+          "companyName": _companycontroller.text,
+          "remark": _remarkcontroller.text,
+          "vtag": vtag,
+          "url": widget.whatsappForward.url,
+          "nameCard": "",
+          "number": widget.whatsappForward.userID + "_" + number,
+        }).then((res) {
+          Navigator.pop(context);
+          launch(res.body);
+          CurrentIndex index = new CurrentIndex(index: 2);
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (context) => MainScreen(
+                index: index,
+              ),
             ),
-          ),
-        );
+          );
+        }).catchError((err) {
+          print("WhatsApp Forward error: " + (err).toString());
+        });
       }
     } else {
       Toast.show("No Internet Connection", context,

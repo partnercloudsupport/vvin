@@ -1,9 +1,12 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:connectivity/connectivity.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:firebase_ml_vision/firebase_ml_vision.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:progress_indicators/progress_indicators.dart';
 import 'package:toast/toast.dart';
 import 'package:vvin/data.dart';
@@ -18,6 +21,7 @@ import 'dart:async';
 // import 'package:speech_to_text/speech_to_text.dart';
 // import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:network_to_file_image/network_to_file_image.dart';
 
 class VProfile extends StatefulWidget {
   final VDataDetails vdata;
@@ -239,9 +243,7 @@ class _VProfileState extends State<VProfile>
                     fontSize: font18,
                     fontWeight: FontWeight.bold),
               ),
-              actions: <Widget>[
-                (vProfileData == true) ? popupMenuButton() : Text("")
-              ],
+              actions: <Widget>[popupMenuButton()],
             ),
           ),
           body: Column(
@@ -501,56 +503,26 @@ class _VProfileState extends State<VProfile>
         size: ScreenUtil().setWidth(40),
         color: Colors.grey,
       ),
-      itemBuilder: (vProfileDetails[0].img == "")
-          ? (BuildContext context) => <PopupMenuEntry<String>>[
-                PopupMenuItem<String>(
-                  value: "add remark",
-                  child: Text(
-                    "Add Remark",
-                    style: TextStyle(
-                      fontSize: font14,
-                    ),
-                  ),
-                ),
-                PopupMenuItem<String>(
-                  value: "edit",
-                  child: Text(
-                    "Edit",
-                    style: TextStyle(
-                      fontSize: font14,
-                    ),
-                  ),
-                ),
-              ]
-          : (BuildContext context) => <PopupMenuEntry<String>>[
-                PopupMenuItem<String>(
-                  value: "add remark",
-                  child: Text(
-                    "Add Remark",
-                    style: TextStyle(
-                      fontSize: font14,
-                    ),
-                  ),
-                ),
-                PopupMenuItem<String>(
-                  value: "edit",
-                  child: Text(
-                    "Edit",
-                    style: TextStyle(
-                      fontSize: font14,
-                    ),
-                  ),
-                ),
-                PopupMenuItem<String>(
-                  value: "name card",
-                  child: Text(
-                    "Name Card",
-                    style: TextStyle(
-                      fontSize: font14,
-                    ),
-                  ),
-                ),
-              ],
+      itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+        PopupMenuItem<String>(
+          value: "add remark",
+          child: Text(
+            "Add Remark",
+            style: TextStyle(
+              fontSize: font14,
+            ),
+          ),
+        ),
+        PopupMenuItem<String>(
+          value: "edit",
+          child: Text(
+            "Edit",
+            style: TextStyle(
+              fontSize: font14,
+            ),
+          ),
+        ),
+      ],
       onSelected: (selectedItem) {
         switch (selectedItem) {
           case "add remark":
@@ -640,12 +612,6 @@ class _VProfileState extends State<VProfile>
           case "edit":
             {
               _editVProfile();
-            }
-            break;
-
-          case "name card":
-            {
-              _showNameCard();
             }
             break;
         }
@@ -795,6 +761,14 @@ class _VProfileState extends State<VProfile>
   }
 
   void checkConnection() async {
+    // Directory dir = await getApplicationDocumentsDirectory();
+    // String pathName = dir.path.toString() + "/attchment.png";
+    // if (File(pathName).existsSync() == true) {
+    //   try {
+    //     final dir = Directory(pathName);
+    //     dir.deleteSync(recursive: true);
+    //   } catch (err) {}
+    // }
     var connectivityResult = await (Connectivity().checkConnectivity());
     if (connectivityResult == ConnectivityResult.wifi ||
         connectivityResult == ConnectivityResult.mobile) {
@@ -1084,7 +1058,12 @@ class Details extends StatefulWidget {
   final VDataDetails vdata;
   final List vtag;
   const Details(
-      {Key key, this.vProfileDetails, this.handler, this.vdata, this.vtag})
+      {Key key,
+      this.vProfileDetails,
+      this.handler,
+      this.vdata,
+      this.vtag,
+      })
       : super(key: key);
 
   @override
@@ -1094,11 +1073,20 @@ class Details extends StatefulWidget {
 class _DetailsState extends State<Details> {
   double font16 = ScreenUtil().setSp(36.8, allowFontScalingSelf: false);
   int emailLength;
+  File file;
 
   @override
   void initState() {
     emailLength = (widget.vProfileDetails[0].email.length / 18).ceil();
+    setup();
     super.initState();
+  }
+
+  void setup() async{
+    Directory dir = await getApplicationDocumentsDirectory();
+    String pathName = dir.path.toString() + "/attachment.png";
+    file = File(pathName);
+    // readText();
   }
 
   @override
@@ -1963,74 +1951,122 @@ class _DetailsState extends State<Details> {
                       ),
                     ),
                     Container(
-                      margin: EdgeInsets.all(ScreenUtil().setHeight(20)),
-                      child: Column(
-                        children: <Widget>[
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            children: <Widget>[
-                              Text(
-                                "TAGS",
-                                style: TextStyle(
-                                  fontSize: font16,
-                                  color: Color.fromRGBO(128, 128, 128, 1),
-                                ),
-                              )
-                            ],
-                          ),
-                          Container(
-                            padding: EdgeInsets.all(0.5),
-                            child: Row(
+                      decoration: BoxDecoration(
+                        border: Border(
+                          bottom: BorderSide(
+                              width: ScreenUtil().setHeight(2),
+                              color: Colors.grey.shade300),
+                        ),
+                      ),
+                      child: Container(
+                        margin: EdgeInsets.all(ScreenUtil().setHeight(20)),
+                        child: Column(
+                          children: <Widget>[
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.start,
                               children: <Widget>[
-                                Expanded(
-                                  child: Container(
-                                    margin: EdgeInsets.fromLTRB(
-                                        ScreenUtil().setHeight(10), 0, 0, 0),
-                                    child: Wrap(
-                                      direction: Axis.horizontal,
-                                      alignment: WrapAlignment.start,
-                                      children: <Widget>[
-                                        for (int i = 0;
-                                            i < widget.vtag.length ?? 0;
-                                            i++)
-                                          Container(
-                                            width: ScreenUtil().setWidth(
-                                                (widget.vtag[i].length * 28)),
-                                            margin: EdgeInsets.all(
-                                                ScreenUtil().setHeight(5)),
-                                            decoration: BoxDecoration(
-                                              color: Color.fromRGBO(
-                                                  235, 235, 255, 1),
-                                              borderRadius:
-                                                  BorderRadius.circular(100),
-                                            ),
-                                            padding: EdgeInsets.all(
-                                              ScreenUtil().setHeight(10),
-                                            ),
-                                            child: Row(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.center,
-                                              children: <Widget>[
-                                                Text(
-                                                  widget.vtag[i],
-                                                  style: TextStyle(
-                                                    color: Colors.black,
-                                                    fontSize: 14,
+                                Text(
+                                  "TAGS",
+                                  style: TextStyle(
+                                    fontSize: font16,
+                                    color: Color.fromRGBO(128, 128, 128, 1),
+                                  ),
+                                )
+                              ],
+                            ),
+                            Container(
+                              padding: EdgeInsets.all(0.5),
+                              child: Row(
+                                children: <Widget>[
+                                  Expanded(
+                                    child: Container(
+                                      margin: EdgeInsets.fromLTRB(
+                                          ScreenUtil().setHeight(10), 0, 0, 0),
+                                      child: Wrap(
+                                        direction: Axis.horizontal,
+                                        alignment: WrapAlignment.start,
+                                        children: <Widget>[
+                                          for (int i = 0;
+                                              i < widget.vtag.length ?? 0;
+                                              i++)
+                                            Container(
+                                              width: ScreenUtil().setWidth(
+                                                  (widget.vtag[i].length * 28)),
+                                              margin: EdgeInsets.all(
+                                                  ScreenUtil().setHeight(5)),
+                                              decoration: BoxDecoration(
+                                                color: Color.fromRGBO(
+                                                    235, 235, 255, 1),
+                                                borderRadius:
+                                                    BorderRadius.circular(100),
+                                              ),
+                                              padding: EdgeInsets.all(
+                                                ScreenUtil().setHeight(10),
+                                              ),
+                                              child: Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.center,
+                                                children: <Widget>[
+                                                  Text(
+                                                    widget.vtag[i],
+                                                    style: TextStyle(
+                                                      color: Colors.black,
+                                                      fontSize: 14,
+                                                    ),
                                                   ),
-                                                ),
-                                              ],
+                                                ],
+                                              ),
                                             ),
-                                          ),
-                                      ],
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    (widget.vProfileDetails[0].img == "")
+                        ? Container()
+                        : Container(
+                            margin: EdgeInsets.all(ScreenUtil().setHeight(20)),
+                            child: Column(
+                              children: <Widget>[
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.start,
+                                  children: <Widget>[
+                                    Text(
+                                      "Attachment",
+                                      style: TextStyle(
+                                        fontSize: font16,
+                                        color: Color.fromRGBO(128, 128, 128, 1),
+                                      ),
+                                    )
+                                  ],
+                                ),
+                                SizedBox(
+                                  height: ScreenUtil().setHeight(20),
+                                ),
+                                Container(
+                                  height: ScreenUtil().setHeight(500),
+                                  width: ScreenUtil().setHeight(500),
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.rectangle,
+                                    color: Colors.white,
+                                    borderRadius:
+                                        BorderRadius.all(Radius.circular(10.0)),
+                                    image: DecorationImage(
+                                      fit: BoxFit.contain,
+                                      image: NetworkImage(
+                                          widget.vProfileDetails[0].img),
                                     ),
                                   ),
                                 ),
                               ],
                             ),
                           ),
-                        ],
-                      ),
-                    ),
                   ],
                 ),
               ),
@@ -2040,7 +2076,6 @@ class _DetailsState extends State<Details> {
       ),
     );
   }
-
   String _dateFormat(String fullDate) {
     String result, date, month, year;
     date = fullDate.substring(8, 10);

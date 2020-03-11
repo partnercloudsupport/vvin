@@ -213,7 +213,7 @@ class _MoreState extends State<More> {
                         ),
                         Container(
                           margin: EdgeInsets.fromLTRB(
-                              ScreenUtil().setHeight(200),
+                              ScreenUtil().setHeight(220),
                               ScreenUtil().setHeight(50),
                               0,
                               0),

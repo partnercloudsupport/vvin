@@ -99,13 +99,15 @@ class _VAnalyticsState extends State<VAnalytics> {
       topView,
       vanalytic,
       chartData,
-      refresh;
+      refresh,
+      editor;
 
   @override
   void initState() {
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
     refreshKey = GlobalKey<RefreshIndicatorState>();
     newVersion = "";
+    editor = false;
     connection = false;
     nodata = false;
     refresh = false;
@@ -190,400 +192,512 @@ class _VAnalyticsState extends State<VAnalytics> {
                     fontWeight: FontWeight.bold),
               )),
         ),
-        body: RefreshIndicator(
-          key: refreshKey,
-          onRefresh: _handleRefresh,
-          child: SingleChildScrollView(
-            controller: controller,
-            child:
-                (timeBar == true &&
-                        topView == true &&
-                        vanalytic == true &&
-                        chartData == true)
-                    ? Column(
-                        children: <Widget>[
-                          InkWell(
-                            onTap: () async {
-                              var connectivityResult =
-                                  await (Connectivity().checkConnectivity());
-                              if (connectivityResult ==
-                                      ConnectivityResult.wifi ||
-                                  connectivityResult ==
-                                      ConnectivityResult.mobile) {
-                                _filterDate();
-                              } else {
-                                _noInternet();
-                              }
-                            },
-                            borderRadius: BorderRadius.circular(20),
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: Colors.black,
-                                borderRadius: BorderRadius.circular(100),
+        body: (editor == true)
+            ? Container(
+                child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  Center(
+                    child: Text(
+                      "You have no permission to enter this page",
+                      style: TextStyle(
+                        fontStyle: FontStyle.italic,
+                        color: Colors.grey,
+                        fontSize:
+                            ScreenUtil().setSp(35, allowFontScalingSelf: false),
+                      ),
+                    ),
+                  ),
+                ],
+              ))
+            : RefreshIndicator(
+                key: refreshKey,
+                onRefresh: _handleRefresh,
+                child: SingleChildScrollView(
+                  controller: controller,
+                  child: (timeBar == true &&
+                          topView == true &&
+                          vanalytic == true &&
+                          chartData == true)
+                      ? Column(
+                          children: <Widget>[
+                            InkWell(
+                              onTap: () async {
+                                var connectivityResult =
+                                    await (Connectivity().checkConnectivity());
+                                if (connectivityResult ==
+                                        ConnectivityResult.wifi ||
+                                    connectivityResult ==
+                                        ConnectivityResult.mobile) {
+                                  _filterDate();
+                                } else {
+                                  _noInternet();
+                                }
+                              },
+                              borderRadius: BorderRadius.circular(20),
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.black,
+                                  borderRadius: BorderRadius.circular(100),
+                                ),
+                                height: ScreenUtil().setHeight(60),
+                                margin: EdgeInsets.all(
+                                  ScreenUtil().setHeight(20),
+                                ),
+                                padding: EdgeInsets.all(
+                                  ScreenUtil().setHeight(10),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.start,
+                                  children: <Widget>[
+                                    Expanded(
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.start,
+                                        children: <Widget>[
+                                          Expanded(
+                                            child: Text(
+                                              (connection == true)
+                                                  ? dateBanner
+                                                  : dateBannerLocal,
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: font14,
+                                              ),
+                                            ),
+                                          ),
+                                          Icon(
+                                            Icons.arrow_drop_down,
+                                            color: Colors.white,
+                                          ),
+                                        ],
+                                      ),
+                                    )
+                                  ],
+                                ),
                               ),
-                              height: ScreenUtil().setHeight(60),
-                              margin: EdgeInsets.all(
-                                ScreenUtil().setHeight(20),
-                              ),
+                            ),
+                            Container(
                               padding: EdgeInsets.all(
                                 ScreenUtil().setHeight(10),
                               ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.start,
+                              color: Colors.white,
+                              margin: EdgeInsets.fromLTRB(
+                                ScreenUtil().setHeight(20),
+                                0,
+                                ScreenUtil().setHeight(20),
+                                ScreenUtil().setHeight(20),
+                              ),
+                              child: Column(
                                 children: <Widget>[
-                                  Expanded(
+                                  Container(
+                                    padding: EdgeInsets.fromLTRB(
+                                      ScreenUtil().setHeight(20),
+                                      0,
+                                      0,
+                                      ScreenUtil().setHeight(20),
+                                    ),
                                     child: Row(
                                       mainAxisAlignment:
                                           MainAxisAlignment.start,
                                       children: <Widget>[
                                         Expanded(
                                           child: Text(
-                                            (connection == true)
-                                                ? dateBanner
-                                                : dateBannerLocal,
+                                            "Leads",
                                             style: TextStyle(
-                                              color: Colors.white,
-                                              fontSize: font14,
+                                              fontSize: font16,
+                                              fontWeight: FontWeight.bold,
                                             ),
                                           ),
                                         ),
-                                        Icon(
-                                          Icons.arrow_drop_down,
-                                          color: Colors.white,
-                                        ),
+                                        FlatButton(
+                                          child: Icon(
+                                            Icons.aspect_ratio,
+                                            size: ScreenUtil().setHeight(50),
+                                          ),
+                                          shape: CircleBorder(
+                                              side: BorderSide(
+                                                  color: Colors.transparent)),
+                                          onPressed: () {
+                                            (connection == true)
+                                                ? Navigator.push(
+                                                    context,
+                                                    MaterialPageRoute(
+                                                        builder: (context) =>
+                                                            LineChart(
+                                                                leadsDatas:
+                                                                    leadsDatas)))
+                                                : Navigator.push(
+                                                    context,
+                                                    MaterialPageRoute(
+                                                      builder: (context) =>
+                                                          LineChart(
+                                                              leadsDatas:
+                                                                  offlineLeadsDatas),
+                                                    ),
+                                                  );
+                                          },
+                                        )
                                       ],
+                                    ),
+                                  ),
+                                  Container(
+                                    height: MediaQuery.of(context).size.height *
+                                        0.3,
+                                    child: SfCartesianChart(
+                                      zoomPanBehavior:
+                                          ZoomPanBehavior(enablePinching: true),
+                                      tooltipBehavior: TooltipBehavior(
+                                          enable: true, header: "Total Leads"),
+                                      primaryXAxis: CategoryAxis(),
+                                      series: <ChartSeries>[
+                                        // Initialize line series
+                                        LineSeries<LeadsData, String>(
+                                            enableTooltip: true,
+                                            dataSource: (connection == true)
+                                                ? [
+                                                    for (var data in leadsDatas)
+                                                      LeadsData(
+                                                          data.date,
+                                                          double.parse(
+                                                              data.number))
+                                                  ]
+                                                : [
+                                                    for (var data
+                                                        in offlineChartData)
+                                                      LeadsData(
+                                                          data['date'],
+                                                          double.parse(
+                                                              data['number'])),
+                                                  ],
+                                            color: Colors.blue,
+                                            xValueMapper:
+                                                (LeadsData sales, _) => sales.x,
+                                            yValueMapper:
+                                                (LeadsData sales, _) => sales.y)
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Container(
+                              margin: EdgeInsets.fromLTRB(
+                                  ScreenUtil().setHeight(20),
+                                  0,
+                                  ScreenUtil().setHeight(20),
+                                  0),
+                              child: Row(
+                                children: <Widget>[
+                                  Flexible(
+                                    flex: 1,
+                                    child: Container(
+                                      height: ScreenUtil().setHeight(210),
+                                      color: Colors.white,
+                                      padding: EdgeInsets.all(
+                                        ScreenUtil().setHeight(20),
+                                      ),
+                                      child: Column(
+                                        children: <Widget>[
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.start,
+                                            children: <Widget>[
+                                              Text(
+                                                "Total Leads",
+                                                style: TextStyle(
+                                                  color: Colors.grey,
+                                                  fontSize: font14,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.start,
+                                            children: <Widget>[
+                                              InkWell(
+                                                onTap: _totalLeads,
+                                                child: Text(
+                                                  (connection == true)
+                                                      ? totalLeads
+                                                      : offlineVAnalyticsData[0]
+                                                          ['total_leads'],
+                                                  style: TextStyle(
+                                                      fontSize: font25,
+                                                      color: Colors.blue,
+                                                      fontWeight:
+                                                          FontWeight.bold),
+                                                ),
+                                              )
+                                            ],
+                                          ),
+                                          SizedBox(
+                                            height: ScreenUtil().setHeight(4),
+                                          ),
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.start,
+                                            children: <Widget>[
+                                              Text(
+                                                (connection == true)
+                                                    ? totalLeadsPercentage
+                                                    : offlineVAnalyticsData[0][
+                                                        'total_leads_percentage'],
+                                                style: TextStyle(
+                                                    fontSize: font14,
+                                                    color: (positive == true)
+                                                        ? Colors.greenAccent
+                                                        : Colors.red),
+                                              )
+                                            ],
+                                          )
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                  SizedBox(
+                                    width: ScreenUtil().setHeight(20),
+                                  ),
+                                  Flexible(
+                                    flex: 1,
+                                    child: Container(
+                                      height: ScreenUtil().setHeight(210),
+                                      color: Colors.white,
+                                      padding: EdgeInsets.all(
+                                        ScreenUtil().setHeight(20),
+                                      ),
+                                      child: Column(
+                                        children: <Widget>[
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.start,
+                                            children: <Widget>[
+                                              Flexible(
+                                                  child: Text(
+                                                "Unassigned Leads",
+                                                style: TextStyle(
+                                                  color: Colors.grey,
+                                                  fontSize: font14,
+                                                ),
+                                              ))
+                                            ],
+                                          ),
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.start,
+                                            children: <Widget>[
+                                              Text(
+                                                (connection == true)
+                                                    ? unassignedLeads
+                                                    : offlineVAnalyticsData[0]
+                                                        ['unassigned_leads'],
+                                                style: TextStyle(
+                                                    fontSize: font25,
+                                                    fontWeight:
+                                                        FontWeight.bold),
+                                              )
+                                            ],
+                                          ),
+                                          SizedBox(
+                                            height: ScreenUtil().setHeight(4),
+                                          ),
+                                          InkWell(
+                                            onTap: () async {
+                                              var connectivityResult =
+                                                  await (Connectivity()
+                                                      .checkConnectivity());
+                                              if (connectivityResult ==
+                                                      ConnectivityResult.wifi ||
+                                                  connectivityResult ==
+                                                      ConnectivityResult
+                                                          .mobile) {
+                                                _assignedNow();
+                                              } else {
+                                                _noInternet();
+                                              }
+                                            },
+                                            child: Container(
+                                              padding: EdgeInsets.fromLTRB(
+                                                  0,
+                                                  ScreenUtil().setHeight(20),
+                                                  ScreenUtil().setHeight(10),
+                                                  0),
+                                              child: Row(
+                                                children: <Widget>[
+                                                  Text(
+                                                    "Assign now",
+                                                    style: TextStyle(
+                                                      color: Colors.blue,
+                                                      fontSize: font12,
+                                                    ),
+                                                  ),
+                                                  SizedBox(
+                                                    width: ScreenUtil()
+                                                        .setHeight(6),
+                                                  ),
+                                                  Icon(
+                                                    Icons.arrow_forward_ios,
+                                                    size: ScreenUtil()
+                                                        .setHeight(20),
+                                                    color: Colors.blue,
+                                                  )
+                                                ],
+                                              ),
+                                            ),
+                                          )
+                                        ],
+                                      ),
                                     ),
                                   )
                                 ],
                               ),
                             ),
-                          ),
-                          Container(
-                            padding: EdgeInsets.all(
-                              ScreenUtil().setHeight(10),
-                            ),
-                            color: Colors.white,
-                            margin: EdgeInsets.fromLTRB(
-                              ScreenUtil().setHeight(20),
-                              0,
-                              ScreenUtil().setHeight(20),
-                              ScreenUtil().setHeight(20),
-                            ),
-                            child: Column(
-                              children: <Widget>[
-                                Container(
-                                  padding: EdgeInsets.fromLTRB(
-                                    ScreenUtil().setHeight(20),
-                                    0,
-                                    0,
-                                    ScreenUtil().setHeight(20),
-                                  ),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.start,
-                                    children: <Widget>[
-                                      Expanded(
-                                        child: Text(
-                                          "Leads",
+                            Container(
+                              margin: EdgeInsets.all(
+                                ScreenUtil().setHeight(20),
+                              ),
+                              child: Column(
+                                children: <Widget>[
+                                  Container(
+                                    padding: EdgeInsets.all(
+                                      ScreenUtil().setHeight(20),
+                                    ),
+                                    color: Colors.white,
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.start,
+                                      children: <Widget>[
+                                        Text(
+                                          "Top 10 Views",
                                           style: TextStyle(
-                                            fontSize: font16,
                                             fontWeight: FontWeight.bold,
+                                            fontSize: font16,
                                           ),
                                         ),
-                                      ),
-                                      FlatButton(
-                                        child: Icon(
-                                          Icons.aspect_ratio,
-                                          size: ScreenUtil().setHeight(50),
-                                        ),
-                                        shape: CircleBorder(
-                                            side: BorderSide(
-                                                color: Colors.transparent)),
-                                        onPressed: () {
-                                          (connection == true)
-                                              ? Navigator.push(
-                                                  context,
-                                                  MaterialPageRoute(
-                                                      builder: (context) =>
-                                                          LineChart(
-                                                              leadsDatas:
-                                                                  leadsDatas)))
-                                              : Navigator.push(
-                                                  context,
-                                                  MaterialPageRoute(
-                                                    builder: (context) =>
-                                                        LineChart(
-                                                            leadsDatas:
-                                                                offlineLeadsDatas),
-                                                  ),
-                                                );
-                                        },
-                                      )
-                                    ],
-                                  ),
-                                ),
-                                Container(
-                                  height:
-                                      MediaQuery.of(context).size.height * 0.3,
-                                  child: SfCartesianChart(
-                                    zoomPanBehavior:
-                                        ZoomPanBehavior(enablePinching: true),
-                                    tooltipBehavior: TooltipBehavior(
-                                        enable: true, header: "Total Leads"),
-                                    primaryXAxis: CategoryAxis(),
-                                    series: <ChartSeries>[
-                                      // Initialize line series
-                                      LineSeries<LeadsData, String>(
-                                          enableTooltip: true,
-                                          dataSource: (connection == true)
-                                              ? [
-                                                  for (var data in leadsDatas)
-                                                    LeadsData(
-                                                        data.date,
-                                                        double.parse(
-                                                            data.number))
-                                                ]
-                                              : [
-                                                  for (var data
-                                                      in offlineChartData)
-                                                    LeadsData(
-                                                        data['date'],
-                                                        double.parse(
-                                                            data['number'])),
-                                                ],
-                                          color: Colors.blue,
-                                          xValueMapper: (LeadsData sales, _) =>
-                                              sales.x,
-                                          yValueMapper: (LeadsData sales, _) =>
-                                              sales.y)
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Container(
-                            margin: EdgeInsets.fromLTRB(
-                                ScreenUtil().setHeight(20),
-                                0,
-                                ScreenUtil().setHeight(20),
-                                0),
-                            child: Row(
-                              children: <Widget>[
-                                Flexible(
-                                  flex: 1,
-                                  child: Container(
-                                    height: ScreenUtil().setHeight(210),
-                                    color: Colors.white,
-                                    padding: EdgeInsets.all(
-                                      ScreenUtil().setHeight(20),
-                                    ),
-                                    child: Column(
-                                      children: <Widget>[
-                                        Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.start,
-                                          children: <Widget>[
-                                            Text(
-                                              "Total Leads",
-                                              style: TextStyle(
-                                                color: Colors.grey,
-                                                fontSize: font14,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.start,
-                                          children: <Widget>[
-                                            InkWell(
-                                              onTap: _totalLeads,
-                                              child: Text(
-                                                (connection == true)
-                                                    ? totalLeads
-                                                    : offlineVAnalyticsData[0]
-                                                        ['total_leads'],
-                                                style: TextStyle(
-                                                    fontSize: font25,
-                                                    color: Colors.blue,
-                                                    fontWeight:
-                                                        FontWeight.bold),
-                                              ),
-                                            )
-                                          ],
-                                        ),
-                                        SizedBox(
-                                          height: ScreenUtil().setHeight(4),
-                                        ),
-                                        Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.start,
-                                          children: <Widget>[
-                                            Text(
-                                              (connection == true)
-                                                  ? totalLeadsPercentage
-                                                  : offlineVAnalyticsData[0][
-                                                      'total_leads_percentage'],
-                                              style: TextStyle(
-                                                  fontSize: font14,
-                                                  color: (positive == true)
-                                                      ? Colors.greenAccent
-                                                      : Colors.red),
-                                            )
-                                          ],
-                                        )
                                       ],
                                     ),
                                   ),
-                                ),
-                                SizedBox(
-                                  width: ScreenUtil().setHeight(20),
-                                ),
-                                Flexible(
-                                  flex: 1,
-                                  child: Container(
-                                    height: ScreenUtil().setHeight(210),
-                                    color: Colors.white,
-                                    padding: EdgeInsets.all(
-                                      ScreenUtil().setHeight(20),
-                                    ),
-                                    child: Column(
-                                      children: <Widget>[
-                                        Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.start,
-                                          children: <Widget>[
-                                            Flexible(
-                                                child: Text(
-                                              "Unassigned Leads",
-                                              style: TextStyle(
-                                                color: Colors.grey,
-                                                fontSize: font14,
-                                              ),
-                                            ))
-                                          ],
-                                        ),
-                                        Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.start,
-                                          children: <Widget>[
-                                            Text(
-                                              (connection == true)
-                                                  ? unassignedLeads
-                                                  : offlineVAnalyticsData[0]
-                                                      ['unassigned_leads'],
-                                              style: TextStyle(
-                                                  fontSize: font25,
-                                                  fontWeight: FontWeight.bold),
-                                            )
-                                          ],
-                                        ),
-                                        SizedBox(
-                                          height: ScreenUtil().setHeight(4),
-                                        ),
-                                        InkWell(
-                                          onTap: () async {
-                                            var connectivityResult =
-                                                await (Connectivity()
-                                                    .checkConnectivity());
-                                            if (connectivityResult ==
-                                                    ConnectivityResult.wifi ||
-                                                connectivityResult ==
-                                                    ConnectivityResult.mobile) {
-                                              _assignedNow();
-                                            } else {
-                                              _noInternet();
-                                            }
-                                          },
-                                          child: Container(
-                                            padding: EdgeInsets.fromLTRB(
-                                                0,
-                                                ScreenUtil().setHeight(20),
-                                                ScreenUtil().setHeight(10),
-                                                0),
-                                            child: Row(
+                                  Container(
+                                    child: (nodata == true)
+                                        ? Container(
+                                            height: ScreenUtil().setHeight(155),
+                                            child: Stack(
                                               children: <Widget>[
-                                                Text(
-                                                  "Assign now",
-                                                  style: TextStyle(
-                                                    color: Colors.blue,
-                                                    fontSize: font12,
+                                                Container(
+                                                  color: Colors.white,
+                                                  width: MediaQuery.of(context)
+                                                          .size
+                                                          .width *
+                                                      0.45,
+                                                  child: ListView(
+                                                    scrollDirection:
+                                                        Axis.vertical,
+                                                    children: <Widget>[
+                                                      Column(
+                                                        children: <Widget>[
+                                                          Row(
+                                                            mainAxisAlignment:
+                                                                MainAxisAlignment
+                                                                    .start,
+                                                            children: <Widget>[
+                                                              Container(
+                                                                width: MediaQuery.of(
+                                                                            context)
+                                                                        .size
+                                                                        .width *
+                                                                    0.45,
+                                                                padding: EdgeInsets.all(
+                                                                    ScreenUtil()
+                                                                        .setHeight(
+                                                                            20)),
+                                                                decoration:
+                                                                    BoxDecoration(
+                                                                  color: Color
+                                                                      .fromRGBO(
+                                                                          235,
+                                                                          235,
+                                                                          255,
+                                                                          1),
+                                                                  border:
+                                                                      Border(
+                                                                    right: BorderSide(
+                                                                        width:
+                                                                            1,
+                                                                        color: Colors
+                                                                            .grey
+                                                                            .shade300),
+                                                                  ),
+                                                                ),
+                                                                child: Text(
+                                                                  "Name",
+                                                                  style:
+                                                                      TextStyle(
+                                                                    color: Colors
+                                                                        .grey,
+                                                                    fontWeight:
+                                                                        FontWeight
+                                                                            .bold,
+                                                                    fontSize:
+                                                                        font14,
+                                                                  ),
+                                                                ),
+                                                              ),
+                                                            ],
+                                                          ),
+                                                          Container(
+                                                            height: ScreenUtil()
+                                                                .setHeight(70),
+                                                            padding: EdgeInsets
+                                                                .all(ScreenUtil()
+                                                                    .setHeight(
+                                                                        20)),
+                                                            decoration:
+                                                                BoxDecoration(
+                                                              color:
+                                                                  Colors.white,
+                                                              border: Border(
+                                                                right: BorderSide(
+                                                                    width: 1,
+                                                                    color: Colors
+                                                                        .grey
+                                                                        .shade300),
+                                                              ),
+                                                            ),
+                                                          )
+                                                        ],
+                                                      )
+                                                    ],
                                                   ),
                                                 ),
-                                                SizedBox(
-                                                  width:
-                                                      ScreenUtil().setHeight(6),
-                                                ),
-                                                Icon(
-                                                  Icons.arrow_forward_ios,
-                                                  size: ScreenUtil()
-                                                      .setHeight(20),
-                                                  color: Colors.blue,
-                                                )
-                                              ],
-                                            ),
-                                          ),
-                                        )
-                                      ],
-                                    ),
-                                  ),
-                                )
-                              ],
-                            ),
-                          ),
-                          Container(
-                            margin: EdgeInsets.all(
-                              ScreenUtil().setHeight(20),
-                            ),
-                            child: Column(
-                              children: <Widget>[
-                                Container(
-                                  padding: EdgeInsets.all(
-                                    ScreenUtil().setHeight(20),
-                                  ),
-                                  color: Colors.white,
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.start,
-                                    children: <Widget>[
-                                      Text(
-                                        "Top 10 Views",
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: font16,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Container(
-                                  child: (nodata == true)
-                                      ? Container(
-                                          height: ScreenUtil().setHeight(155),
-                                          child: Stack(
-                                            children: <Widget>[
-                                              Container(
-                                                color: Colors.white,
-                                                width: MediaQuery.of(context)
-                                                        .size
-                                                        .width *
-                                                    0.45,
-                                                child: ListView(
-                                                  scrollDirection:
-                                                      Axis.vertical,
-                                                  children: <Widget>[
-                                                    Column(
+                                                Container(
+                                                  color: Colors.white,
+                                                  margin: EdgeInsets.fromLTRB(
+                                                    MediaQuery.of(context)
+                                                            .size
+                                                            .width *
+                                                        0.45,
+                                                    0,
+                                                    0,
+                                                    0,
+                                                  ),
+                                                  child: Theme(
+                                                    data: ThemeData(
+                                                      highlightColor:
+                                                          Colors.blue,
+                                                    ),
+                                                    child: Scrollbar(
+                                                        child: ListView(
+                                                      scrollDirection:
+                                                          Axis.horizontal,
                                                       children: <Widget>[
-                                                        Row(
-                                                          mainAxisAlignment:
-                                                              MainAxisAlignment
-                                                                  .start,
+                                                        Column(
                                                           children: <Widget>[
                                                             Container(
-                                                              width: MediaQuery.of(
-                                                                          context)
-                                                                      .size
-                                                                      .width *
-                                                                  0.45,
+                                                              width:
+                                                                  ScreenUtil()
+                                                                      .setWidth(
+                                                                          345),
                                                               padding: EdgeInsets
                                                                   .all(ScreenUtil()
                                                                       .setHeight(
@@ -605,7 +719,7 @@ class _VAnalyticsState extends State<VAnalytics> {
                                                                 ),
                                                               ),
                                                               child: Text(
-                                                                "Name",
+                                                                "Status",
                                                                 style:
                                                                     TextStyle(
                                                                   color: Colors
@@ -618,337 +732,346 @@ class _VAnalyticsState extends State<VAnalytics> {
                                                                 ),
                                                               ),
                                                             ),
+                                                            Container(
+                                                              height:
+                                                                  ScreenUtil()
+                                                                      .setHeight(
+                                                                          70),
+                                                              width:
+                                                                  ScreenUtil()
+                                                                      .setWidth(
+                                                                          345),
+                                                              padding: EdgeInsets
+                                                                  .all(ScreenUtil()
+                                                                      .setHeight(
+                                                                          20)),
+                                                              decoration:
+                                                                  BoxDecoration(
+                                                                color: Colors
+                                                                    .white,
+                                                                border: Border(
+                                                                  right: BorderSide(
+                                                                      width: 1,
+                                                                      color: Colors
+                                                                          .grey
+                                                                          .shade300),
+                                                                ),
+                                                              ),
+                                                            )
                                                           ],
                                                         ),
-                                                        Container(
-                                                          height: ScreenUtil()
-                                                              .setHeight(70),
-                                                          padding: EdgeInsets
-                                                              .all(ScreenUtil()
-                                                                  .setHeight(
-                                                                      20)),
-                                                          decoration:
-                                                              BoxDecoration(
-                                                            color: Colors.white,
-                                                            border: Border(
-                                                              right: BorderSide(
-                                                                  width: 1,
+                                                        Column(
+                                                          children: <Widget>[
+                                                            Container(
+                                                              width:
+                                                                  ScreenUtil()
+                                                                      .setWidth(
+                                                                          330),
+                                                              padding: EdgeInsets
+                                                                  .all(ScreenUtil()
+                                                                      .setHeight(
+                                                                          20)),
+                                                              decoration:
+                                                                  BoxDecoration(
+                                                                color: Color
+                                                                    .fromRGBO(
+                                                                        235,
+                                                                        235,
+                                                                        255,
+                                                                        1),
+                                                                border: Border(
+                                                                  right: BorderSide(
+                                                                      width: 1,
+                                                                      color: Colors
+                                                                          .grey
+                                                                          .shade300),
+                                                                ),
+                                                              ),
+                                                              child: Text(
+                                                                "Channel",
+                                                                style:
+                                                                    TextStyle(
                                                                   color: Colors
-                                                                      .grey
-                                                                      .shade300),
+                                                                      .grey,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .bold,
+                                                                  fontSize:
+                                                                      font14,
+                                                                ),
+                                                              ),
                                                             ),
-                                                          ),
+                                                            Container(
+                                                              height:
+                                                                  ScreenUtil()
+                                                                      .setHeight(
+                                                                          70),
+                                                              width:
+                                                                  ScreenUtil()
+                                                                      .setWidth(
+                                                                          330),
+                                                              padding: EdgeInsets
+                                                                  .all(ScreenUtil()
+                                                                      .setHeight(
+                                                                          20)),
+                                                              decoration:
+                                                                  BoxDecoration(
+                                                                color: Colors
+                                                                    .white,
+                                                                border: Border(
+                                                                  right: BorderSide(
+                                                                      width: 1,
+                                                                      color: Colors
+                                                                          .grey
+                                                                          .shade300),
+                                                                ),
+                                                              ),
+                                                            )
+                                                          ],
+                                                        ),
+                                                        Column(
+                                                          children: <Widget>[
+                                                            Container(
+                                                              width:
+                                                                  ScreenUtil()
+                                                                      .setWidth(
+                                                                          180),
+                                                              padding: EdgeInsets
+                                                                  .all(ScreenUtil()
+                                                                      .setHeight(
+                                                                          20)),
+                                                              decoration:
+                                                                  BoxDecoration(
+                                                                color: Color
+                                                                    .fromRGBO(
+                                                                        235,
+                                                                        235,
+                                                                        255,
+                                                                        1),
+                                                                border: Border(
+                                                                  right: BorderSide(
+                                                                      width: 1,
+                                                                      color: Colors
+                                                                          .grey
+                                                                          .shade300),
+                                                                ),
+                                                              ),
+                                                              child: Text(
+                                                                "Views",
+                                                                style:
+                                                                    TextStyle(
+                                                                  color: Colors
+                                                                      .grey,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .bold,
+                                                                  fontSize:
+                                                                      font14,
+                                                                ),
+                                                              ),
+                                                            ),
+                                                            Container(
+                                                              height:
+                                                                  ScreenUtil()
+                                                                      .setHeight(
+                                                                          70),
+                                                              width:
+                                                                  ScreenUtil()
+                                                                      .setWidth(
+                                                                          180),
+                                                              padding: EdgeInsets
+                                                                  .all(ScreenUtil()
+                                                                      .setHeight(
+                                                                          20)),
+                                                              decoration:
+                                                                  BoxDecoration(
+                                                                color: Colors
+                                                                    .white,
+                                                                border: Border(
+                                                                  right: BorderSide(
+                                                                      width: 1,
+                                                                      color: Colors
+                                                                          .grey
+                                                                          .shade300),
+                                                                ),
+                                                              ),
+                                                            )
+                                                          ],
                                                         )
                                                       ],
-                                                    )
-                                                  ],
+                                                    )),
+                                                  ),
                                                 ),
-                                              ),
-                                              Container(
-                                                color: Colors.white,
-                                                margin: EdgeInsets.fromLTRB(
-                                                  MediaQuery.of(context)
+                                              ],
+                                            ),
+                                          )
+                                        : Container(
+                                            // height: ScreenUtil().setHeight(847),
+                                            height: (connection == true)
+                                                ? ScreenUtil().setHeight(
+                                                    85 + 77 * topViews.length)
+                                                : ScreenUtil().setHeight(85 +
+                                                    77 *
+                                                        offlineTopViewData
+                                                            .length),
+                                            child: Stack(
+                                              children: <Widget>[
+                                                Container(
+                                                  color: Colors.white,
+                                                  width: MediaQuery.of(context)
                                                           .size
                                                           .width *
                                                       0.45,
-                                                  0,
-                                                  0,
-                                                  0,
-                                                ),
-                                                child: Theme(
-                                                  data: ThemeData(
-                                                    highlightColor: Colors.blue,
-                                                  ),
-                                                  child: Scrollbar(
-                                                      child: ListView(
-                                                    scrollDirection:
-                                                        Axis.horizontal,
-                                                    children: <Widget>[
-                                                      Column(
-                                                        children: <Widget>[
-                                                          Container(
-                                                            width: ScreenUtil()
-                                                                .setWidth(345),
-                                                            padding: EdgeInsets
-                                                                .all(ScreenUtil()
-                                                                    .setHeight(
-                                                                        20)),
-                                                            decoration:
-                                                                BoxDecoration(
-                                                              color: Color
-                                                                  .fromRGBO(
-                                                                      235,
-                                                                      235,
-                                                                      255,
-                                                                      1),
-                                                              border: Border(
-                                                                right: BorderSide(
-                                                                    width: 1,
-                                                                    color: Colors
-                                                                        .grey
-                                                                        .shade300),
-                                                              ),
-                                                            ),
-                                                            child: Text(
-                                                              "Status",
-                                                              style: TextStyle(
-                                                                color:
-                                                                    Colors.grey,
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .bold,
-                                                                fontSize:
-                                                                    font14,
-                                                              ),
-                                                            ),
-                                                          ),
-                                                          Container(
-                                                            height: ScreenUtil()
-                                                                .setHeight(70),
-                                                            width: ScreenUtil()
-                                                                .setWidth(345),
-                                                            padding: EdgeInsets
-                                                                .all(ScreenUtil()
-                                                                    .setHeight(
-                                                                        20)),
-                                                            decoration:
-                                                                BoxDecoration(
-                                                              color:
-                                                                  Colors.white,
-                                                              border: Border(
-                                                                right: BorderSide(
-                                                                    width: 1,
-                                                                    color: Colors
-                                                                        .grey
-                                                                        .shade300),
-                                                              ),
-                                                            ),
-                                                          )
-                                                        ],
-                                                      ),
-                                                      Column(
-                                                        children: <Widget>[
-                                                          Container(
-                                                            width: ScreenUtil()
-                                                                .setWidth(330),
-                                                            padding: EdgeInsets
-                                                                .all(ScreenUtil()
-                                                                    .setHeight(
-                                                                        20)),
-                                                            decoration:
-                                                                BoxDecoration(
-                                                              color: Color
-                                                                  .fromRGBO(
-                                                                      235,
-                                                                      235,
-                                                                      255,
-                                                                      1),
-                                                              border: Border(
-                                                                right: BorderSide(
-                                                                    width: 1,
-                                                                    color: Colors
-                                                                        .grey
-                                                                        .shade300),
-                                                              ),
-                                                            ),
-                                                            child: Text(
-                                                              "Channel",
-                                                              style: TextStyle(
-                                                                color:
-                                                                    Colors.grey,
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .bold,
-                                                                fontSize:
-                                                                    font14,
-                                                              ),
-                                                            ),
-                                                          ),
-                                                          Container(
-                                                            height: ScreenUtil()
-                                                                .setHeight(70),
-                                                            width: ScreenUtil()
-                                                                .setWidth(330),
-                                                            padding: EdgeInsets
-                                                                .all(ScreenUtil()
-                                                                    .setHeight(
-                                                                        20)),
-                                                            decoration:
-                                                                BoxDecoration(
-                                                              color:
-                                                                  Colors.white,
-                                                              border: Border(
-                                                                right: BorderSide(
-                                                                    width: 1,
-                                                                    color: Colors
-                                                                        .grey
-                                                                        .shade300),
-                                                              ),
-                                                            ),
-                                                          )
-                                                        ],
-                                                      ),
-                                                      Column(
-                                                        children: <Widget>[
-                                                          Container(
-                                                            width: ScreenUtil()
-                                                                .setWidth(180),
-                                                            padding: EdgeInsets
-                                                                .all(ScreenUtil()
-                                                                    .setHeight(
-                                                                        20)),
-                                                            decoration:
-                                                                BoxDecoration(
-                                                              color: Color
-                                                                  .fromRGBO(
-                                                                      235,
-                                                                      235,
-                                                                      255,
-                                                                      1),
-                                                              border: Border(
-                                                                right: BorderSide(
-                                                                    width: 1,
-                                                                    color: Colors
-                                                                        .grey
-                                                                        .shade300),
-                                                              ),
-                                                            ),
-                                                            child: Text(
-                                                              "Views",
-                                                              style: TextStyle(
-                                                                color:
-                                                                    Colors.grey,
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .bold,
-                                                                fontSize:
-                                                                    font14,
-                                                              ),
-                                                            ),
-                                                          ),
-                                                          Container(
-                                                            height: ScreenUtil()
-                                                                .setHeight(70),
-                                                            width: ScreenUtil()
-                                                                .setWidth(180),
-                                                            padding: EdgeInsets
-                                                                .all(ScreenUtil()
-                                                                    .setHeight(
-                                                                        20)),
-                                                            decoration:
-                                                                BoxDecoration(
-                                                              color:
-                                                                  Colors.white,
-                                                              border: Border(
-                                                                right: BorderSide(
-                                                                    width: 1,
-                                                                    color: Colors
-                                                                        .grey
-                                                                        .shade300),
-                                                              ),
-                                                            ),
-                                                          )
-                                                        ],
-                                                      )
-                                                    ],
-                                                  )),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        )
-                                      : Container(
-                                          // height: ScreenUtil().setHeight(847),
-                                          height: (connection == true)
-                                              ? ScreenUtil().setHeight(
-                                                  85 + 77 * topViews.length)
-                                              : ScreenUtil().setHeight(85 +
-                                                  77 *
-                                                      offlineTopViewData
-                                                          .length),
-                                          child: Stack(
-                                            children: <Widget>[
-                                              Container(
-                                                color: Colors.white,
-                                                width: MediaQuery.of(context)
-                                                        .size
-                                                        .width *
-                                                    0.45,
-                                                child: (connection == true)
-                                                    ? Column(
-                                                        children: <Widget>[
-                                                          for (var i = 0;
-                                                              i <
-                                                                  topViews.length +
-                                                                      1;
-                                                              i++)
-                                                            (i == 0)
-                                                                ? Row(
-                                                                    mainAxisAlignment:
-                                                                        MainAxisAlignment
-                                                                            .start,
-                                                                    children: <
-                                                                        Widget>[
-                                                                      Container(
-                                                                        width: MediaQuery.of(context).size.width *
-                                                                            0.45,
-                                                                        padding:
-                                                                            EdgeInsets.all(ScreenUtil().setHeight(20)),
+                                                  child: (connection == true)
+                                                      ? Column(
+                                                          children: <Widget>[
+                                                            for (var i = 0;
+                                                                i <
+                                                                    topViews.length +
+                                                                        1;
+                                                                i++)
+                                                              (i == 0)
+                                                                  ? Row(
+                                                                      mainAxisAlignment:
+                                                                          MainAxisAlignment
+                                                                              .start,
+                                                                      children: <
+                                                                          Widget>[
+                                                                        Container(
+                                                                          width:
+                                                                              MediaQuery.of(context).size.width * 0.45,
+                                                                          padding:
+                                                                              EdgeInsets.all(ScreenUtil().setHeight(20)),
+                                                                          decoration:
+                                                                              BoxDecoration(
+                                                                            color: Color.fromRGBO(
+                                                                                235,
+                                                                                235,
+                                                                                255,
+                                                                                1),
+                                                                            border:
+                                                                                Border(
+                                                                              right: BorderSide(width: 1, color: Colors.grey.shade300),
+                                                                            ),
+                                                                          ),
+                                                                          child:
+                                                                              Text(
+                                                                            "Name",
+                                                                            style:
+                                                                                TextStyle(
+                                                                              color: Colors.grey,
+                                                                              fontWeight: FontWeight.bold,
+                                                                              fontSize: font14,
+                                                                            ),
+                                                                          ),
+                                                                        ),
+                                                                      ],
+                                                                    )
+                                                                  : InkWell(
+                                                                      onTap:
+                                                                          () async {
+                                                                        var connectivityResult =
+                                                                            await (Connectivity().checkConnectivity());
+                                                                        if (connectivityResult == ConnectivityResult.wifi ||
+                                                                            connectivityResult ==
+                                                                                ConnectivityResult.mobile) {
+                                                                          _redirectVProfile(i -
+                                                                              1);
+                                                                        } else {
+                                                                          Toast.show(
+                                                                              "This feature need Internet connection",
+                                                                              context,
+                                                                              duration: Toast.LENGTH_LONG,
+                                                                              gravity: Toast.BOTTOM);
+                                                                        }
+                                                                      },
+                                                                      child:
+                                                                          Container(
+                                                                        height: (i ==
+                                                                                topViews.length)
+                                                                            ? ScreenUtil().setHeight(80)
+                                                                            : ScreenUtil().setHeight(77),
                                                                         decoration:
                                                                             BoxDecoration(
-                                                                          color: Color.fromRGBO(
-                                                                              235,
-                                                                              235,
-                                                                              255,
-                                                                              1),
                                                                           border:
                                                                               Border(
                                                                             right:
-                                                                                BorderSide(width: 1, color: Colors.grey.shade300),
+                                                                                BorderSide(width: ScreenUtil().setWidth(2), color: Colors.grey.shade300),
                                                                           ),
+                                                                        ),
+                                                                        padding:
+                                                                            EdgeInsets.all(
+                                                                          ScreenUtil()
+                                                                              .setHeight(20),
                                                                         ),
                                                                         child:
+                                                                            Row(
+                                                                          mainAxisAlignment:
+                                                                              MainAxisAlignment.start,
+                                                                          children: <
+                                                                              Widget>[
                                                                             Text(
-                                                                          "Name",
-                                                                          style:
-                                                                              TextStyle(
-                                                                            color:
-                                                                                Colors.grey,
-                                                                            fontWeight:
-                                                                                FontWeight.bold,
-                                                                            fontSize:
-                                                                                font14,
-                                                                          ),
+                                                                              topViews[i - 1].name,
+                                                                              style: TextStyle(
+                                                                                color: Colors.blue,
+                                                                                fontSize: font14,
+                                                                              ),
+                                                                              overflow: TextOverflow.ellipsis,
+                                                                            ),
+                                                                          ],
                                                                         ),
                                                                       ),
-                                                                    ],
-                                                                  )
-                                                                : InkWell(
-                                                                    onTap:
-                                                                        () async {
-                                                                      var connectivityResult =
-                                                                          await (Connectivity()
-                                                                              .checkConnectivity());
-                                                                      if (connectivityResult ==
-                                                                              ConnectivityResult
-                                                                                  .wifi ||
-                                                                          connectivityResult ==
-                                                                              ConnectivityResult.mobile) {
-                                                                        _redirectVProfile(
-                                                                            i - 1);
-                                                                      } else {
-                                                                        Toast.show(
-                                                                            "This feature need Internet connection",
-                                                                            context,
-                                                                            duration:
-                                                                                Toast.LENGTH_LONG,
-                                                                            gravity: Toast.BOTTOM);
-                                                                      }
-                                                                    },
-                                                                    child:
+                                                                    ),
+                                                          ],
+                                                        )
+                                                      : Column(
+                                                          children: <Widget>[
+                                                            for (var i = 0;
+                                                                i <
+                                                                    offlineTopViewData
+                                                                            .length +
+                                                                        1;
+                                                                i++)
+                                                              (i == 0)
+                                                                  ? Row(
+                                                                      mainAxisAlignment:
+                                                                          MainAxisAlignment
+                                                                              .start,
+                                                                      children: <
+                                                                          Widget>[
                                                                         Container(
+                                                                          width:
+                                                                              MediaQuery.of(context).size.width * 0.45,
+                                                                          padding:
+                                                                              EdgeInsets.all(ScreenUtil().setHeight(20)),
+                                                                          decoration:
+                                                                              BoxDecoration(
+                                                                            color: Color.fromRGBO(
+                                                                                235,
+                                                                                235,
+                                                                                255,
+                                                                                1),
+                                                                            border:
+                                                                                Border(
+                                                                              right: BorderSide(width: 1, color: Colors.grey.shade300),
+                                                                            ),
+                                                                          ),
+                                                                          child:
+                                                                              Text(
+                                                                            "Name",
+                                                                            style:
+                                                                                TextStyle(
+                                                                              color: Colors.grey,
+                                                                              fontWeight: FontWeight.bold,
+                                                                              fontSize: font14,
+                                                                            ),
+                                                                          ),
+                                                                        ),
+                                                                      ],
+                                                                    )
+                                                                  : Container(
                                                                       height: (i ==
-                                                                              topViews
+                                                                              offlineTopViewData
                                                                                   .length)
                                                                           ? ScreenUtil().setHeight(
                                                                               80)
@@ -976,7 +1099,9 @@ class _VAnalyticsState extends State<VAnalytics> {
                                                                         children: <
                                                                             Widget>[
                                                                           Text(
-                                                                            topViews[i - 1].name,
+                                                                            (connection == true)
+                                                                                ? topViews[i - 1].name
+                                                                                : offlineTopViewData[i - 1]['name'],
                                                                             style:
                                                                                 TextStyle(
                                                                               color: Colors.blue,
@@ -988,1155 +1113,1009 @@ class _VAnalyticsState extends State<VAnalytics> {
                                                                         ],
                                                                       ),
                                                                     ),
-                                                                  ),
-                                                        ],
-                                                      )
-                                                    : Column(
-                                                        children: <Widget>[
-                                                          for (var i = 0;
-                                                              i <
-                                                                  offlineTopViewData
-                                                                          .length +
-                                                                      1;
-                                                              i++)
-                                                            (i == 0)
-                                                                ? Row(
-                                                                    mainAxisAlignment:
-                                                                        MainAxisAlignment
-                                                                            .start,
-                                                                    children: <
-                                                                        Widget>[
-                                                                      Container(
-                                                                        width: MediaQuery.of(context).size.width *
-                                                                            0.45,
-                                                                        padding:
-                                                                            EdgeInsets.all(ScreenUtil().setHeight(20)),
-                                                                        decoration:
-                                                                            BoxDecoration(
-                                                                          color: Color.fromRGBO(
-                                                                              235,
-                                                                              235,
-                                                                              255,
-                                                                              1),
-                                                                          border:
-                                                                              Border(
-                                                                            right:
-                                                                                BorderSide(width: 1, color: Colors.grey.shade300),
-                                                                          ),
-                                                                        ),
-                                                                        child:
-                                                                            Text(
-                                                                          "Name",
-                                                                          style:
-                                                                              TextStyle(
-                                                                            color:
-                                                                                Colors.grey,
-                                                                            fontWeight:
-                                                                                FontWeight.bold,
-                                                                            fontSize:
-                                                                                font14,
-                                                                          ),
-                                                                        ),
-                                                                      ),
-                                                                    ],
-                                                                  )
-                                                                : Container(
-                                                                    height: (i ==
-                                                                            offlineTopViewData
-                                                                                .length)
-                                                                        ? ScreenUtil()
-                                                                            .setHeight(
-                                                                                80)
-                                                                        : ScreenUtil()
-                                                                            .setHeight(77),
-                                                                    decoration:
-                                                                        BoxDecoration(
-                                                                      border:
-                                                                          Border(
-                                                                        right: BorderSide(
-                                                                            width:
-                                                                                ScreenUtil().setWidth(2),
-                                                                            color: Colors.grey.shade300),
-                                                                      ),
-                                                                    ),
-                                                                    padding:
-                                                                        EdgeInsets
-                                                                            .all(
-                                                                      ScreenUtil()
-                                                                          .setHeight(
-                                                                              20),
-                                                                    ),
-                                                                    child: Row(
-                                                                      mainAxisAlignment:
-                                                                          MainAxisAlignment
-                                                                              .start,
+                                                          ],
+                                                        ),
+                                                ),
+                                                Container(
+                                                  color: Colors.white,
+                                                  margin: EdgeInsets.fromLTRB(
+                                                    MediaQuery.of(context)
+                                                            .size
+                                                            .width *
+                                                        0.45,
+                                                    0,
+                                                    0,
+                                                    0,
+                                                  ),
+                                                  child: Theme(
+                                                    data: ThemeData(
+                                                      highlightColor:
+                                                          Colors.blue,
+                                                    ),
+                                                    child: Scrollbar(
+                                                      child:
+                                                          (connection == true)
+                                                              ? ListView(
+                                                                  scrollDirection:
+                                                                      Axis.horizontal,
+                                                                  children: <
+                                                                      Widget>[
+                                                                    Column(
                                                                       children: <
                                                                           Widget>[
-                                                                        Text(
-                                                                          (connection == true)
-                                                                              ? topViews[i - 1].name
-                                                                              : offlineTopViewData[i - 1]['name'],
-                                                                          style:
-                                                                              TextStyle(
-                                                                            color:
-                                                                                Colors.blue,
-                                                                            fontSize:
-                                                                                font14,
-                                                                          ),
-                                                                          overflow:
-                                                                              TextOverflow.ellipsis,
-                                                                        ),
+                                                                        for (var i =
+                                                                                0;
+                                                                            i < topViews.length + 1;
+                                                                            i++)
+                                                                          (i == 0)
+                                                                              ? Container(
+                                                                                  width: ScreenUtil().setWidth(345),
+                                                                                  padding: EdgeInsets.all(ScreenUtil().setHeight(20)),
+                                                                                  decoration: BoxDecoration(
+                                                                                    color: Color.fromRGBO(235, 235, 255, 1),
+                                                                                    border: Border(
+                                                                                      right: BorderSide(width: 1, color: Colors.grey.shade300),
+                                                                                    ),
+                                                                                  ),
+                                                                                  child: Text(
+                                                                                    "Status",
+                                                                                    style: TextStyle(
+                                                                                      color: Colors.grey,
+                                                                                      fontWeight: FontWeight.bold,
+                                                                                      fontSize: font14,
+                                                                                    ),
+                                                                                  ),
+                                                                                )
+                                                                              : Row(
+                                                                                  mainAxisAlignment: MainAxisAlignment.start,
+                                                                                  children: <Widget>[
+                                                                                    Container(
+                                                                                      height: ScreenUtil().setHeight(77),
+                                                                                      width: ScreenUtil().setWidth(345),
+                                                                                      decoration: BoxDecoration(
+                                                                                        border: Border(
+                                                                                          right: BorderSide(width: ScreenUtil().setHeight(2), color: Colors.grey.shade300),
+                                                                                        ),
+                                                                                      ),
+                                                                                      padding: EdgeInsets.all(
+                                                                                        ScreenUtil().setHeight(20),
+                                                                                      ),
+                                                                                      child: Text(
+                                                                                        topViews[i - 1].status,
+                                                                                        style: TextStyle(
+                                                                                          color: Colors.grey,
+                                                                                          fontSize: font14,
+                                                                                        ),
+                                                                                      ),
+                                                                                    ),
+                                                                                  ],
+                                                                                )
                                                                       ],
                                                                     ),
-                                                                  ),
-                                                        ],
-                                                      ),
-                                              ),
-                                              Container(
-                                                color: Colors.white,
-                                                margin: EdgeInsets.fromLTRB(
-                                                  MediaQuery.of(context)
-                                                          .size
-                                                          .width *
-                                                      0.45,
-                                                  0,
-                                                  0,
-                                                  0,
-                                                ),
-                                                child: Theme(
-                                                  data: ThemeData(
-                                                    highlightColor: Colors.blue,
-                                                  ),
-                                                  child: Scrollbar(
-                                                    child: (connection == true)
-                                                        ? ListView(
-                                                            scrollDirection:
-                                                                Axis.horizontal,
-                                                            children: <Widget>[
-                                                              Column(
-                                                                children: <
-                                                                    Widget>[
-                                                                  for (var i =
-                                                                          0;
-                                                                      i <
-                                                                          topViews.length +
-                                                                              1;
-                                                                      i++)
-                                                                    (i == 0)
-                                                                        ? Container(
-                                                                            width:
-                                                                                ScreenUtil().setWidth(345),
-                                                                            padding:
-                                                                                EdgeInsets.all(ScreenUtil().setHeight(20)),
-                                                                            decoration:
-                                                                                BoxDecoration(
-                                                                              color: Color.fromRGBO(235, 235, 255, 1),
-                                                                              border: Border(
-                                                                                right: BorderSide(width: 1, color: Colors.grey.shade300),
-                                                                              ),
-                                                                            ),
-                                                                            child:
-                                                                                Text(
-                                                                              "Status",
-                                                                              style: TextStyle(
-                                                                                color: Colors.grey,
-                                                                                fontWeight: FontWeight.bold,
-                                                                                fontSize: font14,
-                                                                              ),
-                                                                            ),
-                                                                          )
-                                                                        : Row(
-                                                                            mainAxisAlignment:
-                                                                                MainAxisAlignment.start,
-                                                                            children: <Widget>[
-                                                                              Container(
-                                                                                height: ScreenUtil().setHeight(77),
-                                                                                width: ScreenUtil().setWidth(345),
-                                                                                decoration: BoxDecoration(
-                                                                                  border: Border(
-                                                                                    right: BorderSide(width: ScreenUtil().setHeight(2), color: Colors.grey.shade300),
+                                                                    Column(
+                                                                      children: <
+                                                                          Widget>[
+                                                                        for (var i =
+                                                                                0;
+                                                                            i < topViews.length + 1;
+                                                                            i++)
+                                                                          (i == 0)
+                                                                              ? Container(
+                                                                                  width: ScreenUtil().setWidth(345),
+                                                                                  padding: EdgeInsets.all(ScreenUtil().setHeight(20)),
+                                                                                  decoration: BoxDecoration(
+                                                                                    color: Color.fromRGBO(235, 235, 255, 1),
+                                                                                    border: Border(
+                                                                                      right: BorderSide(width: 1, color: Colors.grey.shade300),
+                                                                                    ),
+                                                                                  ),
+                                                                                  child: Text(
+                                                                                    "Channel",
+                                                                                    style: TextStyle(
+                                                                                      color: Colors.grey,
+                                                                                      fontWeight: FontWeight.bold,
+                                                                                      fontSize: font14,
+                                                                                    ),
+                                                                                  ),
+                                                                                )
+                                                                              : Container(
+                                                                                  height: ScreenUtil().setHeight(77),
+                                                                                  width: ScreenUtil().setWidth(345),
+                                                                                  decoration: BoxDecoration(
+                                                                                    border: Border(
+                                                                                      right: BorderSide(width: ScreenUtil().setHeight(2), color: Colors.grey.shade300),
+                                                                                    ),
+                                                                                  ),
+                                                                                  padding: EdgeInsets.all(
+                                                                                    ScreenUtil().setHeight(20),
+                                                                                  ),
+                                                                                  child: Text(
+                                                                                    topViews[i - 1].channel,
+                                                                                    style: TextStyle(
+                                                                                      color: Colors.grey,
+                                                                                      fontSize: font14,
+                                                                                    ),
                                                                                   ),
                                                                                 ),
-                                                                                padding: EdgeInsets.all(
-                                                                                  ScreenUtil().setHeight(20),
-                                                                                ),
-                                                                                child: Text(
-                                                                                  topViews[i - 1].status,
-                                                                                  style: TextStyle(
-                                                                                    color: Colors.grey,
-                                                                                    fontSize: font14,
+                                                                      ],
+                                                                    ),
+                                                                    Column(
+                                                                      children: <
+                                                                          Widget>[
+                                                                        for (var i =
+                                                                                0;
+                                                                            i < topViews.length + 1;
+                                                                            i++)
+                                                                          (i == 0)
+                                                                              ? Container(
+                                                                                  width: ScreenUtil().setWidth(180),
+                                                                                  padding: EdgeInsets.all(ScreenUtil().setHeight(20)),
+                                                                                  decoration: BoxDecoration(
+                                                                                    color: Color.fromRGBO(235, 235, 255, 1),
+                                                                                    border: Border(
+                                                                                      right: BorderSide(width: 1, color: Colors.grey.shade300),
+                                                                                    ),
+                                                                                  ),
+                                                                                  child: Text(
+                                                                                    "Views",
+                                                                                    style: TextStyle(
+                                                                                      color: Colors.grey,
+                                                                                      fontWeight: FontWeight.bold,
+                                                                                      fontSize: font14,
+                                                                                    ),
+                                                                                  ),
+                                                                                )
+                                                                              : Container(
+                                                                                  height: ScreenUtil().setHeight(77),
+                                                                                  width: ScreenUtil().setWidth(180),
+                                                                                  decoration: BoxDecoration(
+                                                                                    border: Border(
+                                                                                      right: BorderSide(width: ScreenUtil().setHeight(2), color: Colors.grey.shade300),
+                                                                                    ),
+                                                                                  ),
+                                                                                  padding: EdgeInsets.all(
+                                                                                    ScreenUtil().setHeight(20),
+                                                                                  ),
+                                                                                  child: Text(
+                                                                                    topViews[i - 1].views,
+                                                                                    style: TextStyle(
+                                                                                      color: Colors.grey,
+                                                                                      fontSize: font14,
+                                                                                    ),
+                                                                                    overflow: TextOverflow.ellipsis,
                                                                                   ),
                                                                                 ),
-                                                                              ),
-                                                                            ],
-                                                                          )
-                                                                ],
-                                                              ),
-                                                              Column(
-                                                                children: <
-                                                                    Widget>[
-                                                                  for (var i =
-                                                                          0;
-                                                                      i <
-                                                                          topViews.length +
-                                                                              1;
-                                                                      i++)
-                                                                    (i == 0)
-                                                                        ? Container(
-                                                                            width:
-                                                                                ScreenUtil().setWidth(345),
-                                                                            padding:
-                                                                                EdgeInsets.all(ScreenUtil().setHeight(20)),
-                                                                            decoration:
-                                                                                BoxDecoration(
-                                                                              color: Color.fromRGBO(235, 235, 255, 1),
-                                                                              border: Border(
-                                                                                right: BorderSide(width: 1, color: Colors.grey.shade300),
-                                                                              ),
-                                                                            ),
-                                                                            child:
-                                                                                Text(
-                                                                              "Channel",
-                                                                              style: TextStyle(
-                                                                                color: Colors.grey,
-                                                                                fontWeight: FontWeight.bold,
-                                                                                fontSize: font14,
-                                                                              ),
-                                                                            ),
-                                                                          )
-                                                                        : Container(
-                                                                            height:
-                                                                                ScreenUtil().setHeight(77),
-                                                                            width:
-                                                                                ScreenUtil().setWidth(345),
-                                                                            decoration:
-                                                                                BoxDecoration(
-                                                                              border: Border(
-                                                                                right: BorderSide(width: ScreenUtil().setHeight(2), color: Colors.grey.shade300),
-                                                                              ),
-                                                                            ),
-                                                                            padding:
-                                                                                EdgeInsets.all(
-                                                                              ScreenUtil().setHeight(20),
-                                                                            ),
-                                                                            child:
-                                                                                Text(
-                                                                              topViews[i - 1].channel,
-                                                                              style: TextStyle(
-                                                                                color: Colors.grey,
-                                                                                fontSize: font14,
-                                                                              ),
-                                                                            ),
-                                                                          ),
-                                                                ],
-                                                              ),
-                                                              Column(
-                                                                children: <
-                                                                    Widget>[
-                                                                  for (var i =
-                                                                          0;
-                                                                      i <
-                                                                          topViews.length +
-                                                                              1;
-                                                                      i++)
-                                                                    (i == 0)
-                                                                        ? Container(
-                                                                            width:
-                                                                                ScreenUtil().setWidth(180),
-                                                                            padding:
-                                                                                EdgeInsets.all(ScreenUtil().setHeight(20)),
-                                                                            decoration:
-                                                                                BoxDecoration(
-                                                                              color: Color.fromRGBO(235, 235, 255, 1),
-                                                                              border: Border(
-                                                                                right: BorderSide(width: 1, color: Colors.grey.shade300),
-                                                                              ),
-                                                                            ),
-                                                                            child:
-                                                                                Text(
-                                                                              "Views",
-                                                                              style: TextStyle(
-                                                                                color: Colors.grey,
-                                                                                fontWeight: FontWeight.bold,
-                                                                                fontSize: font14,
-                                                                              ),
-                                                                            ),
-                                                                          )
-                                                                        : Container(
-                                                                            height:
-                                                                                ScreenUtil().setHeight(77),
-                                                                            width:
-                                                                                ScreenUtil().setWidth(180),
-                                                                            decoration:
-                                                                                BoxDecoration(
-                                                                              border: Border(
-                                                                                right: BorderSide(width: ScreenUtil().setHeight(2), color: Colors.grey.shade300),
-                                                                              ),
-                                                                            ),
-                                                                            padding:
-                                                                                EdgeInsets.all(
-                                                                              ScreenUtil().setHeight(20),
-                                                                            ),
-                                                                            child:
-                                                                                Text(
-                                                                              topViews[i - 1].views,
-                                                                              style: TextStyle(
-                                                                                color: Colors.grey,
-                                                                                fontSize: font14,
-                                                                              ),
-                                                                              overflow: TextOverflow.ellipsis,
-                                                                            ),
-                                                                          ),
-                                                                ],
-                                                              )
-                                                            ],
-                                                          )
-                                                        : ListView(
-                                                            scrollDirection:
-                                                                Axis.horizontal,
-                                                            children: <Widget>[
-                                                              Column(
-                                                                children: <
-                                                                    Widget>[
-                                                                  for (var i =
-                                                                          0;
-                                                                      i <
-                                                                          offlineTopViewData.length +
-                                                                              1;
-                                                                      i++)
-                                                                    (i == 0)
-                                                                        ? Container(
-                                                                            width:
-                                                                                ScreenUtil().setWidth(345),
-                                                                            padding:
-                                                                                EdgeInsets.all(ScreenUtil().setHeight(20)),
-                                                                            decoration:
-                                                                                BoxDecoration(
-                                                                              color: Color.fromRGBO(235, 235, 255, 1),
-                                                                              border: Border(
-                                                                                right: BorderSide(width: 1, color: Colors.grey.shade300),
-                                                                              ),
-                                                                            ),
-                                                                            child:
-                                                                                Text(
-                                                                              "Status",
-                                                                              style: TextStyle(
-                                                                                color: Colors.grey,
-                                                                                fontWeight: FontWeight.bold,
-                                                                                fontSize: font14,
-                                                                              ),
-                                                                            ),
-                                                                          )
-                                                                        : Row(
-                                                                            mainAxisAlignment:
-                                                                                MainAxisAlignment.start,
-                                                                            children: <Widget>[
-                                                                              Container(
-                                                                                height: ScreenUtil().setHeight(77),
-                                                                                width: ScreenUtil().setWidth(345),
-                                                                                decoration: BoxDecoration(
-                                                                                  border: Border(
-                                                                                    right: BorderSide(width: ScreenUtil().setHeight(2), color: Colors.grey.shade300),
+                                                                      ],
+                                                                    )
+                                                                  ],
+                                                                )
+                                                              : ListView(
+                                                                  scrollDirection:
+                                                                      Axis.horizontal,
+                                                                  children: <
+                                                                      Widget>[
+                                                                    Column(
+                                                                      children: <
+                                                                          Widget>[
+                                                                        for (var i =
+                                                                                0;
+                                                                            i < offlineTopViewData.length + 1;
+                                                                            i++)
+                                                                          (i == 0)
+                                                                              ? Container(
+                                                                                  width: ScreenUtil().setWidth(345),
+                                                                                  padding: EdgeInsets.all(ScreenUtil().setHeight(20)),
+                                                                                  decoration: BoxDecoration(
+                                                                                    color: Color.fromRGBO(235, 235, 255, 1),
+                                                                                    border: Border(
+                                                                                      right: BorderSide(width: 1, color: Colors.grey.shade300),
+                                                                                    ),
+                                                                                  ),
+                                                                                  child: Text(
+                                                                                    "Status",
+                                                                                    style: TextStyle(
+                                                                                      color: Colors.grey,
+                                                                                      fontWeight: FontWeight.bold,
+                                                                                      fontSize: font14,
+                                                                                    ),
+                                                                                  ),
+                                                                                )
+                                                                              : Row(
+                                                                                  mainAxisAlignment: MainAxisAlignment.start,
+                                                                                  children: <Widget>[
+                                                                                    Container(
+                                                                                      height: ScreenUtil().setHeight(77),
+                                                                                      width: ScreenUtil().setWidth(345),
+                                                                                      decoration: BoxDecoration(
+                                                                                        border: Border(
+                                                                                          right: BorderSide(width: ScreenUtil().setHeight(2), color: Colors.grey.shade300),
+                                                                                        ),
+                                                                                      ),
+                                                                                      padding: EdgeInsets.all(
+                                                                                        ScreenUtil().setHeight(20),
+                                                                                      ),
+                                                                                      child: Text(
+                                                                                        offlineTopViewData[i - 1]['status'],
+                                                                                        style: TextStyle(
+                                                                                          color: Colors.grey,
+                                                                                          fontSize: font14,
+                                                                                        ),
+                                                                                      ),
+                                                                                    ),
+                                                                                  ],
+                                                                                )
+                                                                      ],
+                                                                    ),
+                                                                    Column(
+                                                                      children: <
+                                                                          Widget>[
+                                                                        for (var i =
+                                                                                0;
+                                                                            i < offlineTopViewData.length + 1;
+                                                                            i++)
+                                                                          (i == 0)
+                                                                              ? Container(
+                                                                                  width: ScreenUtil().setWidth(345),
+                                                                                  padding: EdgeInsets.all(ScreenUtil().setHeight(20)),
+                                                                                  decoration: BoxDecoration(
+                                                                                    color: Color.fromRGBO(235, 235, 255, 1),
+                                                                                    border: Border(
+                                                                                      right: BorderSide(width: 1, color: Colors.grey.shade300),
+                                                                                    ),
+                                                                                  ),
+                                                                                  child: Text(
+                                                                                    "Channel",
+                                                                                    style: TextStyle(
+                                                                                      color: Colors.grey,
+                                                                                      fontWeight: FontWeight.bold,
+                                                                                      fontSize: font14,
+                                                                                    ),
+                                                                                  ),
+                                                                                )
+                                                                              : Container(
+                                                                                  height: ScreenUtil().setHeight(77),
+                                                                                  width: ScreenUtil().setWidth(345),
+                                                                                  decoration: BoxDecoration(
+                                                                                    border: Border(
+                                                                                      right: BorderSide(width: ScreenUtil().setHeight(2), color: Colors.grey.shade300),
+                                                                                    ),
+                                                                                  ),
+                                                                                  padding: EdgeInsets.all(
+                                                                                    ScreenUtil().setHeight(20),
+                                                                                  ),
+                                                                                  child: Text(
+                                                                                    offlineTopViewData[i - 1]['channel'],
+                                                                                    style: TextStyle(
+                                                                                      color: Colors.grey,
+                                                                                      fontSize: font14,
+                                                                                    ),
                                                                                   ),
                                                                                 ),
-                                                                                padding: EdgeInsets.all(
-                                                                                  ScreenUtil().setHeight(20),
-                                                                                ),
-                                                                                child: Text(
-                                                                                  offlineTopViewData[i - 1]['status'],
-                                                                                  style: TextStyle(
-                                                                                    color: Colors.grey,
-                                                                                    fontSize: font14,
+                                                                      ],
+                                                                    ),
+                                                                    Column(
+                                                                      children: <
+                                                                          Widget>[
+                                                                        for (var i =
+                                                                                0;
+                                                                            i < offlineTopViewData.length + 1;
+                                                                            i++)
+                                                                          (i == 0)
+                                                                              ? Container(
+                                                                                  width: ScreenUtil().setWidth(180),
+                                                                                  padding: EdgeInsets.all(ScreenUtil().setHeight(20)),
+                                                                                  decoration: BoxDecoration(
+                                                                                    color: Color.fromRGBO(235, 235, 255, 1),
+                                                                                    border: Border(
+                                                                                      right: BorderSide(width: 1, color: Colors.grey.shade300),
+                                                                                    ),
+                                                                                  ),
+                                                                                  child: Text(
+                                                                                    "Views",
+                                                                                    style: TextStyle(
+                                                                                      color: Colors.grey,
+                                                                                      fontWeight: FontWeight.bold,
+                                                                                      fontSize: font14,
+                                                                                    ),
+                                                                                  ),
+                                                                                )
+                                                                              : Container(
+                                                                                  height: ScreenUtil().setHeight(77),
+                                                                                  width: ScreenUtil().setWidth(180),
+                                                                                  decoration: BoxDecoration(
+                                                                                    border: Border(
+                                                                                      right: BorderSide(width: ScreenUtil().setHeight(2), color: Colors.grey.shade300),
+                                                                                    ),
+                                                                                  ),
+                                                                                  padding: EdgeInsets.all(
+                                                                                    ScreenUtil().setHeight(20),
+                                                                                  ),
+                                                                                  child: Text(
+                                                                                    offlineTopViewData[i - 1]['views'],
+                                                                                    style: TextStyle(
+                                                                                      color: Colors.grey,
+                                                                                      fontSize: font14,
+                                                                                    ),
+                                                                                    overflow: TextOverflow.ellipsis,
                                                                                   ),
                                                                                 ),
-                                                                              ),
-                                                                            ],
-                                                                          )
-                                                                ],
-                                                              ),
-                                                              Column(
-                                                                children: <
-                                                                    Widget>[
-                                                                  for (var i =
-                                                                          0;
-                                                                      i <
-                                                                          offlineTopViewData.length +
-                                                                              1;
-                                                                      i++)
-                                                                    (i == 0)
-                                                                        ? Container(
-                                                                            width:
-                                                                                ScreenUtil().setWidth(345),
-                                                                            padding:
-                                                                                EdgeInsets.all(ScreenUtil().setHeight(20)),
-                                                                            decoration:
-                                                                                BoxDecoration(
-                                                                              color: Color.fromRGBO(235, 235, 255, 1),
-                                                                              border: Border(
-                                                                                right: BorderSide(width: 1, color: Colors.grey.shade300),
-                                                                              ),
-                                                                            ),
-                                                                            child:
-                                                                                Text(
-                                                                              "Channel",
-                                                                              style: TextStyle(
-                                                                                color: Colors.grey,
-                                                                                fontWeight: FontWeight.bold,
-                                                                                fontSize: font14,
-                                                                              ),
-                                                                            ),
-                                                                          )
-                                                                        : Container(
-                                                                            height:
-                                                                                ScreenUtil().setHeight(77),
-                                                                            width:
-                                                                                ScreenUtil().setWidth(345),
-                                                                            decoration:
-                                                                                BoxDecoration(
-                                                                              border: Border(
-                                                                                right: BorderSide(width: ScreenUtil().setHeight(2), color: Colors.grey.shade300),
-                                                                              ),
-                                                                            ),
-                                                                            padding:
-                                                                                EdgeInsets.all(
-                                                                              ScreenUtil().setHeight(20),
-                                                                            ),
-                                                                            child:
-                                                                                Text(
-                                                                              offlineTopViewData[i - 1]['channel'],
-                                                                              style: TextStyle(
-                                                                                color: Colors.grey,
-                                                                                fontSize: font14,
-                                                                              ),
-                                                                            ),
-                                                                          ),
-                                                                ],
-                                                              ),
-                                                              Column(
-                                                                children: <
-                                                                    Widget>[
-                                                                  for (var i =
-                                                                          0;
-                                                                      i <
-                                                                          offlineTopViewData.length +
-                                                                              1;
-                                                                      i++)
-                                                                    (i == 0)
-                                                                        ? Container(
-                                                                            width:
-                                                                                ScreenUtil().setWidth(180),
-                                                                            padding:
-                                                                                EdgeInsets.all(ScreenUtil().setHeight(20)),
-                                                                            decoration:
-                                                                                BoxDecoration(
-                                                                              color: Color.fromRGBO(235, 235, 255, 1),
-                                                                              border: Border(
-                                                                                right: BorderSide(width: 1, color: Colors.grey.shade300),
-                                                                              ),
-                                                                            ),
-                                                                            child:
-                                                                                Text(
-                                                                              "Views",
-                                                                              style: TextStyle(
-                                                                                color: Colors.grey,
-                                                                                fontWeight: FontWeight.bold,
-                                                                                fontSize: font14,
-                                                                              ),
-                                                                            ),
-                                                                          )
-                                                                        : Container(
-                                                                            height:
-                                                                                ScreenUtil().setHeight(77),
-                                                                            width:
-                                                                                ScreenUtil().setWidth(180),
-                                                                            decoration:
-                                                                                BoxDecoration(
-                                                                              border: Border(
-                                                                                right: BorderSide(width: ScreenUtil().setHeight(2), color: Colors.grey.shade300),
-                                                                              ),
-                                                                            ),
-                                                                            padding:
-                                                                                EdgeInsets.all(
-                                                                              ScreenUtil().setHeight(20),
-                                                                            ),
-                                                                            child:
-                                                                                Text(
-                                                                              offlineTopViewData[i - 1]['views'],
-                                                                              style: TextStyle(
-                                                                                color: Colors.grey,
-                                                                                fontSize: font14,
-                                                                              ),
-                                                                              overflow: TextOverflow.ellipsis,
-                                                                            ),
-                                                                          ),
-                                                                ],
-                                                              )
-                                                            ],
-                                                          ),
+                                                                      ],
+                                                                    )
+                                                                  ],
+                                                                ),
+                                                    ),
                                                   ),
                                                 ),
+                                              ],
+                                            ),
+                                          ),
+                                  ),
+                                  Container(
+                                    margin: EdgeInsets.fromLTRB(
+                                        0, ScreenUtil().setHeight(20), 0, 0),
+                                    padding: EdgeInsets.all(
+                                      ScreenUtil().setHeight(20),
+                                    ),
+                                    color: Colors.white,
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.start,
+                                      children: <Widget>[
+                                        Text(
+                                          "Leads Status",
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: font16,
+                                          ),
+                                        )
+                                      ],
+                                    ),
+                                  ),
+                                  SizedBox(
+                                    height: ScreenUtil().setHeight(2),
+                                  ),
+                                  InkWell(
+                                    onTap: () async {
+                                      var connectivityResult =
+                                          await (Connectivity()
+                                              .checkConnectivity());
+                                      if (connectivityResult ==
+                                              ConnectivityResult.wifi ||
+                                          connectivityResult ==
+                                              ConnectivityResult.mobile) {
+                                        _leadsStatus("New");
+                                      } else {
+                                        Toast.show(
+                                            "This feature need Internet connection",
+                                            context,
+                                            duration: Toast.LENGTH_LONG,
+                                            gravity: Toast.BOTTOM);
+                                      }
+                                    },
+                                    child: Container(
+                                      color: Colors.white,
+                                      padding: EdgeInsets.all(
+                                        ScreenUtil().setHeight(20),
+                                      ),
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.start,
+                                        children: <Widget>[
+                                          Expanded(
+                                            child: Text(
+                                              "New",
+                                              style: TextStyle(
+                                                color: Colors.blue,
+                                                fontSize: font14,
                                               ),
-                                            ],
-                                          ),
-                                        ),
-                                ),
-                                Container(
-                                  margin: EdgeInsets.fromLTRB(
-                                      0, ScreenUtil().setHeight(20), 0, 0),
-                                  padding: EdgeInsets.all(
-                                    ScreenUtil().setHeight(20),
-                                  ),
-                                  color: Colors.white,
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.start,
-                                    children: <Widget>[
-                                      Text(
-                                        "Leads Status",
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: font16,
-                                        ),
-                                      )
-                                    ],
-                                  ),
-                                ),
-                                SizedBox(
-                                  height: ScreenUtil().setHeight(2),
-                                ),
-                                InkWell(
-                                  onTap: () async {
-                                    var connectivityResult =
-                                        await (Connectivity()
-                                            .checkConnectivity());
-                                    if (connectivityResult ==
-                                            ConnectivityResult.wifi ||
-                                        connectivityResult ==
-                                            ConnectivityResult.mobile) {
-                                      _leadsStatus("New");
-                                    } else {
-                                      Toast.show(
-                                          "This feature need Internet connection",
-                                          context,
-                                          duration: Toast.LENGTH_LONG,
-                                          gravity: Toast.BOTTOM);
-                                    }
-                                  },
-                                  child: Container(
-                                    color: Colors.white,
-                                    padding: EdgeInsets.all(
-                                      ScreenUtil().setHeight(20),
-                                    ),
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.start,
-                                      children: <Widget>[
-                                        Expanded(
-                                          child: Text(
-                                            "New",
-                                            style: TextStyle(
-                                              color: Colors.blue,
-                                              fontSize: font14,
                                             ),
                                           ),
-                                        ),
-                                        Text(
-                                          (connection == true)
-                                              ? newLeads
-                                              : offlineVAnalyticsData[0]
-                                                  ['new_leads'],
-                                          style: TextStyle(
-                                            color: Colors.grey,
-                                            fontSize: font14,
-                                          ),
-                                        )
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                                InkWell(
-                                  onTap: () async {
-                                    var connectivityResult =
-                                        await (Connectivity()
-                                            .checkConnectivity());
-                                    if (connectivityResult ==
-                                            ConnectivityResult.wifi ||
-                                        connectivityResult ==
-                                            ConnectivityResult.mobile) {
-                                      _leadsStatus("Contacting");
-                                    } else {
-                                      Toast.show(
-                                          "This feature need Internet connection",
-                                          context,
-                                          duration: Toast.LENGTH_LONG,
-                                          gravity: Toast.BOTTOM);
-                                    }
-                                  },
-                                  child: Container(
-                                    color: Color.fromRGBO(232, 244, 248, 1),
-                                    padding: EdgeInsets.all(
-                                      ScreenUtil().setHeight(20),
-                                    ),
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.start,
-                                      children: <Widget>[
-                                        Expanded(
-                                          child: Text(
-                                            "Contacting",
+                                          Text(
+                                            (connection == true)
+                                                ? newLeads
+                                                : offlineVAnalyticsData[0]
+                                                    ['new_leads'],
                                             style: TextStyle(
-                                              color: Colors.blue,
+                                              color: Colors.grey,
                                               fontSize: font14,
                                             ),
-                                          ),
-                                        ),
-                                        Text(
-                                          (connection == true)
-                                              ? contactingLeads
-                                              : offlineVAnalyticsData[0]
-                                                  ['contacting_leads'],
-                                          style: TextStyle(
-                                            color: Colors.grey,
-                                            fontSize: font14,
-                                          ),
-                                        )
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                                InkWell(
-                                  onTap: () async {
-                                    var connectivityResult =
-                                        await (Connectivity()
-                                            .checkConnectivity());
-                                    if (connectivityResult ==
-                                            ConnectivityResult.wifi ||
-                                        connectivityResult ==
-                                            ConnectivityResult.mobile) {
-                                      _leadsStatus("Contacted");
-                                    } else {
-                                      Toast.show(
-                                          "This feature need Internet connection",
-                                          context,
-                                          duration: Toast.LENGTH_LONG,
-                                          gravity: Toast.BOTTOM);
-                                    }
-                                  },
-                                  child: Container(
-                                    color: Colors.white,
-                                    padding: EdgeInsets.all(
-                                      ScreenUtil().setHeight(20),
-                                    ),
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.start,
-                                      children: <Widget>[
-                                        Expanded(
-                                          child: Text(
-                                            "Contacted",
-                                            style: TextStyle(
-                                              color: Colors.blue,
-                                              fontSize: font14,
-                                            ),
-                                          ),
-                                        ),
-                                        Text(
-                                          (connection == true)
-                                              ? contactedLeads
-                                              : offlineVAnalyticsData[0]
-                                                  ['contacted_leads'],
-                                          style: TextStyle(
-                                            color: Colors.grey,
-                                            fontSize: font14,
-                                          ),
-                                        )
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                                InkWell(
-                                  onTap: () async {
-                                    var connectivityResult =
-                                        await (Connectivity()
-                                            .checkConnectivity());
-                                    if (connectivityResult ==
-                                            ConnectivityResult.wifi ||
-                                        connectivityResult ==
-                                            ConnectivityResult.mobile) {
-                                      _leadsStatus("Qualified");
-                                    } else {
-                                      Toast.show(
-                                          "This feature need Internet connection",
-                                          context,
-                                          duration: Toast.LENGTH_LONG,
-                                          gravity: Toast.BOTTOM);
-                                    }
-                                  },
-                                  child: Container(
-                                    color: Color.fromRGBO(232, 244, 248, 1),
-                                    padding: EdgeInsets.all(
-                                      ScreenUtil().setHeight(20),
-                                    ),
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.start,
-                                      children: <Widget>[
-                                        Expanded(
-                                          child: Text(
-                                            "Qualified",
-                                            style: TextStyle(
-                                              color: Colors.blue,
-                                              fontSize: font14,
-                                            ),
-                                          ),
-                                        ),
-                                        Text(
-                                          (connection == true)
-                                              ? qualifiedLeads
-                                              : offlineVAnalyticsData[0]
-                                                  ['qualified_leads'],
-                                          style: TextStyle(
-                                            color: Colors.grey,
-                                            fontSize: font14,
-                                          ),
-                                        )
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                                InkWell(
-                                  onTap: () async {
-                                    var connectivityResult =
-                                        await (Connectivity()
-                                            .checkConnectivity());
-                                    if (connectivityResult ==
-                                            ConnectivityResult.wifi ||
-                                        connectivityResult ==
-                                            ConnectivityResult.mobile) {
-                                      _leadsStatus("Converted");
-                                    } else {
-                                      Toast.show(
-                                          "This feature need Internet connection",
-                                          context,
-                                          duration: Toast.LENGTH_LONG,
-                                          gravity: Toast.BOTTOM);
-                                    }
-                                  },
-                                  child: Container(
-                                    color: Colors.white,
-                                    padding: EdgeInsets.all(
-                                      ScreenUtil().setHeight(20),
-                                    ),
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.start,
-                                      children: <Widget>[
-                                        Expanded(
-                                          child: Text(
-                                            "Converted",
-                                            style: TextStyle(
-                                              color: Colors.blue,
-                                              fontSize: font14,
-                                            ),
-                                          ),
-                                        ),
-                                        Text(
-                                          (connection == true)
-                                              ? convertedLeads
-                                              : offlineVAnalyticsData[0]
-                                                  ['converted_leads'],
-                                          style: TextStyle(
-                                            color: Colors.grey,
-                                            fontSize: font14,
-                                          ),
-                                        )
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                                InkWell(
-                                  onTap: () async {
-                                    var connectivityResult =
-                                        await (Connectivity()
-                                            .checkConnectivity());
-                                    if (connectivityResult ==
-                                            ConnectivityResult.wifi ||
-                                        connectivityResult ==
-                                            ConnectivityResult.mobile) {
-                                      _leadsStatus("Follow-up");
-                                    } else {
-                                      Toast.show(
-                                          "This feature need Internet connection",
-                                          context,
-                                          duration: Toast.LENGTH_LONG,
-                                          gravity: Toast.BOTTOM);
-                                    }
-                                  },
-                                  child: Container(
-                                    color: Color.fromRGBO(232, 244, 248, 1),
-                                    padding: EdgeInsets.all(
-                                      ScreenUtil().setHeight(20),
-                                    ),
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.start,
-                                      children: <Widget>[
-                                        Expanded(
-                                          child: Text(
-                                            "Follow-up",
-                                            style: TextStyle(
-                                              color: Colors.blue,
-                                              fontSize: font14,
-                                            ),
-                                          ),
-                                        ),
-                                        Text(
-                                          (connection == true)
-                                              ? followupLeads
-                                              : offlineVAnalyticsData[0]
-                                                  ['followup_leads'],
-                                          style: TextStyle(
-                                            color: Colors.grey,
-                                            fontSize: font14,
-                                          ),
-                                        )
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                                InkWell(
-                                  onTap: () async {
-                                    var connectivityResult =
-                                        await (Connectivity()
-                                            .checkConnectivity());
-                                    if (connectivityResult ==
-                                            ConnectivityResult.wifi ||
-                                        connectivityResult ==
-                                            ConnectivityResult.mobile) {
-                                      _leadsStatus("Unqualified");
-                                    } else {
-                                      Toast.show(
-                                          "This feature need Internet connection",
-                                          context,
-                                          duration: Toast.LENGTH_LONG,
-                                          gravity: Toast.BOTTOM);
-                                    }
-                                  },
-                                  child: Container(
-                                    color: Colors.white,
-                                    padding: EdgeInsets.all(
-                                      ScreenUtil().setHeight(20),
-                                    ),
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.start,
-                                      children: <Widget>[
-                                        Expanded(
-                                          child: Text(
-                                            "Unqualified",
-                                            style: TextStyle(
-                                              color: Colors.blue,
-                                              fontSize: font14,
-                                            ),
-                                          ),
-                                        ),
-                                        Text(
-                                          (connection == true)
-                                              ? unqualifiedLeads
-                                              : offlineVAnalyticsData[0]
-                                                  ['unqualified_leads'],
-                                          style: TextStyle(
-                                            color: Colors.grey,
-                                            fontSize: font14,
-                                          ),
-                                        )
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                                InkWell(
-                                  onTap: () async {
-                                    var connectivityResult =
-                                        await (Connectivity()
-                                            .checkConnectivity());
-                                    if (connectivityResult ==
-                                            ConnectivityResult.wifi ||
-                                        connectivityResult ==
-                                            ConnectivityResult.mobile) {
-                                      _leadsStatus("Bad Information");
-                                    } else {
-                                      Toast.show(
-                                          "This feature need Internet connection",
-                                          context,
-                                          duration: Toast.LENGTH_LONG,
-                                          gravity: Toast.BOTTOM);
-                                    }
-                                  },
-                                  child: Container(
-                                    color: Color.fromRGBO(232, 244, 248, 1),
-                                    padding: EdgeInsets.all(
-                                      ScreenUtil().setHeight(20),
-                                    ),
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.start,
-                                      children: <Widget>[
-                                        Expanded(
-                                          child: Text(
-                                            "Bad Information",
-                                            style: TextStyle(
-                                              color: Colors.blue,
-                                              fontSize: font14,
-                                            ),
-                                          ),
-                                        ),
-                                        Text(
-                                          (connection == true)
-                                              ? badInfoLeads
-                                              : offlineVAnalyticsData[0]
-                                                  ['bad_info_leads'],
-                                          style: TextStyle(
-                                            color: Colors.grey,
-                                            fontSize: font14,
-                                          ),
-                                        )
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                                InkWell(
-                                  onTap: () async {
-                                    var connectivityResult =
-                                        await (Connectivity()
-                                            .checkConnectivity());
-                                    if (connectivityResult ==
-                                            ConnectivityResult.wifi ||
-                                        connectivityResult ==
-                                            ConnectivityResult.mobile) {
-                                      _leadsStatus("No Response");
-                                    } else {
-                                      Toast.show(
-                                          "This feature need Internet connection",
-                                          context,
-                                          duration: Toast.LENGTH_LONG,
-                                          gravity: Toast.BOTTOM);
-                                    }
-                                  },
-                                  child: Container(
-                                    color: Colors.white,
-                                    padding: EdgeInsets.all(
-                                      ScreenUtil().setHeight(20),
-                                    ),
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.start,
-                                      children: <Widget>[
-                                        Expanded(
-                                          child: Text(
-                                            "No Response",
-                                            style: TextStyle(
-                                              color: Colors.blue,
-                                              fontSize: font14,
-                                            ),
-                                          ),
-                                        ),
-                                        Text(
-                                          (connection == true)
-                                              ? noResponseLeads
-                                              : offlineVAnalyticsData[0]
-                                                  ['no_response_leads'],
-                                          style: TextStyle(
-                                            color: Colors.grey,
-                                            fontSize: font14,
-                                          ),
-                                        )
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                                SizedBox(
-                                  height: ScreenUtil().setHeight(20),
-                                ),
-                                Container(
-                                  color: Colors.white,
-                                  height: ScreenUtil().setHeight(820),
-                                  child: SfCircularChart(
-                                    onPointTapped: (PointTapArgs args) {
-                                      _redirectAppChart(args.pointIndex);
-                                    },
-                                    // tooltipBehavior: TooltipBehavior(enable: true),
-                                    // Enables the legend
-                                    legend: Legend(
-                                        title: LegendTitle(
-                                            text: "App",
-                                            textStyle: ChartTextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: font16,
-                                            )),
-                                        isVisible: true,
-                                        overflowMode:
-                                            LegendItemOverflowMode.wrap),
-                                    series: <CircularSeries>[
-                                      PieSeries<AppData, String>(
-                                        enableSmartLabels: true,
-                                        dataSource: [
-                                          // Bind data source
-                                          AppData(
-                                              'VFlex',
-                                              (connection == true)
-                                                  ? double.parse(vflex)
-                                                  : double.parse(
-                                                      offlineVAnalyticsData[0]
-                                                          ['vflex']),
-                                              Color.fromRGBO(175, 238, 238, 1)),
-                                          AppData(
-                                              'VCard',
-                                              (connection == true)
-                                                  ? double.parse(vcard)
-                                                  : double.parse(
-                                                      offlineVAnalyticsData[0]
-                                                          ['vcard']),
-                                              Color.fromRGBO(0, 0, 205, 1)),
-                                          AppData(
-                                              'VCatelogue',
-                                              (connection == true)
-                                                  ? double.parse(vcatelogue)
-                                                  : double.parse(
-                                                      offlineVAnalyticsData[0]
-                                                          ['vcatelogue']),
-                                              Color.fromRGBO(30, 144, 255, 1)),
-                                          AppData(
-                                              'VBot',
-                                              (connection == true)
-                                                  ? double.parse(vbot)
-                                                  : double.parse(
-                                                      offlineVAnalyticsData[0]
-                                                          ['vbot']),
-                                              Color.fromRGBO(0, 128, 255, 1)),
-                                          AppData(
-                                              'VHome',
-                                              (connection == true)
-                                                  ? double.parse(vhome)
-                                                  : double.parse(
-                                                      offlineVAnalyticsData[0]
-                                                          ['vhome']),
-                                              Color.fromRGBO(15, 128, 196, 1)),
+                                          )
                                         ],
-                                        pointColorMapper: (AppData data, _) =>
-                                            data.color,
-                                        xValueMapper: (AppData data, _) =>
-                                            data.x,
-                                        yValueMapper: (AppData data, _) =>
-                                            data.y,
-                                        dataLabelSettings: DataLabelSettings(
-                                            isVisible: true,
-                                            labelPosition:
-                                                LabelPosition.inside),
-                                      )
-                                    ],
+                                      ),
+                                    ),
                                   ),
-                                ),
-                                SizedBox(
-                                  height: ScreenUtil().setHeight(20),
-                                ),
-                                Container(
-                                  height: ScreenUtil().setHeight(820),
-                                  color: Colors.white,
-                                  child: SfCircularChart(
-                                    onPointTapped: (PointTapArgs args) {
-                                      _redirectChannelChart(args.pointIndex);
+                                  InkWell(
+                                    onTap: () async {
+                                      var connectivityResult =
+                                          await (Connectivity()
+                                              .checkConnectivity());
+                                      if (connectivityResult ==
+                                              ConnectivityResult.wifi ||
+                                          connectivityResult ==
+                                              ConnectivityResult.mobile) {
+                                        _leadsStatus("Contacting");
+                                      } else {
+                                        Toast.show(
+                                            "This feature need Internet connection",
+                                            context,
+                                            duration: Toast.LENGTH_LONG,
+                                            gravity: Toast.BOTTOM);
+                                      }
                                     },
-                                    // tooltipBehavior: TooltipBehavior(enable: true),
-                                    // Enables the legend
-                                    legend: Legend(
-                                        title: LegendTitle(
-                                            text: "Channel",
-                                            textStyle: ChartTextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: font16,
-                                            )),
-                                        isVisible: true,
-                                        overflowMode:
-                                            LegendItemOverflowMode.wrap),
-                                    series: <CircularSeries>[
-                                      PieSeries<ChannelData, String>(
-                                        enableSmartLabels: true,
-                                        dataSource: [
-                                          // Bind data source
-                                          ChannelData(
-                                              'WhatsApp Forward',
-                                              (connection == true)
-                                                  ? double.parse(
-                                                      whatsappForward)
-                                                  : double.parse(
-                                                      offlineVAnalyticsData[0]
-                                                          ['whatsapp_forward']),
-                                              Color.fromRGBO(72, 209, 204, 1)),
-                                          ChannelData(
-                                              'Contact Form',
-                                              (connection == true)
-                                                  ? double.parse(contactForm)
-                                                  : double.parse(
-                                                      offlineVAnalyticsData[0]
-                                                          ['contact_form']),
-                                              Color.fromRGBO(255, 165, 0, 1)),
-                                          ChannelData(
-                                              'Messenger',
-                                              (connection == true)
-                                                  ? double.parse(messenger)
-                                                  : double.parse(
-                                                      offlineVAnalyticsData[0]
-                                                          ['messenger']),
-                                              Color.fromRGBO(135, 206, 250, 1)),
-                                          ChannelData(
-                                              'Import',
-                                              (connection == true)
-                                                  ? double.parse(import)
-                                                  : double.parse(
-                                                      offlineVAnalyticsData[0]
-                                                          ['import']),
-                                              Color.fromRGBO(225, 225, 255, 1)),
+                                    child: Container(
+                                      color: Color.fromRGBO(232, 244, 248, 1),
+                                      padding: EdgeInsets.all(
+                                        ScreenUtil().setHeight(20),
+                                      ),
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.start,
+                                        children: <Widget>[
+                                          Expanded(
+                                            child: Text(
+                                              "Contacting",
+                                              style: TextStyle(
+                                                color: Colors.blue,
+                                                fontSize: font14,
+                                              ),
+                                            ),
+                                          ),
+                                          Text(
+                                            (connection == true)
+                                                ? contactingLeads
+                                                : offlineVAnalyticsData[0]
+                                                    ['contacting_leads'],
+                                            style: TextStyle(
+                                              color: Colors.grey,
+                                              fontSize: font14,
+                                            ),
+                                          )
                                         ],
-                                        pointColorMapper:
-                                            (ChannelData data, _) => data.color,
-                                        xValueMapper: (ChannelData data, _) =>
-                                            data.x,
-                                        yValueMapper: (ChannelData data, _) =>
-                                            data.y,
-                                        dataLabelSettings: DataLabelSettings(
-                                            isVisible: true,
-                                            labelPosition:
-                                                LabelPosition.inside),
-                                      )
-                                    ],
+                                      ),
+                                    ),
                                   ),
+                                  InkWell(
+                                    onTap: () async {
+                                      var connectivityResult =
+                                          await (Connectivity()
+                                              .checkConnectivity());
+                                      if (connectivityResult ==
+                                              ConnectivityResult.wifi ||
+                                          connectivityResult ==
+                                              ConnectivityResult.mobile) {
+                                        _leadsStatus("Contacted");
+                                      } else {
+                                        Toast.show(
+                                            "This feature need Internet connection",
+                                            context,
+                                            duration: Toast.LENGTH_LONG,
+                                            gravity: Toast.BOTTOM);
+                                      }
+                                    },
+                                    child: Container(
+                                      color: Colors.white,
+                                      padding: EdgeInsets.all(
+                                        ScreenUtil().setHeight(20),
+                                      ),
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.start,
+                                        children: <Widget>[
+                                          Expanded(
+                                            child: Text(
+                                              "Contacted",
+                                              style: TextStyle(
+                                                color: Colors.blue,
+                                                fontSize: font14,
+                                              ),
+                                            ),
+                                          ),
+                                          Text(
+                                            (connection == true)
+                                                ? contactedLeads
+                                                : offlineVAnalyticsData[0]
+                                                    ['contacted_leads'],
+                                            style: TextStyle(
+                                              color: Colors.grey,
+                                              fontSize: font14,
+                                            ),
+                                          )
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                  InkWell(
+                                    onTap: () async {
+                                      var connectivityResult =
+                                          await (Connectivity()
+                                              .checkConnectivity());
+                                      if (connectivityResult ==
+                                              ConnectivityResult.wifi ||
+                                          connectivityResult ==
+                                              ConnectivityResult.mobile) {
+                                        _leadsStatus("Qualified");
+                                      } else {
+                                        Toast.show(
+                                            "This feature need Internet connection",
+                                            context,
+                                            duration: Toast.LENGTH_LONG,
+                                            gravity: Toast.BOTTOM);
+                                      }
+                                    },
+                                    child: Container(
+                                      color: Color.fromRGBO(232, 244, 248, 1),
+                                      padding: EdgeInsets.all(
+                                        ScreenUtil().setHeight(20),
+                                      ),
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.start,
+                                        children: <Widget>[
+                                          Expanded(
+                                            child: Text(
+                                              "Qualified",
+                                              style: TextStyle(
+                                                color: Colors.blue,
+                                                fontSize: font14,
+                                              ),
+                                            ),
+                                          ),
+                                          Text(
+                                            (connection == true)
+                                                ? qualifiedLeads
+                                                : offlineVAnalyticsData[0]
+                                                    ['qualified_leads'],
+                                            style: TextStyle(
+                                              color: Colors.grey,
+                                              fontSize: font14,
+                                            ),
+                                          )
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                  InkWell(
+                                    onTap: () async {
+                                      var connectivityResult =
+                                          await (Connectivity()
+                                              .checkConnectivity());
+                                      if (connectivityResult ==
+                                              ConnectivityResult.wifi ||
+                                          connectivityResult ==
+                                              ConnectivityResult.mobile) {
+                                        _leadsStatus("Converted");
+                                      } else {
+                                        Toast.show(
+                                            "This feature need Internet connection",
+                                            context,
+                                            duration: Toast.LENGTH_LONG,
+                                            gravity: Toast.BOTTOM);
+                                      }
+                                    },
+                                    child: Container(
+                                      color: Colors.white,
+                                      padding: EdgeInsets.all(
+                                        ScreenUtil().setHeight(20),
+                                      ),
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.start,
+                                        children: <Widget>[
+                                          Expanded(
+                                            child: Text(
+                                              "Converted",
+                                              style: TextStyle(
+                                                color: Colors.blue,
+                                                fontSize: font14,
+                                              ),
+                                            ),
+                                          ),
+                                          Text(
+                                            (connection == true)
+                                                ? convertedLeads
+                                                : offlineVAnalyticsData[0]
+                                                    ['converted_leads'],
+                                            style: TextStyle(
+                                              color: Colors.grey,
+                                              fontSize: font14,
+                                            ),
+                                          )
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                  InkWell(
+                                    onTap: () async {
+                                      var connectivityResult =
+                                          await (Connectivity()
+                                              .checkConnectivity());
+                                      if (connectivityResult ==
+                                              ConnectivityResult.wifi ||
+                                          connectivityResult ==
+                                              ConnectivityResult.mobile) {
+                                        _leadsStatus("Follow-up");
+                                      } else {
+                                        Toast.show(
+                                            "This feature need Internet connection",
+                                            context,
+                                            duration: Toast.LENGTH_LONG,
+                                            gravity: Toast.BOTTOM);
+                                      }
+                                    },
+                                    child: Container(
+                                      color: Color.fromRGBO(232, 244, 248, 1),
+                                      padding: EdgeInsets.all(
+                                        ScreenUtil().setHeight(20),
+                                      ),
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.start,
+                                        children: <Widget>[
+                                          Expanded(
+                                            child: Text(
+                                              "Follow-up",
+                                              style: TextStyle(
+                                                color: Colors.blue,
+                                                fontSize: font14,
+                                              ),
+                                            ),
+                                          ),
+                                          Text(
+                                            (connection == true)
+                                                ? followupLeads
+                                                : offlineVAnalyticsData[0]
+                                                    ['followup_leads'],
+                                            style: TextStyle(
+                                              color: Colors.grey,
+                                              fontSize: font14,
+                                            ),
+                                          )
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                  InkWell(
+                                    onTap: () async {
+                                      var connectivityResult =
+                                          await (Connectivity()
+                                              .checkConnectivity());
+                                      if (connectivityResult ==
+                                              ConnectivityResult.wifi ||
+                                          connectivityResult ==
+                                              ConnectivityResult.mobile) {
+                                        _leadsStatus("Unqualified");
+                                      } else {
+                                        Toast.show(
+                                            "This feature need Internet connection",
+                                            context,
+                                            duration: Toast.LENGTH_LONG,
+                                            gravity: Toast.BOTTOM);
+                                      }
+                                    },
+                                    child: Container(
+                                      color: Colors.white,
+                                      padding: EdgeInsets.all(
+                                        ScreenUtil().setHeight(20),
+                                      ),
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.start,
+                                        children: <Widget>[
+                                          Expanded(
+                                            child: Text(
+                                              "Unqualified",
+                                              style: TextStyle(
+                                                color: Colors.blue,
+                                                fontSize: font14,
+                                              ),
+                                            ),
+                                          ),
+                                          Text(
+                                            (connection == true)
+                                                ? unqualifiedLeads
+                                                : offlineVAnalyticsData[0]
+                                                    ['unqualified_leads'],
+                                            style: TextStyle(
+                                              color: Colors.grey,
+                                              fontSize: font14,
+                                            ),
+                                          )
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                  InkWell(
+                                    onTap: () async {
+                                      var connectivityResult =
+                                          await (Connectivity()
+                                              .checkConnectivity());
+                                      if (connectivityResult ==
+                                              ConnectivityResult.wifi ||
+                                          connectivityResult ==
+                                              ConnectivityResult.mobile) {
+                                        _leadsStatus("Bad Information");
+                                      } else {
+                                        Toast.show(
+                                            "This feature need Internet connection",
+                                            context,
+                                            duration: Toast.LENGTH_LONG,
+                                            gravity: Toast.BOTTOM);
+                                      }
+                                    },
+                                    child: Container(
+                                      color: Color.fromRGBO(232, 244, 248, 1),
+                                      padding: EdgeInsets.all(
+                                        ScreenUtil().setHeight(20),
+                                      ),
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.start,
+                                        children: <Widget>[
+                                          Expanded(
+                                            child: Text(
+                                              "Bad Information",
+                                              style: TextStyle(
+                                                color: Colors.blue,
+                                                fontSize: font14,
+                                              ),
+                                            ),
+                                          ),
+                                          Text(
+                                            (connection == true)
+                                                ? badInfoLeads
+                                                : offlineVAnalyticsData[0]
+                                                    ['bad_info_leads'],
+                                            style: TextStyle(
+                                              color: Colors.grey,
+                                              fontSize: font14,
+                                            ),
+                                          )
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                  InkWell(
+                                    onTap: () async {
+                                      var connectivityResult =
+                                          await (Connectivity()
+                                              .checkConnectivity());
+                                      if (connectivityResult ==
+                                              ConnectivityResult.wifi ||
+                                          connectivityResult ==
+                                              ConnectivityResult.mobile) {
+                                        _leadsStatus("No Response");
+                                      } else {
+                                        Toast.show(
+                                            "This feature need Internet connection",
+                                            context,
+                                            duration: Toast.LENGTH_LONG,
+                                            gravity: Toast.BOTTOM);
+                                      }
+                                    },
+                                    child: Container(
+                                      color: Colors.white,
+                                      padding: EdgeInsets.all(
+                                        ScreenUtil().setHeight(20),
+                                      ),
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.start,
+                                        children: <Widget>[
+                                          Expanded(
+                                            child: Text(
+                                              "No Response",
+                                              style: TextStyle(
+                                                color: Colors.blue,
+                                                fontSize: font14,
+                                              ),
+                                            ),
+                                          ),
+                                          Text(
+                                            (connection == true)
+                                                ? noResponseLeads
+                                                : offlineVAnalyticsData[0]
+                                                    ['no_response_leads'],
+                                            style: TextStyle(
+                                              color: Colors.grey,
+                                              fontSize: font14,
+                                            ),
+                                          )
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                  SizedBox(
+                                    height: ScreenUtil().setHeight(20),
+                                  ),
+                                  Container(
+                                    color: Colors.white,
+                                    height: ScreenUtil().setHeight(820),
+                                    child: SfCircularChart(
+                                      onPointTapped: (PointTapArgs args) {
+                                        _redirectAppChart(args.pointIndex);
+                                      },
+                                      // tooltipBehavior: TooltipBehavior(enable: true),
+                                      // Enables the legend
+                                      legend: Legend(
+                                          title: LegendTitle(
+                                              text: "App",
+                                              textStyle: ChartTextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: font16,
+                                              )),
+                                          isVisible: true,
+                                          overflowMode:
+                                              LegendItemOverflowMode.wrap),
+                                      series: <CircularSeries>[
+                                        PieSeries<AppData, String>(
+                                          enableSmartLabels: true,
+                                          dataSource: [
+                                            // Bind data source
+                                            AppData(
+                                                'VFlex',
+                                                (connection == true)
+                                                    ? double.parse(vflex)
+                                                    : double.parse(
+                                                        offlineVAnalyticsData[0]
+                                                            ['vflex']),
+                                                Color.fromRGBO(
+                                                    175, 238, 238, 1)),
+                                            AppData(
+                                                'VCard',
+                                                (connection == true)
+                                                    ? double.parse(vcard)
+                                                    : double.parse(
+                                                        offlineVAnalyticsData[0]
+                                                            ['vcard']),
+                                                Color.fromRGBO(0, 0, 205, 1)),
+                                            AppData(
+                                                'VCatelogue',
+                                                (connection == true)
+                                                    ? double.parse(vcatelogue)
+                                                    : double.parse(
+                                                        offlineVAnalyticsData[0]
+                                                            ['vcatelogue']),
+                                                Color.fromRGBO(
+                                                    30, 144, 255, 1)),
+                                            AppData(
+                                                'VBot',
+                                                (connection == true)
+                                                    ? double.parse(vbot)
+                                                    : double.parse(
+                                                        offlineVAnalyticsData[0]
+                                                            ['vbot']),
+                                                Color.fromRGBO(0, 128, 255, 1)),
+                                            AppData(
+                                                'VHome',
+                                                (connection == true)
+                                                    ? double.parse(vhome)
+                                                    : double.parse(
+                                                        offlineVAnalyticsData[0]
+                                                            ['vhome']),
+                                                Color.fromRGBO(
+                                                    15, 128, 196, 1)),
+                                          ],
+                                          pointColorMapper: (AppData data, _) =>
+                                              data.color,
+                                          xValueMapper: (AppData data, _) =>
+                                              data.x,
+                                          yValueMapper: (AppData data, _) =>
+                                              data.y,
+                                          dataLabelSettings: DataLabelSettings(
+                                              isVisible: true,
+                                              labelPosition:
+                                                  LabelPosition.inside),
+                                        )
+                                      ],
+                                    ),
+                                  ),
+                                  SizedBox(
+                                    height: ScreenUtil().setHeight(20),
+                                  ),
+                                  Container(
+                                    height: ScreenUtil().setHeight(820),
+                                    color: Colors.white,
+                                    child: SfCircularChart(
+                                      onPointTapped: (PointTapArgs args) {
+                                        _redirectChannelChart(args.pointIndex);
+                                      },
+                                      // tooltipBehavior: TooltipBehavior(enable: true),
+                                      // Enables the legend
+                                      legend: Legend(
+                                          title: LegendTitle(
+                                              text: "Channel",
+                                              textStyle: ChartTextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: font16,
+                                              )),
+                                          isVisible: true,
+                                          overflowMode:
+                                              LegendItemOverflowMode.wrap),
+                                      series: <CircularSeries>[
+                                        PieSeries<ChannelData, String>(
+                                          enableSmartLabels: true,
+                                          dataSource: [
+                                            // Bind data source
+                                            ChannelData(
+                                                'WhatsApp Forward',
+                                                (connection == true)
+                                                    ? double.parse(
+                                                        whatsappForward)
+                                                    : double.parse(
+                                                        offlineVAnalyticsData[0]
+                                                            [
+                                                            'whatsapp_forward']),
+                                                Color.fromRGBO(
+                                                    72, 209, 204, 1)),
+                                            ChannelData(
+                                                'Contact Form',
+                                                (connection == true)
+                                                    ? double.parse(contactForm)
+                                                    : double.parse(
+                                                        offlineVAnalyticsData[0]
+                                                            ['contact_form']),
+                                                Color.fromRGBO(255, 165, 0, 1)),
+                                            ChannelData(
+                                                'Messenger',
+                                                (connection == true)
+                                                    ? double.parse(messenger)
+                                                    : double.parse(
+                                                        offlineVAnalyticsData[0]
+                                                            ['messenger']),
+                                                Color.fromRGBO(
+                                                    135, 206, 250, 1)),
+                                            ChannelData(
+                                                'Import',
+                                                (connection == true)
+                                                    ? double.parse(import)
+                                                    : double.parse(
+                                                        offlineVAnalyticsData[0]
+                                                            ['import']),
+                                                Color.fromRGBO(
+                                                    225, 225, 255, 1)),
+                                          ],
+                                          pointColorMapper:
+                                              (ChannelData data, _) =>
+                                                  data.color,
+                                          xValueMapper: (ChannelData data, _) =>
+                                              data.x,
+                                          yValueMapper: (ChannelData data, _) =>
+                                              data.y,
+                                          dataLabelSettings: DataLabelSettings(
+                                              isVisible: true,
+                                              labelPosition:
+                                                  LabelPosition.inside),
+                                        )
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            )
+                          ],
+                        )
+                      : Container(
+                          height: MediaQuery.of(context).size.height * 0.8,
+                          child: Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: <Widget>[
+                                JumpingText('Loading...'),
+                                SizedBox(
+                                    height: MediaQuery.of(context).size.height *
+                                        0.02),
+                                SpinKitRing(
+                                  lineWidth: 3,
+                                  color: Colors.blue,
+                                  size: 30.0,
+                                  duration: Duration(milliseconds: 600),
                                 ),
                               ],
                             ),
-                          )
-                        ],
-                      )
-                    : Container(
-                        height: MediaQuery.of(context).size.height * 0.8,
-                        child: Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: <Widget>[
-                              JumpingText('Loading...'),
-                              SizedBox(
-                                  height: MediaQuery.of(context).size.height *
-                                      0.02),
-                              SpinKitRing(
-                                lineWidth: 3,
-                                color: Colors.blue,
-                                size: 30.0,
-                                duration: Duration(milliseconds: 600),
-                              ),
-                            ],
                           ),
                         ),
-                      ),
-          ),
-        ),
+                ),
+              ),
       ),
     );
   }
@@ -2453,16 +2432,23 @@ class _VAnalyticsState extends State<VAnalytics> {
   }
 
   void _initialize() async {
-    var connectivityResult = await (Connectivity().checkConnectivity());
-    if (connectivityResult == ConnectivityResult.wifi ||
-        connectivityResult == ConnectivityResult.mobile) {
-      // _onLoading();
-      startTime = (DateTime.now()).millisecondsSinceEpoch;
-      getPreference();
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    if (prefs.getString("level") != "1") {
+      var connectivityResult = await (Connectivity().checkConnectivity());
+      if (connectivityResult == ConnectivityResult.wifi ||
+          connectivityResult == ConnectivityResult.mobile) {
+        // _onLoading();
+        startTime = (DateTime.now()).millisecondsSinceEpoch;
+        getPreference();
+      } else {
+        offline();
+        Toast.show("No Internet, the data shown is not up to date", context,
+            duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
+      }
     } else {
-      offline();
-      Toast.show("No Internet, the data shown is not up to date", context,
-          duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
+      setState(() {
+        editor = true;
+      });
     }
   }
 

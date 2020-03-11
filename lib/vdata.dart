@@ -318,19 +318,23 @@ class _VDataState extends State<VData> {
                 (link == true && vData == true)
                     ? (nodata == true)
                         ? Container(
-                            height: ScreenUtil().setHeight(200),
-                            child: Center(
-                              child: Text(
-                                "No Data",
-                                style: TextStyle(
-                                  fontStyle: FontStyle.italic,
-                                  color: Colors.grey,
-                                  fontSize: ScreenUtil()
-                                      .setSp(50, allowFontScalingSelf: false),
+                            height: MediaQuery.of(context).size.height * 0.7,
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: <Widget>[
+                                Center(
+                                  child: Text(
+                                    "No Data",
+                                    style: TextStyle(
+                                      fontStyle: FontStyle.italic,
+                                      color: Colors.grey,
+                                      fontSize: ScreenUtil().setSp(35,
+                                          allowFontScalingSelf: false),
+                                    ),
+                                  ),
                                 ),
-                              ),
-                            ),
-                          )
+                              ],
+                            ))
                         : Flexible(
                             child: DraggableScrollbar.arrows(
                               alwaysVisibleScrollThumb: false,
@@ -818,12 +822,15 @@ class _VDataState extends State<VData> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: <Widget>[
                               JumpingText('Loading...'),
-                              SizedBox(height: MediaQuery.of(context).size.height * 0.02),
+                              SizedBox(
+                                  height: MediaQuery.of(context).size.height *
+                                      0.02),
                               SpinKitRing(
-                                  lineWidth: 3,
-                                  color: Colors.blue,
-                                  size: 30.0,
-                                  duration: Duration(milliseconds: 600),),
+                                lineWidth: 3,
+                                color: Colors.blue,
+                                size: 30.0,
+                                duration: Duration(milliseconds: 600),
+                              ),
                             ],
                           ),
                         ),
