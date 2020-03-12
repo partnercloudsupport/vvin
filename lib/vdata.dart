@@ -1038,182 +1038,236 @@ class _VDataState extends State<VData> {
                               SizedBox(
                                 height: ScreenUtil().setHeight(15),
                               ),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.start,
-                                children: <Widget>[
-                                  Text(
-                                    "By Type",
-                                    style: TextStyle(
-                                      color: Colors.grey,
-                                      fontSize: font14,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              SizedBox(
-                                height: ScreenUtil().setHeight(10),
-                              ),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.start,
-                                children: <Widget>[
-                                  Flexible(
-                                    child: Wrap(
+                              (level != "0")
+                                  ? Row()
+                                  : Column(
                                       children: <Widget>[
-                                        Container(
-                                          width: ScreenUtil().setWidth(115),
-                                          height: ScreenUtil().setHeight(60),
-                                          margin: EdgeInsets.fromLTRB(0, 0,
-                                              ScreenUtil().setWidth(20), 0),
-                                          decoration: BoxDecoration(
-                                            color: (type == "all")
-                                                ? Colors.blue
-                                                : Colors.white,
-                                            border: Border(
-                                              top: BorderSide(
-                                                  width: 1,
-                                                  color: (type == "all")
-                                                      ? Colors.blue
-                                                      : Colors.grey.shade300),
-                                              right: BorderSide(
-                                                  width: 1,
-                                                  color: (type == "all")
-                                                      ? Colors.blue
-                                                      : Colors.grey.shade300),
-                                              bottom: BorderSide(
-                                                  width: 1,
-                                                  color: (type == "all")
-                                                      ? Colors.blue
-                                                      : Colors.grey.shade300),
-                                              left: BorderSide(
-                                                  width: 1,
-                                                  color: (type == "all")
-                                                      ? Colors.blue
-                                                      : Colors.grey.shade300),
-                                            ),
-                                          ),
-                                          child: FlatButton(
-                                            onPressed: () {
-                                              setModalState(() {
-                                                type = "all";
-                                              });
-                                            },
-                                            child: Text(
-                                              'All',
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.start,
+                                          children: <Widget>[
+                                            Text(
+                                              "By Type",
                                               style: TextStyle(
-                                                fontSize: font12,
-                                                color: (type == "all")
-                                                    ? Colors.white
-                                                    : Colors.grey,
+                                                color: Colors.grey,
+                                                fontSize: font14,
                                               ),
                                             ),
-                                          ),
+                                          ],
                                         ),
-                                        Container(
-                                          width: ScreenUtil().setWidth(220),
-                                          height: ScreenUtil().setHeight(60),
-                                          margin: EdgeInsets.fromLTRB(0, 0,
-                                              ScreenUtil().setWidth(20), 0),
-                                          decoration: BoxDecoration(
-                                            color: (type == "assigned")
-                                                ? Colors.blue
-                                                : Colors.white,
-                                            border: Border(
-                                              top: BorderSide(
-                                                  width: 1,
-                                                  color: (type == "assigned")
-                                                      ? Colors.blue
-                                                      : Colors.grey.shade300),
-                                              right: BorderSide(
-                                                  width: 1,
-                                                  color: (type == "assigned")
-                                                      ? Colors.blue
-                                                      : Colors.grey.shade300),
-                                              bottom: BorderSide(
-                                                  width: 1,
-                                                  color: (type == "assigned")
-                                                      ? Colors.blue
-                                                      : Colors.grey.shade300),
-                                              left: BorderSide(
-                                                  width: 1,
-                                                  color: (type == "assigned")
-                                                      ? Colors.blue
-                                                      : Colors.grey.shade300),
-                                            ),
-                                          ),
-                                          child: FlatButton(
-                                            onPressed: () {
-                                              setModalState(() {
-                                                type = "assigned";
-                                              });
-                                            },
-                                            child: Text(
-                                              'Assigned',
-                                              style: TextStyle(
-                                                fontSize: font12,
-                                                color: (type == "assigned")
-                                                    ? Colors.white
-                                                    : Colors.grey,
-                                              ),
-                                            ),
-                                          ),
+                                        SizedBox(
+                                          height: ScreenUtil().setHeight(10),
                                         ),
-                                        Container(
-                                          width: ScreenUtil().setWidth(250),
-                                          height: ScreenUtil().setHeight(60),
-                                          margin: EdgeInsets.fromLTRB(0, 0,
-                                              ScreenUtil().setWidth(10), 0),
-                                          decoration: BoxDecoration(
-                                            color: (type == "unassigned")
-                                                ? Colors.blue
-                                                : Colors.white,
-                                            border: Border(
-                                              top: BorderSide(
-                                                  width: 1,
-                                                  color: (type == "unassigned")
-                                                      ? Colors.blue
-                                                      : Colors.grey.shade300),
-                                              right: BorderSide(
-                                                  width: 1,
-                                                  color: (type == "unassigned")
-                                                      ? Colors.blue
-                                                      : Colors.grey.shade300),
-                                              bottom: BorderSide(
-                                                  width: 1,
-                                                  color: (type == "unassigned")
-                                                      ? Colors.blue
-                                                      : Colors.grey.shade300),
-                                              left: BorderSide(
-                                                  width: 1,
-                                                  color: (type == "unassigned")
-                                                      ? Colors.blue
-                                                      : Colors.grey.shade300),
-                                            ),
-                                          ),
-                                          child: FlatButton(
-                                            onPressed: () {
-                                              setModalState(() {
-                                                type = "unassigned";
-                                              });
-                                            },
-                                            child: Text(
-                                              'Unassigned',
-                                              style: TextStyle(
-                                                fontSize: font12,
-                                                color: (type == "unassigned")
-                                                    ? Colors.white
-                                                    : Colors.grey,
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.start,
+                                          children: <Widget>[
+                                            Flexible(
+                                              child: Wrap(
+                                                children: <Widget>[
+                                                  Container(
+                                                    width: ScreenUtil()
+                                                        .setWidth(115),
+                                                    height: ScreenUtil()
+                                                        .setHeight(60),
+                                                    margin: EdgeInsets.fromLTRB(
+                                                        0,
+                                                        0,
+                                                        ScreenUtil()
+                                                            .setWidth(20),
+                                                        0),
+                                                    decoration: BoxDecoration(
+                                                      color: (type == "all")
+                                                          ? Colors.blue
+                                                          : Colors.white,
+                                                      border: Border(
+                                                        top: BorderSide(
+                                                            width: 1,
+                                                            color: (type ==
+                                                                    "all")
+                                                                ? Colors.blue
+                                                                : Colors.grey
+                                                                    .shade300),
+                                                        right: BorderSide(
+                                                            width: 1,
+                                                            color: (type ==
+                                                                    "all")
+                                                                ? Colors.blue
+                                                                : Colors.grey
+                                                                    .shade300),
+                                                        bottom: BorderSide(
+                                                            width: 1,
+                                                            color: (type ==
+                                                                    "all")
+                                                                ? Colors.blue
+                                                                : Colors.grey
+                                                                    .shade300),
+                                                        left: BorderSide(
+                                                            width: 1,
+                                                            color: (type ==
+                                                                    "all")
+                                                                ? Colors.blue
+                                                                : Colors.grey
+                                                                    .shade300),
+                                                      ),
+                                                    ),
+                                                    child: FlatButton(
+                                                      onPressed: () {
+                                                        setModalState(() {
+                                                          type = "all";
+                                                        });
+                                                      },
+                                                      child: Text(
+                                                        'All',
+                                                        style: TextStyle(
+                                                          fontSize: font12,
+                                                          color: (type == "all")
+                                                              ? Colors.white
+                                                              : Colors.grey,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  Container(
+                                                    width: ScreenUtil()
+                                                        .setWidth(220),
+                                                    height: ScreenUtil()
+                                                        .setHeight(60),
+                                                    margin: EdgeInsets.fromLTRB(
+                                                        0,
+                                                        0,
+                                                        ScreenUtil()
+                                                            .setWidth(20),
+                                                        0),
+                                                    decoration: BoxDecoration(
+                                                      color:
+                                                          (type == "assigned")
+                                                              ? Colors.blue
+                                                              : Colors.white,
+                                                      border: Border(
+                                                        top: BorderSide(
+                                                            width: 1,
+                                                            color: (type ==
+                                                                    "assigned")
+                                                                ? Colors.blue
+                                                                : Colors.grey
+                                                                    .shade300),
+                                                        right: BorderSide(
+                                                            width: 1,
+                                                            color: (type ==
+                                                                    "assigned")
+                                                                ? Colors.blue
+                                                                : Colors.grey
+                                                                    .shade300),
+                                                        bottom: BorderSide(
+                                                            width: 1,
+                                                            color: (type ==
+                                                                    "assigned")
+                                                                ? Colors.blue
+                                                                : Colors.grey
+                                                                    .shade300),
+                                                        left: BorderSide(
+                                                            width: 1,
+                                                            color: (type ==
+                                                                    "assigned")
+                                                                ? Colors.blue
+                                                                : Colors.grey
+                                                                    .shade300),
+                                                      ),
+                                                    ),
+                                                    child: FlatButton(
+                                                      onPressed: () {
+                                                        setModalState(() {
+                                                          type = "assigned";
+                                                        });
+                                                      },
+                                                      child: Text(
+                                                        'Assigned',
+                                                        style: TextStyle(
+                                                          fontSize: font12,
+                                                          color: (type ==
+                                                                  "assigned")
+                                                              ? Colors.white
+                                                              : Colors.grey,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  Container(
+                                                    width: ScreenUtil()
+                                                        .setWidth(250),
+                                                    height: ScreenUtil()
+                                                        .setHeight(60),
+                                                    margin: EdgeInsets.fromLTRB(
+                                                        0,
+                                                        0,
+                                                        ScreenUtil()
+                                                            .setWidth(10),
+                                                        0),
+                                                    decoration: BoxDecoration(
+                                                      color:
+                                                          (type == "unassigned")
+                                                              ? Colors.blue
+                                                              : Colors.white,
+                                                      border: Border(
+                                                        top: BorderSide(
+                                                            width: 1,
+                                                            color: (type ==
+                                                                    "unassigned")
+                                                                ? Colors.blue
+                                                                : Colors.grey
+                                                                    .shade300),
+                                                        right: BorderSide(
+                                                            width: 1,
+                                                            color: (type ==
+                                                                    "unassigned")
+                                                                ? Colors.blue
+                                                                : Colors.grey
+                                                                    .shade300),
+                                                        bottom: BorderSide(
+                                                            width: 1,
+                                                            color: (type ==
+                                                                    "unassigned")
+                                                                ? Colors.blue
+                                                                : Colors.grey
+                                                                    .shade300),
+                                                        left: BorderSide(
+                                                            width: 1,
+                                                            color: (type ==
+                                                                    "unassigned")
+                                                                ? Colors.blue
+                                                                : Colors.grey
+                                                                    .shade300),
+                                                      ),
+                                                    ),
+                                                    child: FlatButton(
+                                                      onPressed: () {
+                                                        setModalState(() {
+                                                          type = "unassigned";
+                                                        });
+                                                      },
+                                                      child: Text(
+                                                        'Unassigned',
+                                                        style: TextStyle(
+                                                          fontSize: font12,
+                                                          color: (type ==
+                                                                  "unassigned")
+                                                              ? Colors.white
+                                                              : Colors.grey,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
                                               ),
                                             ),
-                                          ),
+                                          ],
+                                        ),
+                                        SizedBox(
+                                          height: ScreenUtil().setHeight(30),
                                         ),
                                       ],
                                     ),
-                                  ),
-                                ],
-                              ),
-                              SizedBox(
-                                height: ScreenUtil().setHeight(30),
-                              ),
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.start,
                                 children: <Widget>[

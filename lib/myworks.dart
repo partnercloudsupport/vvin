@@ -3480,10 +3480,13 @@ class _MyWorksState extends State<MyWorks> {
     if (offlineLink.length == 0) {
       setState(() {
         nodata = true;
+        status = true;
+        vtagStatus = true;
       });
     } else {
       setState(() {
         status = true;
+        vtagStatus = true;
       });
     }
   }

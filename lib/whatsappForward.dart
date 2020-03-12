@@ -42,7 +42,7 @@ class _WhatsAppForwardState extends State<WhatsAppForward> {
   List<String> phoneList = [];
   List<String> otherList = [];
   List seletedVTag = [];
-  String pathName, base64Image, tempText, number;
+  String pathName, base64Image, tempText, number, platform;
 
   @override
   void initState() {
@@ -51,6 +51,11 @@ class _WhatsAppForwardState extends State<WhatsAppForward> {
     tempText = "";
     base64Image = "";
     number = "";
+    if (Platform.isAndroid) {
+      platform = "android";
+    } else {
+      platform = "ios";
+    }
     super.initState();
   }
 
@@ -73,7 +78,7 @@ class _WhatsAppForwardState extends State<WhatsAppForward> {
                       resizeToAvoidBottomInset: true,
                       body: SingleChildScrollView(
                         physics: ScrollPhysics(),
-                        controller: whatsappController, 
+                        controller: whatsappController,
                         child: Container(
                           margin: EdgeInsets.fromLTRB(
                               ScreenUtil().setHeight(30),
@@ -877,9 +882,11 @@ class _WhatsAppForwardState extends State<WhatsAppForward> {
           "url": widget.whatsappForward.url,
           "nameCard": "",
           "number": widget.whatsappForward.userID + "_" + number,
+          "system": platform,
         }).then((res) {
           Navigator.pop(context);
-          launch(res.body);
+          FlutterOpenWhatsapp.sendSingleMessage(_phonecontroller.text, "Hello " + _namecontroller.text + "! Reply 'hi' to enable the URL link. " + widget.whatsappForward.url + res.body);
+          // launch(res.body);
           CurrentIndex index = new CurrentIndex(index: 2);
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(
@@ -994,10 +1001,14 @@ class _WhatsAppForwardState extends State<WhatsAppForward> {
                                     }
                                   }
                                   if (cancelAdd == false) {
-                                    seletedVTag.add(selectedTag);
+                                    setState(() {
+                                      seletedVTag.add(selectedTag);
+                                    });
                                   }
                                 } else {
-                                  seletedVTag.add(selectedTag);
+                                  setState(() {
+                                    seletedVTag.add(selectedTag);
+                                  });
                                 }
                               }
                               Navigator.pop(context);
@@ -1350,6 +1361,7 @@ class _WhatsAppForwardState extends State<WhatsAppForward> {
           "number": widget.whatsappForward.userID + "_" + number,
           "url": widget.whatsappForward.url,
           "nameCard": base64Image,
+          "system": platform,
         })
         .then((res) {})
         .catchError((err) {
