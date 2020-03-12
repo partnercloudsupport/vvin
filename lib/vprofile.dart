@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:connectivity/connectivity.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:firebase_ml_vision/firebase_ml_vision.dart';
+import 'package:photo_view/photo_view.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -619,50 +619,6 @@ class _VProfileState extends State<VProfile>
     );
   }
 
-  void _showNameCard() {
-    showDialog(
-      context: context,
-      barrierDismissible: true,
-      builder: (_) => Dialog(
-        elevation: 0.0,
-        backgroundColor: Colors.transparent,
-        child: Stack(
-          children: <Widget>[
-            Container(
-              height: MediaQuery.of(context).size.height * 0.5,
-              width: MediaQuery.of(context).size.width,
-              decoration: BoxDecoration(
-                shape: BoxShape.rectangle,
-                color: Colors.white,
-                borderRadius: BorderRadius.all(Radius.circular(10.0)),
-                image: DecorationImage(
-                  fit: BoxFit.fitWidth,
-                  image: NetworkImage(vProfileDetails[0].img),
-                ),
-              ),
-            ),
-            Positioned(
-              right: 0.0,
-              child: GestureDetector(
-                onTap: () {
-                  Navigator.of(context).pop();
-                },
-                child: Align(
-                  alignment: Alignment.topRight,
-                  child: CircleAvatar(
-                    radius: 14.0,
-                    backgroundColor: Colors.white,
-                    child: Icon(Icons.close, color: Colors.red),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   void _editVProfile() async {
     var connectivityResult = await (Connectivity().checkConnectivity());
     if (connectivityResult == ConnectivityResult.wifi ||
@@ -779,7 +735,7 @@ class _VProfileState extends State<VProfile>
       getRemarks();
       getVTag();
     } else {
-      Navigator.pop(context);
+      // Navigator.pop(context);
       Toast.show("No Internet connection! Can't show", context,
           duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
     }
@@ -871,7 +827,7 @@ class _VProfileState extends State<VProfile>
         vProfileData = true;
       });
     }).catchError((err) {
-      Navigator.pop(context);
+      // Navigator.pop(context);
       Toast.show(err, context,
           duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
       print("Get VProfile data error: " + (err).toString());
@@ -1057,14 +1013,13 @@ class Details extends StatefulWidget {
   final List handler;
   final VDataDetails vdata;
   final List vtag;
-  const Details(
-      {Key key,
-      this.vProfileDetails,
-      this.handler,
-      this.vdata,
-      this.vtag,
-      })
-      : super(key: key);
+  const Details({
+    Key key,
+    this.vProfileDetails,
+    this.handler,
+    this.vdata,
+    this.vtag,
+  }) : super(key: key);
 
   @override
   _DetailsState createState() => _DetailsState();
@@ -1082,7 +1037,7 @@ class _DetailsState extends State<Details> {
     super.initState();
   }
 
-  void setup() async{
+  void setup() async {
     Directory dir = await getApplicationDocumentsDirectory();
     String pathName = dir.path.toString() + "/attachment.png";
     file = File(pathName);
@@ -2049,18 +2004,23 @@ class _DetailsState extends State<Details> {
                                 SizedBox(
                                   height: ScreenUtil().setHeight(20),
                                 ),
-                                Container(
-                                  height: ScreenUtil().setHeight(500),
-                                  width: ScreenUtil().setHeight(500),
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.rectangle,
-                                    color: Colors.white,
-                                    borderRadius:
-                                        BorderRadius.all(Radius.circular(10.0)),
-                                    image: DecorationImage(
-                                      fit: BoxFit.contain,
-                                      image: NetworkImage(
-                                          widget.vProfileDetails[0].img),
+                                InkWell(
+                                  onTap: () {
+                                    _showNameCard();
+                                  },
+                                  child: Container(
+                                    height: ScreenUtil().setHeight(500),
+                                    width: ScreenUtil().setHeight(500),
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.rectangle,
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.all(
+                                          Radius.circular(10.0)),
+                                      image: DecorationImage(
+                                        fit: BoxFit.contain,
+                                        image: NetworkImage(
+                                            widget.vProfileDetails[0].img),
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -2076,6 +2036,57 @@ class _DetailsState extends State<Details> {
       ),
     );
   }
+
+  void _showNameCard() {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (_) => Dialog(
+        elevation: 0.0,
+        backgroundColor: Colors.transparent,
+        child: Stack(
+          children: <Widget>[
+            Container(
+              color: Colors.white,
+              margin: EdgeInsets.fromLTRB(
+                  0, ScreenUtil().setHeight(20), ScreenUtil().setHeight(20), 0),
+              height: MediaQuery.of(context).size.height * 0.5,
+              width: MediaQuery.of(context).size.width * 0.8,
+              // decoration: BoxDecoration(
+              //   shape: BoxShape.rectangle,
+              //   color: Colors.white,
+              //   borderRadius: BorderRadius.all(Radius.circular(30.0)),
+              //   image: DecorationImage(
+              //     fit: BoxFit.fitWidth,
+              //     image: NetworkImage(widget.vProfileDetails[0].img),
+              //   ),
+              // ),
+              child: PhotoView(
+                imageProvider: NetworkImage(widget.vProfileDetails[0].img),
+              ),
+            ),
+            Positioned(
+              right: 0.0,
+              child: GestureDetector(
+                onTap: () {
+                  Navigator.of(context).pop();
+                },
+                child: Align(
+                  alignment: Alignment.topRight,
+                  child: CircleAvatar(
+                    radius: 14.0,
+                    backgroundColor: Colors.white,
+                    child: Icon(Icons.close, color: Colors.red),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   String _dateFormat(String fullDate) {
     String result, date, month, year;
     date = fullDate.substring(8, 10);

@@ -2760,7 +2760,6 @@ class _VAnalyticsState extends State<VAnalytics> {
         );
         leadsDatas.add(leadsData);
       } else {
-        print(res.body);
         var jsonData = json.decode(res.body);
         leadsDatas.clear();
         for (var data in jsonData) {
