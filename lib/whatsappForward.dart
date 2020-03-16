@@ -1344,7 +1344,7 @@ class _WhatsAppForwardState extends State<WhatsAppForward> {
 
   Future readText() async {
     pickedImage = await FlutterNativeImage.compressImage(pickedImage.path,
-        quality: 20, percentage: 30);
+        quality: 40, percentage: 30);
     base64Image = base64Encode(pickedImage.readAsBytesSync());
     number = Random().nextInt(200).toString();
     http
