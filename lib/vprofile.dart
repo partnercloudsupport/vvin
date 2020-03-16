@@ -1,7 +1,10 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:connectivity/connectivity.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:firebase_ml_vision/firebase_ml_vision.dart';
+import 'package:flutter_native_image/flutter_native_image.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -717,14 +720,14 @@ class _VProfileState extends State<VProfile>
   }
 
   void checkConnection() async {
-    // Directory dir = await getApplicationDocumentsDirectory();
-    // String pathName = dir.path.toString() + "/attchment.png";
-    // if (File(pathName).existsSync() == true) {
-    //   try {
-    //     final dir = Directory(pathName);
-    //     dir.deleteSync(recursive: true);
-    //   } catch (err) {}
-    // }
+    Directory dir = await getApplicationDocumentsDirectory();
+    String pathName = dir.path.toString() + "/attachment.png";
+    if (File(pathName).existsSync() == true) {
+      try {
+        final dir = Directory(pathName);
+        dir.deleteSync(recursive: true);
+      } catch (err) {}
+    }
     var connectivityResult = await (Connectivity().checkConnectivity());
     if (connectivityResult == ConnectivityResult.wifi ||
         connectivityResult == ConnectivityResult.mobile) {
@@ -1028,7 +1031,10 @@ class Details extends StatefulWidget {
 class _DetailsState extends State<Details> {
   double font16 = ScreenUtil().setSp(36.8, allowFontScalingSelf: false);
   int emailLength;
-  File file;
+  File file, pickedImage;
+  List<String> phoneList = [];
+  List<String> otherList = [];
+  bool ready = false;
 
   @override
   void initState() {
@@ -1040,118 +1046,101 @@ class _DetailsState extends State<Details> {
   void setup() async {
     Directory dir = await getApplicationDocumentsDirectory();
     String pathName = dir.path.toString() + "/attachment.png";
-    file = File(pathName);
-    // readText();
+    setState(() {
+      file = File(pathName);
+      ready = true;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     ScreenUtil.init(context, width: 750, height: 1334, allowFontScaling: false);
     return Scaffold(
-      body: Container(
-        padding: EdgeInsets.fromLTRB(
-            0, ScreenUtil().setHeight(20), 0, ScreenUtil().setHeight(20)),
-        color: Colors.white,
-        child: Column(
-          children: <Widget>[
-            Flexible(
-              child: SingleChildScrollView(
-                physics: ScrollPhysics(),
-                child: Column(
-                  children: <Widget>[
-                    Container(
-                      decoration: BoxDecoration(
-                        border: Border(
-                          bottom: BorderSide(
-                              width: ScreenUtil().setHeight(2),
-                              color: Colors.grey.shade300),
-                        ),
-                      ),
+      body: (ready == false)
+          ? Container()
+          : Container(
+              padding: EdgeInsets.fromLTRB(
+                  0, ScreenUtil().setHeight(20), 0, ScreenUtil().setHeight(20)),
+              color: Colors.white,
+              child: Column(
+                children: <Widget>[
+                  Flexible(
+                    child: SingleChildScrollView(
+                      physics: ScrollPhysics(),
                       child: Column(
                         children: <Widget>[
-                          Row(
-                            children: <Widget>[
-                              Flexible(
-                                flex: 1,
-                                child: (widget.handler.length == 0)
-                                    ? Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.end,
-                                        children: <Widget>[
-                                          Text(
-                                            "Handler",
-                                            style: TextStyle(
-                                                fontSize: font16,
-                                                color: Color.fromRGBO(
-                                                    128, 128, 128, 1)),
-                                          )
-                                        ],
-                                      )
-                                    : Column(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.start,
-                                        children: <Widget>[
-                                          for (var i = 0;
-                                              i < widget.handler.length;
-                                              i++)
-                                            Row(
+                          Container(
+                            decoration: BoxDecoration(
+                              border: Border(
+                                bottom: BorderSide(
+                                    width: ScreenUtil().setHeight(2),
+                                    color: Colors.grey.shade300),
+                              ),
+                            ),
+                            child: Column(
+                              children: <Widget>[
+                                Row(
+                                  children: <Widget>[
+                                    Flexible(
+                                      flex: 1,
+                                      child: (widget.handler.length == 0)
+                                          ? Row(
                                               mainAxisAlignment:
                                                   MainAxisAlignment.end,
                                               children: <Widget>[
-                                                (i == 0)
-                                                    ? Text(
-                                                        "Handler",
-                                                        style: TextStyle(
-                                                            fontSize: font16,
-                                                            color:
-                                                                Color.fromRGBO(
-                                                                    128,
-                                                                    128,
-                                                                    128,
-                                                                    1)),
-                                                      )
-                                                    : Text(""),
+                                                Text(
+                                                  "Handler",
+                                                  style: TextStyle(
+                                                      fontSize: font16,
+                                                      color: Color.fromRGBO(
+                                                          128, 128, 128, 1)),
+                                                )
+                                              ],
+                                            )
+                                          : Column(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.start,
+                                              children: <Widget>[
+                                                for (var i = 0;
+                                                    i < widget.handler.length;
+                                                    i++)
+                                                  Row(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment.end,
+                                                    children: <Widget>[
+                                                      (i == 0)
+                                                          ? Text(
+                                                              "Handler",
+                                                              style: TextStyle(
+                                                                  fontSize:
+                                                                      font16,
+                                                                  color: Color
+                                                                      .fromRGBO(
+                                                                          128,
+                                                                          128,
+                                                                          128,
+                                                                          1)),
+                                                            )
+                                                          : Text(""),
+                                                    ],
+                                                  ),
                                               ],
                                             ),
-                                        ],
-                                      ),
-                              ),
-                              SizedBox(
-                                width: ScreenUtil().setWidth(20),
-                              ),
-                              (widget.handler.length == 0)
-                                  ? Flexible(
-                                      flex: 1,
-                                      child: Container(
-                                        child: Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.start,
-                                          children: <Widget>[
-                                            Flexible(
-                                              child: Text(
-                                                "-",
-                                                style: TextStyle(
-                                                  fontSize: font16,
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    )
-                                  : Flexible(
-                                      flex: 1,
-                                      child: Column(
-                                        children: <Widget>[
-                                          for (var i in widget.handler)
-                                            Container(
+                                    ),
+                                    SizedBox(
+                                      width: ScreenUtil().setWidth(20),
+                                    ),
+                                    (widget.handler.length == 0)
+                                        ? Flexible(
+                                            flex: 1,
+                                            child: Container(
                                               child: Row(
                                                 mainAxisAlignment:
                                                     MainAxisAlignment.start,
                                                 children: <Widget>[
                                                   Flexible(
                                                     child: Text(
-                                                      i.toString(),
+                                                      "-",
                                                       style: TextStyle(
                                                         fontSize: font16,
                                                       ),
@@ -1160,468 +1149,117 @@ class _DetailsState extends State<Details> {
                                                 ],
                                               ),
                                             ),
-                                        ],
-                                      ),
-                                    ),
-                            ],
-                          ),
-                          SizedBox(
-                            height: ScreenUtil().setHeight(10),
-                          ),
-                          Row(
-                            children: <Widget>[
-                              Flexible(
-                                flex: 1,
-                                child: (emailLength == 0)
-                                    ? Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.end,
-                                        children: <Widget>[
-                                          Text(
-                                            "Email",
-                                            style: TextStyle(
-                                                fontSize: font16,
-                                                color: Color.fromRGBO(
-                                                    128, 128, 128, 1)),
                                           )
-                                        ],
-                                      )
-                                    : Column(
-                                        children: <Widget>[
-                                          for (var i = 0; i < emailLength; i++)
-                                            Row(
+                                        : Flexible(
+                                            flex: 1,
+                                            child: Column(
+                                              children: <Widget>[
+                                                for (var i in widget.handler)
+                                                  Container(
+                                                    child: Row(
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .start,
+                                                      children: <Widget>[
+                                                        Flexible(
+                                                          child: Text(
+                                                            i.toString(),
+                                                            style: TextStyle(
+                                                              fontSize: font16,
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                              ],
+                                            ),
+                                          ),
+                                  ],
+                                ),
+                                SizedBox(
+                                  height: ScreenUtil().setHeight(10),
+                                ),
+                                Row(
+                                  children: <Widget>[
+                                    Flexible(
+                                      flex: 1,
+                                      child: (emailLength == 0)
+                                          ? Row(
                                               mainAxisAlignment:
                                                   MainAxisAlignment.end,
                                               children: <Widget>[
-                                                (i == 0)
-                                                    ? Text(
-                                                        "Email",
-                                                        style: TextStyle(
-                                                            fontSize: font16,
-                                                            color:
-                                                                Color.fromRGBO(
-                                                                    128,
-                                                                    128,
-                                                                    128,
-                                                                    1)),
-                                                      )
-                                                    : Text(""),
+                                                Text(
+                                                  "Email",
+                                                  style: TextStyle(
+                                                      fontSize: font16,
+                                                      color: Color.fromRGBO(
+                                                          128, 128, 128, 1)),
+                                                )
+                                              ],
+                                            )
+                                          : Column(
+                                              children: <Widget>[
+                                                for (var i = 0;
+                                                    i < emailLength;
+                                                    i++)
+                                                  Row(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment.end,
+                                                    children: <Widget>[
+                                                      (i == 0)
+                                                          ? Text(
+                                                              "Email",
+                                                              style: TextStyle(
+                                                                  fontSize:
+                                                                      font16,
+                                                                  color: Color
+                                                                      .fromRGBO(
+                                                                          128,
+                                                                          128,
+                                                                          128,
+                                                                          1)),
+                                                            )
+                                                          : Text(""),
+                                                    ],
+                                                  ),
                                               ],
                                             ),
-                                        ],
-                                      ),
-                              ),
-                              SizedBox(
-                                width: ScreenUtil().setWidth(20),
-                              ),
-                              Flexible(
-                                flex: 1,
-                                child: Container(
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.start,
-                                    children: <Widget>[
-                                      Flexible(
-                                        child: Text(
-                                            (widget.vProfileDetails[0].email ==
-                                                    "")
-                                                ? "-"
-                                                : widget
-                                                    .vProfileDetails[0].email,
-                                            style: TextStyle(
-                                              fontSize: font16,
+                                    ),
+                                    SizedBox(
+                                      width: ScreenUtil().setWidth(20),
+                                    ),
+                                    Flexible(
+                                      flex: 1,
+                                      child: Container(
+                                        child: Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.start,
+                                          children: <Widget>[
+                                            Flexible(
+                                              child: Text(
+                                                  (widget.vProfileDetails[0]
+                                                              .email ==
+                                                          "")
+                                                      ? "-"
+                                                      : widget
+                                                          .vProfileDetails[0]
+                                                          .email,
+                                                  style: TextStyle(
+                                                    fontSize: font16,
+                                                  ),
+                                                  textAlign: TextAlign.left),
                                             ),
-                                            textAlign: TextAlign.left),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              )
-                            ],
-                          ),
-                          SizedBox(
-                            height: ScreenUtil().setHeight(10),
-                          ),
-                          Row(
-                            children: <Widget>[
-                              Flexible(
-                                flex: 1,
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.end,
-                                  children: <Widget>[
-                                    Text(
-                                      "Company",
-                                      style: TextStyle(
-                                          fontSize: font16,
-                                          color:
-                                              Color.fromRGBO(128, 128, 128, 1)),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              SizedBox(
-                                width: ScreenUtil().setWidth(20),
-                              ),
-                              Flexible(
-                                flex: 1,
-                                child: Container(
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.start,
-                                    children: <Widget>[
-                                      Flexible(
-                                        child: Text(
-                                          (widget.vProfileDetails[0].company ==
-                                                  "")
-                                              ? "-"
-                                              : widget
-                                                  .vProfileDetails[0].company,
-                                          style: TextStyle(
-                                            fontSize: font16,
-                                          ),
+                                          ],
                                         ),
                                       ),
-                                    ],
-                                  ),
-                                ),
-                              )
-                            ],
-                          ),
-                          SizedBox(
-                            height: ScreenUtil().setHeight(10),
-                          ),
-                          Row(
-                            children: <Widget>[
-                              Flexible(
-                                flex: 1,
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.end,
-                                  children: <Widget>[
-                                    Flexible(
-                                      child: Text(
-                                        "IC/Passport",
-                                        style: TextStyle(
-                                            fontSize: font16,
-                                            color: Color.fromRGBO(
-                                                128, 128, 128, 1)),
-                                      ),
-                                    ),
+                                    )
                                   ],
                                 ),
-                              ),
-                              SizedBox(
-                                width: ScreenUtil().setWidth(20),
-                              ),
-                              Flexible(
-                                flex: 1,
-                                child: Container(
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.start,
-                                    children: <Widget>[
-                                      Flexible(
-                                        child: Text(
-                                          (widget.vProfileDetails[0].ic == "")
-                                              ? "-"
-                                              : widget.vProfileDetails[0].ic,
-                                          style: TextStyle(
-                                            fontSize: font16,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              )
-                            ],
-                          ),
-                          SizedBox(
-                            height: ScreenUtil().setHeight(10),
-                          ),
-                          Row(
-                            children: <Widget>[
-                              Flexible(
-                                flex: 1,
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.end,
-                                  children: <Widget>[
-                                    Flexible(
-                                      child: Text(
-                                        "Date of Birth",
-                                        style: TextStyle(
-                                            fontSize: font16,
-                                            color: Color.fromRGBO(
-                                                128, 128, 128, 1)),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              SizedBox(
-                                width: ScreenUtil().setWidth(20),
-                              ),
-                              Flexible(
-                                flex: 1,
-                                child: Container(
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.start,
-                                    children: <Widget>[
-                                      Flexible(
-                                        child: Text(
-                                          (widget.vProfileDetails[0].dob == "")
-                                              ? "-"
-                                              : _dateFormat(widget
-                                                  .vProfileDetails[0].dob),
-                                          style: TextStyle(
-                                            fontSize: font16,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              )
-                            ],
-                          ),
-                          SizedBox(
-                            height: ScreenUtil().setHeight(10),
-                          ),
-                          Row(
-                            children: <Widget>[
-                              Flexible(
-                                flex: 1,
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.end,
-                                  children: <Widget>[
-                                    Text(
-                                      "Gender",
-                                      style: TextStyle(
-                                          fontSize: font16,
-                                          color:
-                                              Color.fromRGBO(128, 128, 128, 1)),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              SizedBox(
-                                width: ScreenUtil().setWidth(20),
-                              ),
-                              Flexible(
-                                flex: 1,
-                                child: Container(
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.start,
-                                    children: <Widget>[
-                                      Text(
-                                        (widget.vProfileDetails[0].gender == "")
-                                            ? "-"
-                                            : _gender(widget
-                                                .vProfileDetails[0].gender),
-                                        style: TextStyle(
-                                          fontSize: font16,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              )
-                            ],
-                          ),
-                          SizedBox(
-                            height: ScreenUtil().setHeight(10),
-                          ),
-                          Row(
-                            children: <Widget>[
-                              Flexible(
-                                flex: 1,
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.end,
-                                  children: <Widget>[
-                                    Text(
-                                      "Position",
-                                      style: TextStyle(
-                                          fontSize: font16,
-                                          color:
-                                              Color.fromRGBO(128, 128, 128, 1)),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              SizedBox(
-                                width: ScreenUtil().setWidth(20),
-                              ),
-                              Flexible(
-                                flex: 1,
-                                child: Container(
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.start,
-                                    children: <Widget>[
-                                      Flexible(
-                                        child: Text(
-                                          (widget.vProfileDetails[0].position ==
-                                                  "")
-                                              ? "-"
-                                              : widget
-                                                  .vProfileDetails[0].position,
-                                          style: TextStyle(
-                                            fontSize: font16,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              )
-                            ],
-                          ),
-                          SizedBox(
-                            height: ScreenUtil().setHeight(10),
-                          ),
-                          Row(
-                            children: <Widget>[
-                              Flexible(
-                                flex: 1,
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.end,
-                                  children: <Widget>[
-                                    Text(
-                                      "Industry",
-                                      style: TextStyle(
-                                          fontSize: font16,
-                                          color:
-                                              Color.fromRGBO(128, 128, 128, 1)),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              SizedBox(
-                                width: ScreenUtil().setWidth(20),
-                              ),
-                              Flexible(
-                                flex: 1,
-                                child: Container(
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.start,
-                                    children: <Widget>[
-                                      Flexible(
-                                        child: Text(
-                                          (widget.vProfileDetails[0].industry ==
-                                                  "")
-                                              ? "-"
-                                              : widget
-                                                  .vProfileDetails[0].industry,
-                                          style: TextStyle(
-                                            fontSize: font16,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              )
-                            ],
-                          ),
-                          SizedBox(
-                            height: ScreenUtil().setHeight(10),
-                          ),
-                          Row(
-                            children: <Widget>[
-                              Flexible(
-                                flex: 1,
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.end,
-                                  children: <Widget>[
-                                    Text(
-                                      "Occupation",
-                                      style: TextStyle(
-                                          fontSize: font16,
-                                          color:
-                                              Color.fromRGBO(128, 128, 128, 1)),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              SizedBox(
-                                width: ScreenUtil().setWidth(20),
-                              ),
-                              Flexible(
-                                flex: 1,
-                                child: Container(
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.start,
-                                    children: <Widget>[
-                                      Flexible(
-                                        child: Text(
-                                          (widget.vProfileDetails[0]
-                                                      .occupation ==
-                                                  "")
-                                              ? "-"
-                                              : widget.vProfileDetails[0]
-                                                  .occupation,
-                                          style: TextStyle(
-                                            fontSize: font16,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              )
-                            ],
-                          ),
-                          SizedBox(
-                            height: ScreenUtil().setHeight(10),
-                          ),
-                          Row(
-                            children: <Widget>[
-                              Flexible(
-                                flex: 1,
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.end,
-                                  children: <Widget>[
-                                    Text(
-                                      "Country",
-                                      style: TextStyle(
-                                          fontSize: font16,
-                                          color:
-                                              Color.fromRGBO(128, 128, 128, 1)),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              SizedBox(
-                                width: ScreenUtil().setWidth(20),
-                              ),
-                              Flexible(
-                                flex: 1,
-                                child: Container(
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.start,
-                                    children: <Widget>[
-                                      Flexible(
-                                        child: Text(
-                                          (widget.vProfileDetails[0].country ==
-                                                  "")
-                                              ? "-"
-                                              : widget
-                                                  .vProfileDetails[0].country,
-                                          style: TextStyle(
-                                            fontSize: font16,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              )
-                            ],
-                          ),
-                          (widget.vProfileDetails[0].country == "Malaysia")
-                              ? SizedBox(
+                                SizedBox(
                                   height: ScreenUtil().setHeight(10),
-                                )
-                              : SizedBox(
-                                  height: 0,
                                 ),
-                          (widget.vProfileDetails[0].country == "Malaysia")
-                              ? Row(
+                                Row(
                                   children: <Widget>[
                                     Flexible(
                                       flex: 1,
@@ -1630,7 +1268,7 @@ class _DetailsState extends State<Details> {
                                             MainAxisAlignment.end,
                                         children: <Widget>[
                                           Text(
-                                            "State",
+                                            "Company",
                                             style: TextStyle(
                                                 fontSize: font16,
                                                 color: Color.fromRGBO(
@@ -1652,11 +1290,11 @@ class _DetailsState extends State<Details> {
                                             Flexible(
                                               child: Text(
                                                 (widget.vProfileDetails[0]
-                                                            .state ==
+                                                            .company ==
                                                         "")
                                                     ? "-"
                                                     : widget.vProfileDetails[0]
-                                                        .state,
+                                                        .company,
                                                 style: TextStyle(
                                                   fontSize: font16,
                                                 ),
@@ -1667,374 +1305,895 @@ class _DetailsState extends State<Details> {
                                       ),
                                     )
                                   ],
-                                )
-                              : Row(),
-                          SizedBox(
-                            height: ScreenUtil().setHeight(10),
-                          ),
-                          Row(
-                            children: <Widget>[
-                              Flexible(
-                                flex: 1,
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.end,
+                                ),
+                                SizedBox(
+                                  height: ScreenUtil().setHeight(10),
+                                ),
+                                Row(
                                   children: <Widget>[
-                                    Text(
-                                      "Area",
-                                      style: TextStyle(
-                                          fontSize: font16,
-                                          color:
-                                              Color.fromRGBO(128, 128, 128, 1)),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              SizedBox(
-                                width: ScreenUtil().setWidth(20),
-                              ),
-                              Flexible(
-                                flex: 1,
-                                child: Container(
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.start,
-                                    children: <Widget>[
-                                      Flexible(
-                                        child: Text(
-                                          (widget.vProfileDetails[0].area == "")
-                                              ? "-"
-                                              : widget.vProfileDetails[0].area,
-                                          style: TextStyle(
-                                            fontSize: font16,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              )
-                            ],
-                          ),
-                          SizedBox(
-                            height: ScreenUtil().setHeight(10),
-                          ),
-                          Row(
-                            children: <Widget>[
-                              Flexible(
-                                flex: 1,
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.end,
-                                  children: <Widget>[
-                                    Text(
-                                      "App",
-                                      style: TextStyle(
-                                          fontSize: font16,
-                                          color:
-                                              Color.fromRGBO(128, 128, 128, 1)),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              SizedBox(
-                                width: ScreenUtil().setWidth(20),
-                              ),
-                              Flexible(
-                                flex: 1,
-                                child: Container(
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.start,
-                                    children: <Widget>[
-                                      Flexible(
-                                        child: Text(
-                                          (widget.vProfileDetails[0].app == "")
-                                              ? "-"
-                                              : widget.vProfileDetails[0].app,
-                                          style: TextStyle(
-                                            fontSize: font16,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              )
-                            ],
-                          ),
-                          SizedBox(
-                            height: ScreenUtil().setHeight(10),
-                          ),
-                          Row(
-                            children: <Widget>[
-                              Flexible(
-                                flex: 1,
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.end,
-                                  children: <Widget>[
-                                    Text(
-                                      "Channel",
-                                      style: TextStyle(
-                                          fontSize: font16,
-                                          color:
-                                              Color.fromRGBO(128, 128, 128, 1)),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              SizedBox(
-                                width: ScreenUtil().setWidth(20),
-                              ),
-                              Flexible(
-                                flex: 1,
-                                child: Container(
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.start,
-                                    children: <Widget>[
-                                      Flexible(
-                                        child: Text(
-                                          (widget.vProfileDetails[0].channel ==
-                                                  "")
-                                              ? "-"
-                                              : widget
-                                                  .vProfileDetails[0].channel,
-                                          style: TextStyle(
-                                            fontSize: font16,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              )
-                            ],
-                          ),
-                          SizedBox(
-                            height: ScreenUtil().setHeight(10),
-                          ),
-                          Row(
-                            children: <Widget>[
-                              Flexible(
-                                flex: 1,
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.end,
-                                  children: <Widget>[
-                                    Text(
-                                      "Created",
-                                      style: TextStyle(
-                                          fontSize: font16,
-                                          color:
-                                              Color.fromRGBO(128, 128, 128, 1)),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              SizedBox(
-                                width: ScreenUtil().setWidth(20),
-                              ),
-                              Flexible(
-                                flex: 1,
-                                child: Container(
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.start,
-                                    children: <Widget>[
-                                      Flexible(
-                                        child: Text(
-                                          _dateFormat(widget
-                                              .vProfileDetails[0].created),
-                                          style: TextStyle(
-                                            fontSize: font16,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              )
-                            ],
-                          ),
-                          SizedBox(
-                            height: ScreenUtil().setHeight(10),
-                          ),
-                          Row(
-                            children: <Widget>[
-                              Flexible(
-                                flex: 1,
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.end,
-                                  children: <Widget>[
-                                    Text(
-                                      "Last Active",
-                                      style: TextStyle(
-                                          fontSize: font16,
-                                          color:
-                                              Color.fromRGBO(128, 128, 128, 1)),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              SizedBox(
-                                width: ScreenUtil().setWidth(20),
-                              ),
-                              Flexible(
-                                flex: 1,
-                                child: Container(
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.start,
-                                    children: <Widget>[
-                                      Flexible(
-                                        child: Text(
-                                          (widget.vProfileDetails[0]
-                                                      .lastActive !=
-                                                  "")
-                                              ? _dateFormat(widget
-                                                  .vProfileDetails[0]
-                                                  .lastActive)
-                                              : "-",
-                                          style: TextStyle(
-                                            fontSize: font16,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              )
-                            ],
-                          ),
-                          SizedBox(
-                            height: ScreenUtil().setHeight(30),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Container(
-                      decoration: BoxDecoration(
-                        border: Border(
-                          bottom: BorderSide(
-                              width: ScreenUtil().setHeight(2),
-                              color: Colors.grey.shade300),
-                        ),
-                      ),
-                      child: Container(
-                        margin: EdgeInsets.all(ScreenUtil().setHeight(20)),
-                        child: Column(
-                          children: <Widget>[
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              children: <Widget>[
-                                Text(
-                                  "TAGS",
-                                  style: TextStyle(
-                                    fontSize: font16,
-                                    color: Color.fromRGBO(128, 128, 128, 1),
-                                  ),
-                                )
-                              ],
-                            ),
-                            Container(
-                              padding: EdgeInsets.all(0.5),
-                              child: Row(
-                                children: <Widget>[
-                                  Expanded(
-                                    child: Container(
-                                      margin: EdgeInsets.fromLTRB(
-                                          ScreenUtil().setHeight(10), 0, 0, 0),
-                                      child: Wrap(
-                                        direction: Axis.horizontal,
-                                        alignment: WrapAlignment.start,
+                                    Flexible(
+                                      flex: 1,
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.end,
                                         children: <Widget>[
-                                          for (int i = 0;
-                                              i < widget.vtag.length ?? 0;
-                                              i++)
-                                            Container(
-                                              width: ScreenUtil().setWidth(
-                                                  (widget.vtag[i].length * 28)),
-                                              margin: EdgeInsets.all(
-                                                  ScreenUtil().setHeight(5)),
-                                              decoration: BoxDecoration(
-                                                color: Color.fromRGBO(
-                                                    235, 235, 255, 1),
-                                                borderRadius:
-                                                    BorderRadius.circular(100),
-                                              ),
-                                              padding: EdgeInsets.all(
-                                                ScreenUtil().setHeight(10),
-                                              ),
-                                              child: Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.center,
-                                                children: <Widget>[
-                                                  Text(
-                                                    widget.vtag[i],
-                                                    style: TextStyle(
-                                                      color: Colors.black,
-                                                      fontSize: 14,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
+                                          Flexible(
+                                            child: Text(
+                                              "IC/Passport",
+                                              style: TextStyle(
+                                                  fontSize: font16,
+                                                  color: Color.fromRGBO(
+                                                      128, 128, 128, 1)),
                                             ),
+                                          ),
                                         ],
                                       ),
                                     ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    (widget.vProfileDetails[0].img == "")
-                        ? Container()
-                        : Container(
-                            margin: EdgeInsets.all(ScreenUtil().setHeight(20)),
-                            child: Column(
-                              children: <Widget>[
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.start,
-                                  children: <Widget>[
-                                    Text(
-                                      "Attachment",
-                                      style: TextStyle(
-                                        fontSize: font16,
-                                        color: Color.fromRGBO(128, 128, 128, 1),
+                                    SizedBox(
+                                      width: ScreenUtil().setWidth(20),
+                                    ),
+                                    Flexible(
+                                      flex: 1,
+                                      child: Container(
+                                        child: Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.start,
+                                          children: <Widget>[
+                                            Flexible(
+                                              child: Text(
+                                                (widget.vProfileDetails[0].ic ==
+                                                        "")
+                                                    ? "-"
+                                                    : widget
+                                                        .vProfileDetails[0].ic,
+                                                style: TextStyle(
+                                                  fontSize: font16,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
                                       ),
                                     )
                                   ],
                                 ),
                                 SizedBox(
-                                  height: ScreenUtil().setHeight(20),
+                                  height: ScreenUtil().setHeight(10),
                                 ),
-                                InkWell(
-                                  onTap: () {
-                                    _showNameCard();
-                                  },
-                                  child: Container(
-                                    height: ScreenUtil().setHeight(500),
-                                    width: ScreenUtil().setHeight(500),
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.rectangle,
-                                      color: Colors.white,
-                                      borderRadius: BorderRadius.all(
-                                          Radius.circular(10.0)),
-                                      image: DecorationImage(
-                                        fit: BoxFit.contain,
-                                        image: NetworkImage(
-                                            widget.vProfileDetails[0].img),
+                                Row(
+                                  children: <Widget>[
+                                    Flexible(
+                                      flex: 1,
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.end,
+                                        children: <Widget>[
+                                          Flexible(
+                                            child: Text(
+                                              "Date of Birth",
+                                              style: TextStyle(
+                                                  fontSize: font16,
+                                                  color: Color.fromRGBO(
+                                                      128, 128, 128, 1)),
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ),
-                                  ),
+                                    SizedBox(
+                                      width: ScreenUtil().setWidth(20),
+                                    ),
+                                    Flexible(
+                                      flex: 1,
+                                      child: Container(
+                                        child: Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.start,
+                                          children: <Widget>[
+                                            Flexible(
+                                              child: Text(
+                                                (widget.vProfileDetails[0]
+                                                            .dob ==
+                                                        "")
+                                                    ? "-"
+                                                    : _dateFormat(widget
+                                                        .vProfileDetails[0]
+                                                        .dob),
+                                                style: TextStyle(
+                                                  fontSize: font16,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    )
+                                  ],
+                                ),
+                                SizedBox(
+                                  height: ScreenUtil().setHeight(10),
+                                ),
+                                Row(
+                                  children: <Widget>[
+                                    Flexible(
+                                      flex: 1,
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.end,
+                                        children: <Widget>[
+                                          Text(
+                                            "Gender",
+                                            style: TextStyle(
+                                                fontSize: font16,
+                                                color: Color.fromRGBO(
+                                                    128, 128, 128, 1)),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    SizedBox(
+                                      width: ScreenUtil().setWidth(20),
+                                    ),
+                                    Flexible(
+                                      flex: 1,
+                                      child: Container(
+                                        child: Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.start,
+                                          children: <Widget>[
+                                            Text(
+                                              (widget.vProfileDetails[0]
+                                                          .gender ==
+                                                      "")
+                                                  ? "-"
+                                                  : _gender(widget
+                                                      .vProfileDetails[0]
+                                                      .gender),
+                                              style: TextStyle(
+                                                fontSize: font16,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    )
+                                  ],
+                                ),
+                                SizedBox(
+                                  height: ScreenUtil().setHeight(10),
+                                ),
+                                Row(
+                                  children: <Widget>[
+                                    Flexible(
+                                      flex: 1,
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.end,
+                                        children: <Widget>[
+                                          Text(
+                                            "Position",
+                                            style: TextStyle(
+                                                fontSize: font16,
+                                                color: Color.fromRGBO(
+                                                    128, 128, 128, 1)),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    SizedBox(
+                                      width: ScreenUtil().setWidth(20),
+                                    ),
+                                    Flexible(
+                                      flex: 1,
+                                      child: Container(
+                                        child: Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.start,
+                                          children: <Widget>[
+                                            Flexible(
+                                              child: Text(
+                                                (widget.vProfileDetails[0]
+                                                            .position ==
+                                                        "")
+                                                    ? "-"
+                                                    : widget.vProfileDetails[0]
+                                                        .position,
+                                                style: TextStyle(
+                                                  fontSize: font16,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    )
+                                  ],
+                                ),
+                                SizedBox(
+                                  height: ScreenUtil().setHeight(10),
+                                ),
+                                Row(
+                                  children: <Widget>[
+                                    Flexible(
+                                      flex: 1,
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.end,
+                                        children: <Widget>[
+                                          Text(
+                                            "Industry",
+                                            style: TextStyle(
+                                                fontSize: font16,
+                                                color: Color.fromRGBO(
+                                                    128, 128, 128, 1)),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    SizedBox(
+                                      width: ScreenUtil().setWidth(20),
+                                    ),
+                                    Flexible(
+                                      flex: 1,
+                                      child: Container(
+                                        child: Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.start,
+                                          children: <Widget>[
+                                            Flexible(
+                                              child: Text(
+                                                (widget.vProfileDetails[0]
+                                                            .industry ==
+                                                        "")
+                                                    ? "-"
+                                                    : widget.vProfileDetails[0]
+                                                        .industry,
+                                                style: TextStyle(
+                                                  fontSize: font16,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    )
+                                  ],
+                                ),
+                                SizedBox(
+                                  height: ScreenUtil().setHeight(10),
+                                ),
+                                Row(
+                                  children: <Widget>[
+                                    Flexible(
+                                      flex: 1,
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.end,
+                                        children: <Widget>[
+                                          Text(
+                                            "Occupation",
+                                            style: TextStyle(
+                                                fontSize: font16,
+                                                color: Color.fromRGBO(
+                                                    128, 128, 128, 1)),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    SizedBox(
+                                      width: ScreenUtil().setWidth(20),
+                                    ),
+                                    Flexible(
+                                      flex: 1,
+                                      child: Container(
+                                        child: Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.start,
+                                          children: <Widget>[
+                                            Flexible(
+                                              child: Text(
+                                                (widget.vProfileDetails[0]
+                                                            .occupation ==
+                                                        "")
+                                                    ? "-"
+                                                    : widget.vProfileDetails[0]
+                                                        .occupation,
+                                                style: TextStyle(
+                                                  fontSize: font16,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    )
+                                  ],
+                                ),
+                                SizedBox(
+                                  height: ScreenUtil().setHeight(10),
+                                ),
+                                Row(
+                                  children: <Widget>[
+                                    Flexible(
+                                      flex: 1,
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.end,
+                                        children: <Widget>[
+                                          Text(
+                                            "Country",
+                                            style: TextStyle(
+                                                fontSize: font16,
+                                                color: Color.fromRGBO(
+                                                    128, 128, 128, 1)),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    SizedBox(
+                                      width: ScreenUtil().setWidth(20),
+                                    ),
+                                    Flexible(
+                                      flex: 1,
+                                      child: Container(
+                                        child: Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.start,
+                                          children: <Widget>[
+                                            Flexible(
+                                              child: Text(
+                                                (widget.vProfileDetails[0]
+                                                            .country ==
+                                                        "")
+                                                    ? "-"
+                                                    : widget.vProfileDetails[0]
+                                                        .country,
+                                                style: TextStyle(
+                                                  fontSize: font16,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    )
+                                  ],
+                                ),
+                                (widget.vProfileDetails[0].country ==
+                                        "Malaysia")
+                                    ? SizedBox(
+                                        height: ScreenUtil().setHeight(10),
+                                      )
+                                    : SizedBox(
+                                        height: 0,
+                                      ),
+                                (widget.vProfileDetails[0].country ==
+                                        "Malaysia")
+                                    ? Row(
+                                        children: <Widget>[
+                                          Flexible(
+                                            flex: 1,
+                                            child: Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.end,
+                                              children: <Widget>[
+                                                Text(
+                                                  "State",
+                                                  style: TextStyle(
+                                                      fontSize: font16,
+                                                      color: Color.fromRGBO(
+                                                          128, 128, 128, 1)),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          SizedBox(
+                                            width: ScreenUtil().setWidth(20),
+                                          ),
+                                          Flexible(
+                                            flex: 1,
+                                            child: Container(
+                                              child: Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.start,
+                                                children: <Widget>[
+                                                  Flexible(
+                                                    child: Text(
+                                                      (widget.vProfileDetails[0]
+                                                                  .state ==
+                                                              "")
+                                                          ? "-"
+                                                          : widget
+                                                              .vProfileDetails[
+                                                                  0]
+                                                              .state,
+                                                      style: TextStyle(
+                                                        fontSize: font16,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          )
+                                        ],
+                                      )
+                                    : Row(),
+                                SizedBox(
+                                  height: ScreenUtil().setHeight(10),
+                                ),
+                                Row(
+                                  children: <Widget>[
+                                    Flexible(
+                                      flex: 1,
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.end,
+                                        children: <Widget>[
+                                          Text(
+                                            "Area",
+                                            style: TextStyle(
+                                                fontSize: font16,
+                                                color: Color.fromRGBO(
+                                                    128, 128, 128, 1)),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    SizedBox(
+                                      width: ScreenUtil().setWidth(20),
+                                    ),
+                                    Flexible(
+                                      flex: 1,
+                                      child: Container(
+                                        child: Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.start,
+                                          children: <Widget>[
+                                            Flexible(
+                                              child: Text(
+                                                (widget.vProfileDetails[0]
+                                                            .area ==
+                                                        "")
+                                                    ? "-"
+                                                    : widget.vProfileDetails[0]
+                                                        .area,
+                                                style: TextStyle(
+                                                  fontSize: font16,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    )
+                                  ],
+                                ),
+                                SizedBox(
+                                  height: ScreenUtil().setHeight(10),
+                                ),
+                                Row(
+                                  children: <Widget>[
+                                    Flexible(
+                                      flex: 1,
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.end,
+                                        children: <Widget>[
+                                          Text(
+                                            "App",
+                                            style: TextStyle(
+                                                fontSize: font16,
+                                                color: Color.fromRGBO(
+                                                    128, 128, 128, 1)),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    SizedBox(
+                                      width: ScreenUtil().setWidth(20),
+                                    ),
+                                    Flexible(
+                                      flex: 1,
+                                      child: Container(
+                                        child: Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.start,
+                                          children: <Widget>[
+                                            Flexible(
+                                              child: Text(
+                                                (widget.vProfileDetails[0]
+                                                            .app ==
+                                                        "")
+                                                    ? "-"
+                                                    : widget
+                                                        .vProfileDetails[0].app,
+                                                style: TextStyle(
+                                                  fontSize: font16,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    )
+                                  ],
+                                ),
+                                SizedBox(
+                                  height: ScreenUtil().setHeight(10),
+                                ),
+                                Row(
+                                  children: <Widget>[
+                                    Flexible(
+                                      flex: 1,
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.end,
+                                        children: <Widget>[
+                                          Text(
+                                            "Channel",
+                                            style: TextStyle(
+                                                fontSize: font16,
+                                                color: Color.fromRGBO(
+                                                    128, 128, 128, 1)),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    SizedBox(
+                                      width: ScreenUtil().setWidth(20),
+                                    ),
+                                    Flexible(
+                                      flex: 1,
+                                      child: Container(
+                                        child: Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.start,
+                                          children: <Widget>[
+                                            Flexible(
+                                              child: Text(
+                                                (widget.vProfileDetails[0]
+                                                            .channel ==
+                                                        "")
+                                                    ? "-"
+                                                    : widget.vProfileDetails[0]
+                                                        .channel,
+                                                style: TextStyle(
+                                                  fontSize: font16,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    )
+                                  ],
+                                ),
+                                SizedBox(
+                                  height: ScreenUtil().setHeight(10),
+                                ),
+                                Row(
+                                  children: <Widget>[
+                                    Flexible(
+                                      flex: 1,
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.end,
+                                        children: <Widget>[
+                                          Text(
+                                            "Created",
+                                            style: TextStyle(
+                                                fontSize: font16,
+                                                color: Color.fromRGBO(
+                                                    128, 128, 128, 1)),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    SizedBox(
+                                      width: ScreenUtil().setWidth(20),
+                                    ),
+                                    Flexible(
+                                      flex: 1,
+                                      child: Container(
+                                        child: Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.start,
+                                          children: <Widget>[
+                                            Flexible(
+                                              child: Text(
+                                                _dateFormat(widget
+                                                    .vProfileDetails[0]
+                                                    .created),
+                                                style: TextStyle(
+                                                  fontSize: font16,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    )
+                                  ],
+                                ),
+                                SizedBox(
+                                  height: ScreenUtil().setHeight(10),
+                                ),
+                                Row(
+                                  children: <Widget>[
+                                    Flexible(
+                                      flex: 1,
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.end,
+                                        children: <Widget>[
+                                          Text(
+                                            "Last Active",
+                                            style: TextStyle(
+                                                fontSize: font16,
+                                                color: Color.fromRGBO(
+                                                    128, 128, 128, 1)),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    SizedBox(
+                                      width: ScreenUtil().setWidth(20),
+                                    ),
+                                    Flexible(
+                                      flex: 1,
+                                      child: Container(
+                                        child: Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.start,
+                                          children: <Widget>[
+                                            Flexible(
+                                              child: Text(
+                                                (widget.vProfileDetails[0]
+                                                            .lastActive !=
+                                                        "")
+                                                    ? _dateFormat(widget
+                                                        .vProfileDetails[0]
+                                                        .lastActive)
+                                                    : "-",
+                                                style: TextStyle(
+                                                  fontSize: font16,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    )
+                                  ],
+                                ),
+                                SizedBox(
+                                  height: ScreenUtil().setHeight(30),
                                 ),
                               ],
                             ),
                           ),
-                  ],
-                ),
+                          Container(
+                            decoration: BoxDecoration(
+                              border: Border(
+                                bottom: BorderSide(
+                                    width: ScreenUtil().setHeight(2),
+                                    color: Colors.grey.shade300),
+                              ),
+                            ),
+                            child: Container(
+                              margin:
+                                  EdgeInsets.all(ScreenUtil().setHeight(20)),
+                              child: Column(
+                                children: <Widget>[
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.start,
+                                    children: <Widget>[
+                                      Text(
+                                        "TAGS",
+                                        style: TextStyle(
+                                          fontSize: font16,
+                                          color:
+                                              Color.fromRGBO(128, 128, 128, 1),
+                                        ),
+                                      )
+                                    ],
+                                  ),
+                                  Container(
+                                    padding: EdgeInsets.all(0.5),
+                                    child: Row(
+                                      children: <Widget>[
+                                        Expanded(
+                                          child: Container(
+                                            margin: EdgeInsets.fromLTRB(
+                                                ScreenUtil().setHeight(10),
+                                                0,
+                                                0,
+                                                0),
+                                            child: Wrap(
+                                              direction: Axis.horizontal,
+                                              alignment: WrapAlignment.start,
+                                              children: <Widget>[
+                                                for (int i = 0;
+                                                    i < widget.vtag.length ?? 0;
+                                                    i++)
+                                                  Container(
+                                                    width: ScreenUtil()
+                                                        .setWidth((widget
+                                                                .vtag[i]
+                                                                .length *
+                                                            28)),
+                                                    margin: EdgeInsets.all(
+                                                        ScreenUtil()
+                                                            .setHeight(5)),
+                                                    decoration: BoxDecoration(
+                                                      color: Color.fromRGBO(
+                                                          235, 235, 255, 1),
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              100),
+                                                    ),
+                                                    padding: EdgeInsets.all(
+                                                      ScreenUtil()
+                                                          .setHeight(10),
+                                                    ),
+                                                    child: Row(
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .center,
+                                                      children: <Widget>[
+                                                        Text(
+                                                          widget.vtag[i],
+                                                          style: TextStyle(
+                                                            color: Colors.black,
+                                                            fontSize: 14,
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          (widget.vProfileDetails[0].img == "")
+                              ? Container()
+                              : Container(
+                                  margin: EdgeInsets.all(
+                                      ScreenUtil().setHeight(20)),
+                                  child: Column(
+                                    children: <Widget>[
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.start,
+                                        children: <Widget>[
+                                          Text(
+                                            "Attachment",
+                                            style: TextStyle(
+                                              fontSize: font16,
+                                              color: Color.fromRGBO(
+                                                  128, 128, 128, 1),
+                                            ),
+                                          )
+                                        ],
+                                      ),
+                                      SizedBox(
+                                        height: ScreenUtil().setHeight(20),
+                                      ),
+                                      Stack(
+                                        children: <Widget>[
+                                          Container(
+                                            height: ScreenUtil().setHeight(500),
+                                            width: ScreenUtil().setHeight(500),
+                                            decoration: BoxDecoration(
+                                              shape: BoxShape.rectangle,
+                                              color: Colors.white,
+                                              borderRadius: BorderRadius.all(
+                                                  Radius.circular(10.0)),
+                                            ),
+                                            child: Image(
+                                                image: NetworkToFileImage(
+                                                    url: widget
+                                                        .vProfileDetails[0].img,
+                                                    file: file,
+                                                    debug: true)),
+                                          ),
+                                          InkWell(
+                                            onTap: () {
+                                              _showNameCard();
+                                              readText();
+                                            },
+                                            child: Container(
+                                              height:
+                                                  ScreenUtil().setHeight(500),
+                                              width:
+                                                  ScreenUtil().setHeight(500),
+                                              decoration: BoxDecoration(
+                                                shape: BoxShape.rectangle,
+                                                color: Colors.white,
+                                                borderRadius: BorderRadius.all(
+                                                    Radius.circular(10.0)),
+                                                image: DecorationImage(
+                                                  image: CachedNetworkImageProvider(widget
+                                                      .vProfileDetails[0].img),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      // InkWell(
+                                      //   onTap: () {
+                                      //     _showNameCard();
+                                      //     readText();
+                                      //   },
+                                      //   child: Container(
+                                      //     height: ScreenUtil().setHeight(500),
+                                      //     width: ScreenUtil().setHeight(500),
+                                      //     decoration: BoxDecoration(
+                                      //       shape: BoxShape.rectangle,
+                                      //       color: Colors.white,
+                                      //       borderRadius: BorderRadius.all(
+                                      //           Radius.circular(10.0)),
+                                      //       image: DecorationImage(
+                                      //         image: NetworkImage(widget
+                                      //             .vProfileDetails[0].img),
+                                      //       ),
+                                      //     ),
+                                      //   ),
+                                      // ),
+                                    ],
+                                  ),
+                                ),
+                        ],
+                      ),
+                    ),
+                  )
+                ],
               ),
-            )
-          ],
-        ),
-      ),
+            ),
     );
+  }
+
+  Future readText() async {
+    if (file.existsSync() == true) {
+      otherList.add("-");
+      FirebaseVisionImage ourImage = FirebaseVisionImage.fromFile(file);
+      TextRecognizer recognizeText = FirebaseVision.instance.textRecognizer();
+      VisionText readText = await recognizeText.processImage(ourImage);
+
+      String patttern = r'[0-9]';
+      RegExp regExp = new RegExp(patttern);
+      for (TextBlock block in readText.blocks) {
+        for (TextLine line in block.lines) {
+          String temPhone = "";
+          for (int i = 0; i < line.text.length; i++) {
+            if (regExp.hasMatch(line.text[i])) {
+              temPhone = temPhone + line.text[i];
+            }
+          }
+          if (temPhone.length >= 10) {
+            if (temPhone.substring(0, 1).toString() != "6") {
+              phoneList.add("6" + temPhone);
+            } else {
+              phoneList.add(temPhone);
+            }
+          } else {
+            otherList.add(line.text);
+          }
+        }
+      }
+    } else {
+      print("File not exits");
+      print(file);
+    }
   }
 
   void _showNameCard() {
