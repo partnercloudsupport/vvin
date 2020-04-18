@@ -781,6 +781,7 @@ class _ProfileState extends State<Profile> {
     userID = prefs.getString('userID');
     level = prefs.getString('level');
     userType = prefs.getString('user_type');
+    print(companyID + ", " + userID + ", " + level + ", " + userType);
     http.post(companyURL, body: {
       "companyID": companyID,
       "userID": userID,
@@ -788,7 +789,7 @@ class _ProfileState extends State<Profile> {
       "user_type": userType
     }).then((res) async {
       // print("Get company details status: " + (res.statusCode).toString());
-      // print("Company details:" + res.body);
+      // print("Company details:" + res.body.toString());
       try {
         final dir = Directory(location + "/company/profile.jpg");
         dir.deleteSync(recursive: true);

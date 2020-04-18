@@ -34,8 +34,6 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:vvin/main.dart';
 
 final ScrollController controller = ScrollController();
-const PLAY_STORE_URL =
-    'https://play.google.com/store/apps/details?id=com.my.jtapps.vvin';
 
 class VAnalytics extends StatefulWidget {
   final String url;
@@ -160,30 +158,6 @@ class _VAnalyticsState extends State<VAnalytics> {
           noti = true;
         }
       },
-      // onLaunch: (Map<String, dynamic> message) async {
-      //   SharedPreferences prefs = await SharedPreferences.getInstance();
-      //   if (prefs.getString('newNoti') != null) {
-      //     int time = int.parse((prefs.getString('newNoti')));
-      //     int now = DateTime.now().millisecondsSinceEpoch;
-      //     if (now - time < 200) {
-      //       Navigator.of(context).pushReplacement(
-      //         MaterialPageRoute(
-      //           builder: (context) => Notifications(),
-      //         ),
-      //       );
-      //       prefs.setString(
-      //           'newNoti', (DateTime.now().millisecondsSinceEpoch).toString());
-      //     }
-      //   } else {
-      //     Navigator.of(context).pushReplacement(
-      //       MaterialPageRoute(
-      //         builder: (context) => Notifications(),
-      //       ),
-      //     );
-      //     prefs.setString(
-      //         'newNoti', (DateTime.now().millisecondsSinceEpoch).toString());
-      //   }
-      // },
       onResume: (Map<String, dynamic> message) async {
         List time = message.toString().split('google.sent_time: ');
         String noti = time[1].toString().substring(0, 13);
@@ -3287,7 +3261,7 @@ class _VAnalyticsState extends State<VAnalytics> {
                   FlatButton(
                     child: Text("Update Now"),
                     onPressed: () => _launchURL(
-                        'https://play.google.com/store/apps/details?id=com.my.jtapps.vvin'),
+                        'https://apps.apple.com/us/app/vvin/id1502502224'),
                   ),
                   FlatButton(
                     child: Text("Later"),
