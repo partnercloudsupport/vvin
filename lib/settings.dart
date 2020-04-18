@@ -1,12 +1,15 @@
 import 'package:connectivity/connectivity.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:toast/toast.dart';
 import 'package:vvin/data.dart';
-import 'package:vvin/mainscreen.dart';
 import 'package:http/http.dart' as http;
+import 'package:vvin/more.dart';
+import 'package:vvin/notifications.dart';
 
 class Settings extends StatefulWidget {
   final Setting setting;
@@ -18,6 +21,7 @@ class Settings extends StatefulWidget {
 
 class _SettingsState extends State<Settings> {
   final ScrollController controller = ScrollController();
+  FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
   double font12 = ScreenUtil().setSp(27.6, allowFontScalingSelf: false);
   double font14 = ScreenUtil().setSp(32.2, allowFontScalingSelf: false);
   double font18 = ScreenUtil().setSp(41.4, allowFontScalingSelf: false);
@@ -30,6 +34,64 @@ class _SettingsState extends State<Settings> {
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
     assign = widget.setting.assign;
     unassign = widget.setting.unassign;
+    _firebaseMessaging.configure(
+      onMessage: (Map<String, dynamic> message) async {
+        bool noti = false;
+        if (noti == false) {
+          showDialog(
+              barrierDismissible: false,
+              context: context,
+              builder: (BuildContext context) => CupertinoAlertDialog(
+                    title: Text(
+                      "You have 1 new notification",
+                      style: TextStyle(
+                        fontSize: font14,
+                      ),
+                    ),
+                    actions: <Widget>[
+                      FlatButton(
+                        child: Text("Cancel"),
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                          Navigator.of(context).pop();
+                          if (this.mounted) {
+                            setState(() {
+                              noti = false;
+                            });
+                          }
+                        },
+                      ),
+                      FlatButton(
+                        child: Text("View"),
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                          Navigator.of(context).pop();
+                          // CurrentIndex index = new CurrentIndex(index: 3);
+                          Navigator.of(context).pushReplacement(
+                            MaterialPageRoute(
+                              builder: (context) => Notifications(),
+                            ),
+                          );
+                        },
+                      )
+                    ],
+                  ));
+          noti = true;
+        }
+      },
+      onResume: (Map<String, dynamic> message) async {
+        List time = message.toString().split('google.sent_time: ');
+        String noti = time[1].toString().substring(0, 13);
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        if (prefs.getString('newNoti') != noti) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (context) => Notifications(),
+            ),
+          );
+        }
+      },
+    );
     super.initState();
   }
 
@@ -98,7 +160,9 @@ class _SettingsState extends State<Settings> {
                             children: <Widget>[
                               Text(
                                 "New Unassign Leads",
-                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: font14),
+                                style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: font14),
                               ),
                             ],
                           ),
@@ -145,7 +209,9 @@ class _SettingsState extends State<Settings> {
                             children: <Widget>[
                               Text(
                                 "Leads assigned to you",
-                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: font14),
+                                style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: font14),
                               ),
                             ],
                           ),
@@ -208,9 +274,11 @@ class _SettingsState extends State<Settings> {
           "assign": assign,
         }).then((res) {
           if (res.body == "1") {
-            setState(() {
-              unassign = status;
-            });
+            if (this.mounted) {
+              setState(() {
+                unassign = status;
+              });
+            }
             Toast.show("Status changed", context,
                 duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
           } else {
@@ -234,9 +302,11 @@ class _SettingsState extends State<Settings> {
           "assign": status,
         }).then((res) {
           if (res.body == "1") {
-            setState(() {
-              assign = status;
-            });
+            if (this.mounted) {
+              setState(() {
+                assign = status;
+              });
+            }
             Toast.show("Status changed", context,
                 duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
           } else {
@@ -264,12 +334,10 @@ class _SettingsState extends State<Settings> {
   }
 
   Future<bool> _onBackPressAppBar() async {
-    CurrentIndex index = new CurrentIndex(index: 4);
+    // CurrentIndex index = new CurrentIndex(index: 4);
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(
-        builder: (context) => MainScreen(
-          index: index,
-        ),
+        builder: (context) => More(),
       ),
     );
     return Future.value(false);

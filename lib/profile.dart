@@ -14,10 +14,11 @@ import 'package:vvin/login.dart';
 import 'package:vvin/data.dart';
 import 'package:vvin/editCompany.dart';
 import 'package:http/http.dart' as http;
-import 'package:vvin/mainscreen.dart';
 import 'package:vvin/mainscreenNotiDB.dart';
+import 'package:vvin/more.dart';
 import 'package:vvin/myworksDB.dart';
 import 'package:vvin/notiDB.dart';
+import 'package:vvin/notifications.dart';
 import 'package:vvin/topViewDB.dart';
 import 'package:vvin/vDataDB.dart';
 import 'package:vvin/vanalyticsDB.dart';
@@ -28,7 +29,6 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 final ScrollController controller = ScrollController();
 
 class Profile extends StatefulWidget {
-
   @override
   _ProfileState createState() => _ProfileState();
 }
@@ -87,9 +87,11 @@ class _ProfileState extends State<Profile> {
                         onPressed: () {
                           Navigator.of(context).pop();
                           Navigator.of(context).pop();
-                          setState(() {
-                            noti = false;
-                          });
+                          if (this.mounted) {
+                            setState(() {
+                              noti = false;
+                            });
+                          }
                         },
                       ),
                       FlatButton(
@@ -97,12 +99,10 @@ class _ProfileState extends State<Profile> {
                         onPressed: () {
                           Navigator.of(context).pop();
                           Navigator.of(context).pop();
-                          CurrentIndex index = new CurrentIndex(index: 3);
+                          // CurrentIndex index = new CurrentIndex(index: 3);
                           Navigator.of(context).pushReplacement(
                             MaterialPageRoute(
-                              builder: (context) => MainScreen(
-                                index: index,
-                              ),
+                              builder: (context) => Notifications(),
                             ),
                           );
                         },
@@ -110,6 +110,18 @@ class _ProfileState extends State<Profile> {
                     ],
                   ));
           noti = true;
+        }
+      },
+      onResume: (Map<String, dynamic> message) async {
+        List time = message.toString().split('google.sent_time: ');
+        String noti = time[1].toString().substring(0, 13);
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        if (prefs.getString('newNoti') != noti) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (context) => Notifications(),
+            ),
+          );
         }
       },
     );
@@ -140,13 +152,13 @@ class _ProfileState extends State<Profile> {
           ),
           child: AppBar(
             leading: IconButton(
-                onPressed: _onBackPressAppBar,
-                icon: Icon(
-                  Icons.arrow_back_ios,
-                  size: ScreenUtil().setWidth(30),
-                  color: Colors.grey,
-                ),
+              onPressed: _onBackPressAppBar,
+              icon: Icon(
+                Icons.arrow_back_ios,
+                size: ScreenUtil().setWidth(30),
+                color: Colors.grey,
               ),
+            ),
             brightness: Brightness.light,
             backgroundColor: Colors.white,
             elevation: 1,
@@ -253,7 +265,8 @@ class _ProfileState extends State<Profile> {
                                           child: Image.file(
                                             File((location == null)
                                                 ? "/data/user/0/com.jtapps.vvin/app_flutter/company/profile.jpg"
-                                                : location + "/company/profile.jpg"),
+                                                : location +
+                                                    "/company/profile.jpg"),
                                           ),
                                         ),
                                       ),
@@ -737,14 +750,12 @@ class _ProfileState extends State<Profile> {
   }
 
   Future<bool> _onBackPressAppBar() async {
-    CurrentIndex index = new CurrentIndex(index: 4);
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder: (context) => MainScreen(
-            index: index,
-          ),
-        ),
-      );
+    // CurrentIndex index = new CurrentIndex(index: 4);
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder: (context) => More(),
+      ),
+    );
     return Future.value(false);
   }
 
@@ -754,9 +765,11 @@ class _ProfileState extends State<Profile> {
         connectivityResult == ConnectivityResult.mobile) {
       loadData();
     } else {
-      setState(() {
-        start = true;
-      });
+      if (this.mounted) {
+        setState(() {
+          start = true;
+        });
+      }
       Toast.show("No Internet, the data shown is not up to date", context,
           duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
     }
@@ -777,45 +790,52 @@ class _ProfileState extends State<Profile> {
       // print("Get company details status: " + (res.statusCode).toString());
       // print("Company details:" + res.body);
       try {
-        final dir = Directory(location + 
-            "/company/profile.jpg");
+        final dir = Directory(location + "/company/profile.jpg");
         dir.deleteSync(recursive: true);
       } catch (err) {}
       var jsonData = json.decode(res.body);
       for (var data in jsonData) {
-        setState(() {
-          name = data["name"];
-          phone = data["phone"];
-          email = data["email"];
-          website = data["website"];
-          address = data["address"];
-          image = data["image"];
-          nameLocal = name;
-          phoneLocal = phone;
-          emailLocal = email;
-          websiteLocal = website;
-          addressLocal = address;
-          setData();
-          _downloadImage(image, "company", "profile");
-        });
+        if (this.mounted) {
+          setState(() {
+            name = data["name"];
+            phone = data["phone"];
+            email = data["email"];
+            website = data["website"];
+            address = data["address"];
+            image = data["image"];
+            nameLocal = name;
+            phoneLocal = phone;
+            emailLocal = email;
+            websiteLocal = website;
+            addressLocal = address;
+            setData();
+            _downloadImage(image, "company", "profile");
+          });
+        }
       }
       if (address == null || address == "") {
       } else {
-        setState(() {
-          addressLength = (address.length / 23).ceil();
-        });
+        if (this.mounted) {
+          setState(() {
+            addressLength = (address.length / 23).ceil();
+          });
+        }
       }
       if (email == null || email == "") {
       } else {
+        if (this.mounted) {
+          setState(() {
+            emailLength = (email.length / 23).ceil();
+          });
+        }
+      }
+      if (this.mounted) {
         setState(() {
-          emailLength = (email.length / 23).ceil();
+          start = true;
+          connection = true;
+          ready = true;
         });
       }
-      setState(() {
-        start = true;
-        connection = true;
-        ready = true;
-      });
     }).catchError((err) {
       print("Load data error: " + (err).toString());
     });
@@ -840,27 +860,37 @@ class _ProfileState extends State<Profile> {
 
   Future<void> initialize() async {
     final _devicePath = await getApplicationDocumentsDirectory();
-    setState(() {
-      location = _devicePath.path.toString();
-    });
-    Database db = await CompanyDB.instance.database;
-    List<Map> result = await db.query(CompanyDB.table);
-    setState(() {
-      nameLocal = result[0]['name'];
-      phoneLocal = result[0]['phone'];
-      emailLocal = result[0]['email'];
-      websiteLocal = result[0]['website'];
-      addressLocal = result[0]['address'];
-    });
-    if (addressLocal.length != 0) {
+    if (this.mounted) {
       setState(() {
-        offLineAddressLength = (addressLocal.length / 23).ceil();
+        location = _devicePath.path.toString();
       });
     }
-    if (addressLocal.length != 0) {
+
+    Database db = await CompanyDB.instance.database;
+    List<Map> result = await db.query(CompanyDB.table);
+    if (this.mounted) {
       setState(() {
-        offLineEmailLength = (emailLocal.length / 23).ceil();
+        nameLocal = result[0]['name'];
+        phoneLocal = result[0]['phone'];
+        emailLocal = result[0]['email'];
+        websiteLocal = result[0]['website'];
+        addressLocal = result[0]['address'];
       });
+    }
+
+    if (addressLocal.length != 0) {
+      if (this.mounted) {
+        setState(() {
+          offLineAddressLength = (addressLocal.length / 23).ceil();
+        });
+      }
+    }
+    if (addressLocal.length != 0) {
+      if (this.mounted) {
+        setState(() {
+          offLineEmailLength = (emailLocal.length / 23).ceil();
+        });
+      }
     }
   }
 
@@ -915,31 +945,33 @@ class _ProfileState extends State<Profile> {
       }
 
       SharedPreferences prefs = await SharedPreferences.getInstance();
-      await prefs.setString('companyID', null);
-      await prefs.setString('userID', null);
-      await prefs.setString('level', null);
-      await prefs.setString('user_type', null);
-      await prefs.setString('totalQR', null);
-      await prefs.setString('totalLink', null);
+      prefs.setString('companyID', null);
+      prefs.setString('userID', null);
+      prefs.setString('level', null);
+      prefs.setString('user_type', null);
+      prefs.setString('totalQR', null);
+      prefs.setString('totalLink', null);
+      prefs.setString('noti', null);
+      prefs.setString('newNoti', null);
 
       _clearToken();
 
       Database companyDB = await CompanyDB.instance.database;
-      await companyDB.rawInsert('DELETE FROM details WHERE id > 0');
+      companyDB.rawInsert('DELETE FROM details WHERE id > 0');
       Database leadsDB = await LeadsDB.instance.database;
-      await leadsDB.rawInsert('DELETE FROM leads WHERE id > 0');
+      leadsDB.rawInsert('DELETE FROM leads WHERE id > 0');
       Database mainscreenNotiDB = await MainScreenNotiDB.instance.database;
-      await mainscreenNotiDB.rawInsert('DELETE FROM mainnoti WHERE id > 0');
+      mainscreenNotiDB.rawInsert('DELETE FROM mainnoti WHERE id > 0');
       Database myWorksDB = await MyWorksDB.instance.database;
-      await myWorksDB.rawInsert('DELETE FROM myworks WHERE id > 0');
+      myWorksDB.rawInsert('DELETE FROM myworks WHERE id > 0');
       Database notiDB = await NotiDB.instance.database;
-      await notiDB.rawInsert('DELETE FROM noti WHERE id > 0');
+      notiDB.rawInsert('DELETE FROM noti WHERE id > 0');
       Database topViewDB = await TopViewDB.instance.database;
-      await topViewDB.rawInsert('DELETE FROM topview WHERE id > 0');
+      topViewDB.rawInsert('DELETE FROM topview WHERE id > 0');
       Database vanalyticsDB = await VAnalyticsDB.instance.database;
-      await vanalyticsDB.rawInsert('DELETE FROM analytics WHERE id > 0');
+      vanalyticsDB.rawInsert('DELETE FROM analytics WHERE id > 0');
       Database vdataDB = await VDataDB.instance.database;
-      await vdataDB.rawInsert('DELETE FROM vdata WHERE id > 0');
+      vdataDB.rawInsert('DELETE FROM vdata WHERE id > 0');
       Navigator.push(context, MaterialPageRoute(builder: (context) => Login()));
     } else {
       Toast.show("Please connect to Internet first", context,

@@ -12,9 +12,9 @@ import 'package:http/http.dart' as http;
 import 'package:vvin/forgot.dart';
 import 'package:vvin/loader.dart';
 import 'package:device_info/device_info.dart';
-import 'package:vvin/mainscreen.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:vvin/vanalytics.dart';
 
 final TextEditingController _emcontroller = TextEditingController();
 final TextEditingController _passcontroller = TextEditingController();
@@ -47,12 +47,18 @@ class _LoginPageState extends State<Login> {
   void initState() {
     super.initState();
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.dark.copyWith(
-        statusBarColor: Colors.white, // Color for Android
-        ));
+      statusBarColor: Colors.white, // Color for Android
+    ));
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
     token = "";
+    _firebaseMessaging.requestNotificationPermissions(
+        const IosNotificationSettings(sound: true, badge: true, alert: true));
+    _firebaseMessaging.onIosSettingsRegistered
+        .listen((IosNotificationSettings settings) {
+    });
     _firebaseMessaging.getToken().then((fbtoken) {
       token = fbtoken;
+      print(fbtoken);
     });
     _email = "";
     _password = "";
@@ -165,8 +171,7 @@ class _LoginPageState extends State<Login> {
                                 child: Text(
                                   "Forgot Password?",
                                   style: TextStyle(
-                                      fontSize: font14,
-                                      color: Colors.grey),
+                                      fontSize: font14, color: Colors.grey),
                                 ),
                               )
                             ],
@@ -301,7 +306,7 @@ class _LoginPageState extends State<Login> {
           Toast.show("Welcome " + data[3], context,
               duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
           Navigator.push(
-              context, MaterialPageRoute(builder: (context) => MainScreen()));
+              context, MaterialPageRoute(builder: (context) => VAnalytics()));
         } else {
           Navigator.pop(context);
           Toast.show("Please contact VVIN IT desk", context,
@@ -368,11 +373,12 @@ class _LoginPageState extends State<Login> {
               children: <Widget>[
                 JumpingText('Loading...'),
                 SizedBox(height: MediaQuery.of(context).size.height * 0.02),
-                              SpinKitRing(
-                                  lineWidth: 3,
-                                  color: Colors.blue,
-                                  size: 30.0,
-                                  duration: Duration(milliseconds: 600),),
+                SpinKitRing(
+                  lineWidth: 3,
+                  color: Colors.blue,
+                  size: 30.0,
+                  duration: Duration(milliseconds: 600),
+                ),
               ],
             ),
           ),
@@ -436,9 +442,7 @@ class _Default extends State<Default> {
           children: <Widget>[
             Text(
               "Please select a company",
-              style: TextStyle(
-                  fontSize: font15,
-                  fontWeight: FontWeight.w500),
+              style: TextStyle(fontSize: font15, fontWeight: FontWeight.w500),
             )
           ],
         ),
@@ -464,8 +468,7 @@ class _Default extends State<Default> {
                   child: Text(
                     item.toString(),
                     style: TextStyle(
-                      fontSize:
-                          font14,
+                      fontSize: font14,
                     ),
                   ),
                   value: item.toString(),
@@ -537,7 +540,7 @@ class _Default extends State<Default> {
           Toast.show("Welcome " + data[3], context,
               duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
           Navigator.push(
-              context, MaterialPageRoute(builder: (context) => MainScreen()));
+              context, MaterialPageRoute(builder: (context) => VAnalytics()));
         } else {
           Navigator.pop(context);
           Toast.show("Please contact VVIN IT desk", context,
@@ -575,11 +578,12 @@ class _Default extends State<Default> {
               children: <Widget>[
                 JumpingText('Loading...'),
                 SizedBox(height: MediaQuery.of(context).size.height * 0.02),
-                              SpinKitRing(
-                                  lineWidth: 3,
-                                  color: Colors.blue,
-                                  size: 30.0,
-                                  duration: Duration(milliseconds: 600),),
+                SpinKitRing(
+                  lineWidth: 3,
+                  color: Colors.blue,
+                  size: 30.0,
+                  duration: Duration(milliseconds: 600),
+                ),
               ],
             ),
           ),
@@ -588,5 +592,3 @@ class _Default extends State<Default> {
     );
   }
 }
-
-

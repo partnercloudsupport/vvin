@@ -17,16 +17,18 @@ import 'package:toast/toast.dart';
 import 'package:vvin/companyDB.dart';
 import 'package:vvin/data.dart';
 import 'package:vvin/leadsDB.dart';
-import 'package:vvin/mainscreen.dart';
 import 'package:vvin/mainscreenNotiDB.dart';
+import 'package:vvin/myworks.dart';
 import 'package:vvin/myworksDB.dart';
 import 'package:vvin/notiDB.dart';
+import 'package:vvin/notifications.dart';
 import 'package:vvin/profile.dart';
 import 'package:vvin/settings.dart';
 import 'package:vvin/topViewDB.dart';
 import 'package:vvin/vDataDB.dart';
+import 'package:vvin/vanalytics.dart';
 import 'package:vvin/vanalyticsDB.dart';
-
+import 'package:vvin/vdata.dart';
 import 'login.dart';
 
 class More extends StatefulWidget {
@@ -42,6 +44,9 @@ class _MoreState extends State<More> {
   double font18 = ScreenUtil().setSp(41.4, allowFontScalingSelf: false);
   FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
   bool start, connection, ready;
+  int currentTabIndex;
+  SharedPreferences prefs;
+  String urlNoti = "https://vvinoa.vvin.com/api/notiTotalNumber.php";
   String companyURL = "https://vvinoa.vvin.com/api/companyProfile.php";
   String urlLogout = "https://vvinoa.vvin.com/api/logout.php";
   String level,
@@ -57,11 +62,14 @@ class _MoreState extends State<More> {
       unassign,
       assign,
       nameLocal,
-      location;
+      location,
+      totalNotification;
 
   @override
   void initState() {
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+    totalNotification = "0";
+    currentTabIndex = 4;
     connection = false;
     checkConnection();
     initialize();
@@ -85,9 +93,11 @@ class _MoreState extends State<More> {
                         onPressed: () {
                           Navigator.of(context).pop();
                           Navigator.of(context).pop();
-                          setState(() {
-                            noti = false;
-                          });
+                          if (this.mounted) {
+                            setState(() {
+                              noti = false;
+                            });
+                          }
                         },
                       ),
                       FlatButton(
@@ -95,12 +105,10 @@ class _MoreState extends State<More> {
                         onPressed: () {
                           Navigator.of(context).pop();
                           Navigator.of(context).pop();
-                          CurrentIndex index = new CurrentIndex(index: 3);
+                          // CurrentIndex index = new CurrentIndex(index: 3);
                           Navigator.of(context).pushReplacement(
                             MaterialPageRoute(
-                              builder: (context) => MainScreen(
-                                index: index,
-                              ),
+                              builder: (context) => Notifications(),
                             ),
                           );
                         },
@@ -110,8 +118,56 @@ class _MoreState extends State<More> {
           noti = true;
         }
       },
+      onResume: (Map<String, dynamic> message) async {
+        List time = message.toString().split('google.sent_time: ');
+        String noti = time[1].toString().substring(0, 13);
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        if (prefs.getString('newNoti') != noti) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (context) => Notifications(),
+            ),
+          );
+        }
+      },
     );
     super.initState();
+  }
+
+  void onTapped(int index) {
+    if (index != 4) {
+      switch (index) {
+        case 0:
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (context) => VAnalytics(),
+            ),
+          );
+          break;
+        case 1:
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (context) => VData(),
+            ),
+          );
+          break;
+        case 2:
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (context) => MyWorks(),
+            ),
+          );
+          break;
+
+        case 3:
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (context) => Notifications(),
+            ),
+          );
+          break;
+      }
+    }
   }
 
   @override
@@ -121,6 +177,102 @@ class _MoreState extends State<More> {
       onWillPop: _onBackPressAppBar,
       child: Scaffold(
         backgroundColor: Colors.white,
+        bottomNavigationBar: BottomNavigationBar(
+          backgroundColor: Colors.white,
+          onTap: onTapped,
+          currentIndex: currentTabIndex,
+          type: BottomNavigationBarType.fixed,
+          items: [
+            BottomNavigationBarItem(
+              icon: Icon(
+                Icons.trending_up,
+                size: ScreenUtil().setHeight(40),
+              ),
+              title: Text(
+                "VAnalytics",
+                style: TextStyle(
+                  fontSize: ScreenUtil().setSp(24, allowFontScalingSelf: false),
+                ),
+              ),
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(
+                Icons.insert_chart,
+                size: ScreenUtil().setHeight(40),
+              ),
+              title: Text(
+                "VData",
+                style: TextStyle(
+                  fontSize: ScreenUtil().setSp(24, allowFontScalingSelf: false),
+                ),
+              ),
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(
+                Icons.assignment,
+                size: ScreenUtil().setHeight(40),
+              ),
+              title: Text(
+                "My Works",
+                style: TextStyle(
+                  fontSize: ScreenUtil().setSp(24, allowFontScalingSelf: false),
+                ),
+              ),
+            ),
+            BottomNavigationBarItem(
+              icon: Stack(
+                children: <Widget>[
+                  Icon(
+                    Icons.notifications,
+                    size: ScreenUtil().setHeight(40),
+                  ),
+                  Positioned(
+                      right: 0,
+                      child: (totalNotification != "0")
+                          ? Container(
+                              padding: EdgeInsets.all(1),
+                              decoration: BoxDecoration(
+                                color: Colors.red,
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              constraints: BoxConstraints(
+                                minWidth: 12,
+                                minHeight: 12,
+                              ),
+                              child: Text(
+                                '$totalNotification',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: ScreenUtil()
+                                      .setSp(20, allowFontScalingSelf: false),
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            )
+                          : Container())
+                ],
+              ),
+              title: Text(
+                "Notifications",
+                style: TextStyle(
+                  fontSize: ScreenUtil().setSp(24, allowFontScalingSelf: false),
+                ),
+              ),
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(
+                Icons.menu,
+                size: ScreenUtil().setHeight(40),
+              ),
+              title: Text(
+                "More",
+                style: TextStyle(
+                  fontSize: ScreenUtil().setSp(24, allowFontScalingSelf: false),
+                ),
+              ),
+            )
+          ],
+        ),
         appBar: PreferredSize(
           preferredSize: Size.fromHeight(
             ScreenUtil().setHeight(85),
@@ -491,21 +643,48 @@ class _MoreState extends State<More> {
   }
 
   void checkConnection() async {
+    prefs = await SharedPreferences.getInstance();
+    if (prefs.getString("noti") != null) {
+      if (this.mounted) {
+        setState(() {
+          totalNotification = prefs.getString("noti");
+        });
+      }
+    }
     var connectivityResult = await (Connectivity().checkConnectivity());
     if (connectivityResult == ConnectivityResult.wifi ||
         connectivityResult == ConnectivityResult.mobile) {
       loadData();
+      notification();
     } else {
-      setState(() {
-        start = true;
-      });
+      if (this.mounted) {
+        setState(() {
+          start = true;
+        });
+      }
       Toast.show("No Internet, the data shown is not up to date", context,
           duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
     }
   }
 
+  void notification() {
+    http.post(urlNoti, body: {
+      "userID": userID,
+      "companyID": companyID,
+      "level": level,
+      "user_type": userType,
+    }).then((res) async {
+      if (this.mounted) {
+        setState(() {
+          totalNotification = res.body;
+        });
+      }
+    }).catchError((err) {
+      print("Notification error: " + err.toString());
+    });
+  }
+
   Future<void> loadData() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
     companyID = prefs.getString('companyID');
     userID = prefs.getString('userID');
     level = prefs.getString('level');
@@ -533,11 +712,12 @@ class _MoreState extends State<More> {
         unassign = data["unassign"].toString();
         assign = data["assign"].toString();
       }
-      setState(() {
-        start = true;
-        connection = true;
-      });
-
+      if (this.mounted) {
+        setState(() {
+          start = true;
+          connection = true;
+        });
+      }
       final _devicePath = await getApplicationDocumentsDirectory();
       location = _devicePath.path.toString();
       try {
@@ -569,14 +749,18 @@ class _MoreState extends State<More> {
 
   Future<void> initialize() async {
     final _devicePath = await getApplicationDocumentsDirectory();
-    setState(() {
-      location = _devicePath.path.toString();
-    });
+    if (this.mounted) {
+      setState(() {
+        location = _devicePath.path.toString();
+      });
+    }
     Database db = await CompanyDB.instance.database;
     List<Map> result = await db.query(CompanyDB.table);
-    setState(() {
-      nameLocal = result[0]['name'];
-    });
+    if (this.mounted) {
+      setState(() {
+        nameLocal = result[0]['name'];
+      });
+    }
   }
 
   Future<void> _logout() async {
@@ -612,31 +796,33 @@ class _MoreState extends State<More> {
       }
 
       SharedPreferences prefs = await SharedPreferences.getInstance();
-      await prefs.setString('companyID', null);
-      await prefs.setString('userID', null);
-      await prefs.setString('level', null);
-      await prefs.setString('user_type', null);
-      await prefs.setString('totalQR', null);
-      await prefs.setString('totalLink', null);
+      prefs.setString('companyID', null);
+      prefs.setString('userID', null);
+      prefs.setString('level', null);
+      prefs.setString('user_type', null);
+      prefs.setString('totalQR', null);
+      prefs.setString('totalLink', null);
+      prefs.setString('noti', null);
+      prefs.setString('newNoti', null);
 
       _clearToken();
 
       Database companyDB = await CompanyDB.instance.database;
-      await companyDB.rawInsert('DELETE FROM details WHERE id > 0');
+      companyDB.rawInsert('DELETE FROM details WHERE id > 0');
       Database leadsDB = await LeadsDB.instance.database;
-      await leadsDB.rawInsert('DELETE FROM leads WHERE id > 0');
+      leadsDB.rawInsert('DELETE FROM leads WHERE id > 0');
       Database mainscreenNotiDB = await MainScreenNotiDB.instance.database;
-      await mainscreenNotiDB.rawInsert('DELETE FROM mainnoti WHERE id > 0');
+      mainscreenNotiDB.rawInsert('DELETE FROM mainnoti WHERE id > 0');
       Database myWorksDB = await MyWorksDB.instance.database;
-      await myWorksDB.rawInsert('DELETE FROM myworks WHERE id > 0');
+      myWorksDB.rawInsert('DELETE FROM myworks WHERE id > 0');
       Database notiDB = await NotiDB.instance.database;
-      await notiDB.rawInsert('DELETE FROM noti WHERE id > 0');
+      notiDB.rawInsert('DELETE FROM noti WHERE id > 0');
       Database topViewDB = await TopViewDB.instance.database;
-      await topViewDB.rawInsert('DELETE FROM topview WHERE id > 0');
+      topViewDB.rawInsert('DELETE FROM topview WHERE id > 0');
       Database vanalyticsDB = await VAnalyticsDB.instance.database;
-      await vanalyticsDB.rawInsert('DELETE FROM analytics WHERE id > 0');
+      vanalyticsDB.rawInsert('DELETE FROM analytics WHERE id > 0');
       Database vdataDB = await VDataDB.instance.database;
-      await vdataDB.rawInsert('DELETE FROM vdata WHERE id > 0');
+      vdataDB.rawInsert('DELETE FROM vdata WHERE id > 0');
       Navigator.push(context, MaterialPageRoute(builder: (context) => Login()));
     } else {
       Toast.show("Please connect to Internet first", context,

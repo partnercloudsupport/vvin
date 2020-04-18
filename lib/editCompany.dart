@@ -7,10 +7,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:logger/logger.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:toast/toast.dart';
 import 'package:vvin/companyDB.dart';
-import 'package:vvin/mainscreen.dart';
+import 'package:vvin/more.dart';
+import 'package:vvin/notifications.dart';
 import 'package:vvin/profile.dart';
 import 'package:vvin/data.dart';
 import 'package:http/http.dart' as http;
@@ -92,9 +94,11 @@ class _EditCompanyState extends State<EditCompany> {
                         onPressed: () {
                           Navigator.of(context).pop();
                           Navigator.of(context).pop();
-                          setState(() {
-                            noti = false;
-                          });
+                          if (this.mounted) {
+                            setState(() {
+                              noti = false;
+                            });
+                          }
                         },
                       ),
                       FlatButton(
@@ -102,12 +106,10 @@ class _EditCompanyState extends State<EditCompany> {
                         onPressed: () {
                           Navigator.of(context).pop();
                           Navigator.of(context).pop();
-                          CurrentIndex index = new CurrentIndex(index: 3);
+                          // CurrentIndex index = new CurrentIndex(index: 3);
                           Navigator.of(context).pushReplacement(
                             MaterialPageRoute(
-                              builder: (context) => MainScreen(
-                                index: index,
-                              ),
+                              builder: (context) => Notifications(),
                             ),
                           );
                         },
@@ -115,6 +117,18 @@ class _EditCompanyState extends State<EditCompany> {
                     ],
                   ));
           noti = true;
+        }
+      },
+      onResume: (Map<String, dynamic> message) async {
+        List time = message.toString().split('google.sent_time: ');
+        String noti = time[1].toString().substring(0, 13);
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        if (prefs.getString('newNoti') != noti) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (context) => Notifications(),
+            ),
+          );
         }
       },
     );
@@ -557,10 +571,12 @@ class _EditCompanyState extends State<EditCompany> {
         "user_type": userType,
       }).then((res) {
         if (res.body.toString() != "nodata") {
-          setState(() {
-            imageCache.clear();
-            image = res.body.toString();
-          });
+          if (this.mounted) {
+            setState(() {
+              imageCache.clear();
+              image = res.body.toString();
+            });
+          }
           Toast.show("Image changed", context,
               duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
           _downloadImage(image, "company", "profile");
@@ -607,12 +623,10 @@ class _EditCompanyState extends State<EditCompany> {
             // print("Update company profile: " + (res.statusCode).toString());
             // print("Return from internet:" + res.body);
             if (res.body == "success") {
-              CurrentIndex index = new CurrentIndex(index: 4);
+              // CurrentIndex index = new CurrentIndex(index: 4);
               Navigator.of(context).pushReplacement(
                 MaterialPageRoute(
-                  builder: (context) => MainScreen(
-                    index: index,
-                  ),
+                  builder: (context) => More(),
                 ),
               );
               setData();

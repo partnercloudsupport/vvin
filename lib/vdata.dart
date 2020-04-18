@@ -13,8 +13,11 @@ import 'package:sqflite/sqflite.dart';
 import 'package:toast/toast.dart';
 import 'package:vvin/data.dart';
 import 'package:vvin/loader.dart';
-import 'package:vvin/mainscreen.dart';
+import 'package:vvin/more.dart';
+import 'package:vvin/myworks.dart';
+import 'package:vvin/notifications.dart';
 import 'package:vvin/vDataDB.dart';
+import 'package:vvin/vanalytics.dart';
 import 'package:vvin/vprofile.dart';
 import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
@@ -64,14 +67,16 @@ class _VDataState extends State<VData> {
       endDate,
       minimumDate,
       maximumDate,
-      handlerStatus;
-  int tap, total, startTime, endTime;
+      handlerStatus,
+      totalNotification;
+  int tap, total, startTime, endTime, currentTabIndex;
   DateTime _startDate,
       _endDate,
       _startDatePicker,
       _endDatePicker,
       startDateTime,
       endDateTime;
+  String urlNoti = "https://vvinoa.vvin.com/api/notiTotalNumber.php";
   String urlVData = "https://vvinoa.vvin.com/api/vdata.php";
   String urlChangeStatus = "https://vvinoa.vvin.com/api/vdataChangeStatus.php";
   String urlLinks = "https://vvinoa.vvin.com/api/links.php";
@@ -102,6 +107,7 @@ class _VDataState extends State<VData> {
   List<String> appsAll = [
     "All",
     "VBot",
+    "VBrochure",
     "VCard",
     "VCatalogue",
     "VFlex",
@@ -115,6 +121,8 @@ class _VDataState extends State<VData> {
   void initState() {
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
     refreshKey = GlobalKey<RefreshIndicatorState>();
+    totalNotification = "0";
+    currentTabIndex = 1;
     connection = false;
     nodata = false;
     vData = false;
@@ -158,9 +166,11 @@ class _VDataState extends State<VData> {
                         onPressed: () {
                           Navigator.of(context).pop();
                           Navigator.of(context).pop();
-                          setState(() {
-                            noti = false;
-                          });
+                          if (this.mounted) {
+                            setState(() {
+                              noti = false;
+                            });
+                          }
                         },
                       ),
                       FlatButton(
@@ -168,12 +178,10 @@ class _VDataState extends State<VData> {
                         onPressed: () {
                           Navigator.of(context).pop();
                           Navigator.of(context).pop();
-                          CurrentIndex index = new CurrentIndex(index: 3);
+                          // CurrentIndex index = new CurrentIndex(index: 3);
                           Navigator.of(context).pushReplacement(
                             MaterialPageRoute(
-                              builder: (context) => MainScreen(
-                                index: index,
-                              ),
+                              builder: (context) => Notifications(),
                             ),
                           );
                         },
@@ -183,8 +191,55 @@ class _VDataState extends State<VData> {
           noti = true;
         }
       },
+      onResume: (Map<String, dynamic> message) async {
+        List time = message.toString().split('google.sent_time: ');
+        String noti = time[1].toString().substring(0, 13);
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        if (prefs.getString('newNoti') != noti) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (context) => Notifications(),
+            ),
+          );
+        }
+      },
     );
     super.initState();
+  }
+
+  void onTapped(int index) {
+    if (index != 1) {
+      switch (index) {
+        case 0:
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (context) => VAnalytics(),
+            ),
+          );
+          break;
+        case 2:
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (context) => MyWorks(),
+            ),
+          );
+          break;
+        case 3:
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (context) => Notifications(),
+            ),
+          );
+          break;
+        case 4:
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (context) => More(),
+            ),
+          );
+          break;
+      }
+    }
   }
 
   @override
@@ -202,6 +257,102 @@ class _VDataState extends State<VData> {
       child: Scaffold(
         // backgroundColor: Color.fromARGB(50, 220, 220, 220),
         backgroundColor: Color.fromRGBO(235, 235, 255, 1),
+        bottomNavigationBar: BottomNavigationBar(
+          backgroundColor: Colors.white,
+          onTap: onTapped,
+          currentIndex: currentTabIndex,
+          type: BottomNavigationBarType.fixed,
+          items: [
+            BottomNavigationBarItem(
+              icon: Icon(
+                Icons.trending_up,
+                size: ScreenUtil().setHeight(40),
+              ),
+              title: Text(
+                "VAnalytics",
+                style: TextStyle(
+                  fontSize: ScreenUtil().setSp(24, allowFontScalingSelf: false),
+                ),
+              ),
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(
+                Icons.insert_chart,
+                size: ScreenUtil().setHeight(40),
+              ),
+              title: Text(
+                "VData",
+                style: TextStyle(
+                  fontSize: ScreenUtil().setSp(24, allowFontScalingSelf: false),
+                ),
+              ),
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(
+                Icons.assignment,
+                size: ScreenUtil().setHeight(40),
+              ),
+              title: Text(
+                "My Works",
+                style: TextStyle(
+                  fontSize: ScreenUtil().setSp(24, allowFontScalingSelf: false),
+                ),
+              ),
+            ),
+            BottomNavigationBarItem(
+              icon: Stack(
+                children: <Widget>[
+                  Icon(
+                    Icons.notifications,
+                    size: ScreenUtil().setHeight(40),
+                  ),
+                  Positioned(
+                      right: 0,
+                      child: (totalNotification != "0")
+                          ? Container(
+                              padding: EdgeInsets.all(1),
+                              decoration: BoxDecoration(
+                                color: Colors.red,
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              constraints: BoxConstraints(
+                                minWidth: 12,
+                                minHeight: 12,
+                              ),
+                              child: Text(
+                                '$totalNotification',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: ScreenUtil()
+                                      .setSp(20, allowFontScalingSelf: false),
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            )
+                          : Container())
+                ],
+              ),
+              title: Text(
+                "Notifications",
+                style: TextStyle(
+                  fontSize: ScreenUtil().setSp(24, allowFontScalingSelf: false),
+                ),
+              ),
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(
+                Icons.menu,
+                size: ScreenUtil().setHeight(40),
+              ),
+              title: Text(
+                "More",
+                style: TextStyle(
+                  fontSize: ScreenUtil().setSp(24, allowFontScalingSelf: false),
+                ),
+              ),
+            )
+          ],
+        ),
         appBar: PreferredSize(
           preferredSize: Size.fromHeight(
             ScreenUtil().setHeight(85),
@@ -397,14 +548,11 @@ class _VDataState extends State<VData> {
                                                     children: <Widget>[
                                                       Text(
                                                         (connection == true)
-                                                            ? _dateFormat(
-                                                                vDataDetails[
-                                                                        index]
-                                                                    .date)
-                                                            : _dateFormat(
-                                                                offlineVData[
-                                                                        index]
-                                                                    ['date']),
+                                                            ? vDataDetails[
+                                                                    index]
+                                                                .date
+                                                            : offlineVData[
+                                                                index]['date'],
                                                         style: TextStyle(
                                                           color: Colors.grey,
                                                           fontSize: font12,
@@ -658,32 +806,6 @@ class _VDataState extends State<VData> {
                                                           borderRadius:
                                                               BorderRadius
                                                                   .circular(5),
-                                                          // border: Border(
-                                                          //   bottom: BorderSide(
-                                                          //       width: ScreenUtil()
-                                                          //           .setHeight(
-                                                          //               2),
-                                                          //       color: Colors
-                                                          //           .blue),
-                                                          //   left: BorderSide(
-                                                          //       width: ScreenUtil()
-                                                          //           .setHeight(
-                                                          //               2),
-                                                          //       color: Colors
-                                                          //           .blue),
-                                                          //   right: BorderSide(
-                                                          //       width: ScreenUtil()
-                                                          //           .setHeight(
-                                                          //               2),
-                                                          //       color: Colors
-                                                          //           .blue),
-                                                          //   top: BorderSide(
-                                                          //       width: ScreenUtil()
-                                                          //           .setHeight(
-                                                          //               2),
-                                                          //       color: Colors
-                                                          //           .blue),
-                                                          // ),
                                                         ),
                                                       ),
                                                     ),
@@ -715,32 +837,6 @@ class _VDataState extends State<VData> {
                                                           borderRadius:
                                                               BorderRadius
                                                                   .circular(5),
-                                                          // border: Border(
-                                                          //   bottom: BorderSide(
-                                                          //       width: ScreenUtil()
-                                                          //           .setHeight(
-                                                          //               2),
-                                                          //       color: Colors
-                                                          //           .blue),
-                                                          //   left: BorderSide(
-                                                          //       width: ScreenUtil()
-                                                          //           .setHeight(
-                                                          //               2),
-                                                          //       color: Colors
-                                                          //           .blue),
-                                                          //   right: BorderSide(
-                                                          //       width: ScreenUtil()
-                                                          //           .setHeight(
-                                                          //               2),
-                                                          //       color: Colors
-                                                          //           .blue),
-                                                          //   top: BorderSide(
-                                                          //       width: ScreenUtil()
-                                                          //           .setHeight(
-                                                          //               2),
-                                                          //       color: Colors
-                                                          //           .blue),
-                                                          // ),
                                                         ),
                                                       ),
                                                     ),
@@ -804,9 +900,6 @@ class _VDataState extends State<VData> {
                                               ],
                                             ),
                                           ),
-                                          // SizedBox(
-                                          //   height: ScreenUtil().setHeight(10),
-                                          // ),
                                         ],
                                       ),
                                     ),
@@ -1994,10 +2087,12 @@ class _VDataState extends State<VData> {
                               scrollController: FixedExtentScrollController(
                                   initialItem: position),
                               onSelectedItemChanged: (int index) {
-                                setState(() {
-                                  _byLink = linksID[index].link_type +
-                                      linksID[index].link;
-                                });
+                                if (this.mounted) {
+                                  setState(() {
+                                    _byLink = linksID[index].link_type +
+                                        linksID[index].link;
+                                  });
+                                }
                               },
                               children: <Widget>[
                                 for (var each in linksID)
@@ -2097,9 +2192,11 @@ class _VDataState extends State<VData> {
                               scrollController: FixedExtentScrollController(
                                   initialItem: position),
                               onSelectedItemChanged: (int index) {
-                                setState(() {
-                                  _byStatus = status[index];
-                                });
+                                if (this.mounted) {
+                                  setState(() {
+                                    _byStatus = status[index];
+                                  });
+                                }
                               },
                               children: <Widget>[
                                 for (var each in status)
@@ -2198,9 +2295,11 @@ class _VDataState extends State<VData> {
                               scrollController: FixedExtentScrollController(
                                   initialItem: position),
                               onSelectedItemChanged: (int index) {
-                                setState(() {
-                                  _byExecutive = executiveList[index];
-                                });
+                                if (this.mounted) {
+                                  setState(() {
+                                    _byExecutive = executiveList[index];
+                                  });
+                                }
                               },
                               children: <Widget>[
                                 for (var each in executiveList)
@@ -2303,9 +2402,11 @@ class _VDataState extends State<VData> {
                               scrollController: FixedExtentScrollController(
                                   initialItem: position),
                               onSelectedItemChanged: (int index) {
-                                setState(() {
-                                  apps = appsAll[index];
-                                });
+                                if (this.mounted) {
+                                  setState(() {
+                                    apps = appsAll[index];
+                                  });
+                                }
                               },
                               children: <Widget>[
                                 for (var each in appsAll)
@@ -2334,6 +2435,13 @@ class _VDataState extends State<VData> {
   void checkConnection() async {
     startTime = (DateTime.now()).millisecondsSinceEpoch;
     SharedPreferences prefs = await SharedPreferences.getInstance();
+    if (prefs.getString("noti") != null) {
+      if (this.mounted) {
+        setState(() {
+          totalNotification = prefs.getString("noti");
+        });
+      }
+    }
     companyID = prefs.getString('companyID');
     userID = prefs.getString('userID');
     level = prefs.getString('level');
@@ -2354,6 +2462,24 @@ class _VDataState extends State<VData> {
     getData();
     getLinks();
     getExecutive();
+    notification();
+  }
+
+  void notification() {
+    http.post(urlNoti, body: {
+      "userID": userID,
+      "companyID": companyID,
+      "level": level,
+      "user_type": userType,
+    }).then((res) async {
+      if (this.mounted) {
+        setState(() {
+          totalNotification = res.body;
+        });
+      }
+    }).catchError((err) {
+      print("Notification error: " + err.toString());
+    });
   }
 
   String checkStatus(String status) {
@@ -2423,17 +2549,21 @@ class _VDataState extends State<VData> {
       // print("VData status:" + (res.statusCode).toString());
       // print("VData body: " + res.body.toString());
       if (res.body == "nodata") {
-        setState(() {
-          vData = true;
-          connection = true;
-          nodata = true;
-          total = 0;
-        });
+        if (this.mounted) {
+          setState(() {
+            vData = true;
+            connection = true;
+            nodata = true;
+            total = 0;
+          });
+        }
       } else {
         var jsonData = json.decode(res.body);
-        setState(() {
-          total = jsonData[0]['total'];
-        });
+        if (this.mounted) {
+          setState(() {
+            total = jsonData[0]['total'];
+          });
+        }
         vDataDetails.clear();
         vDataDetails1.clear();
         for (var data in jsonData) {
@@ -2452,14 +2582,14 @@ class _VDataState extends State<VData> {
           vDataDetails.add(vdata);
           vDataDetails1.add(vdata);
         }
-        // Navigator.pop(context);
-        setState(() {
-          vData = true;
-          connection = true;
-        });
+        if (this.mounted) {
+          setState(() {
+            vData = true;
+            connection = true;
+          });
+        }
       }
       if (link == true && vData == true && executive == true) {
-        // Navigator.pop(context);
         getOfflineData();
         endTime = DateTime.now().millisecondsSinceEpoch;
         int result = endTime - startTime;
@@ -2535,14 +2665,18 @@ class _VDataState extends State<VData> {
       // print("VData status:" + (res.statusCode).toString());
       // print("Get More VData body: " + res.body.toString());
       if (res.body == "nodata") {
-        setState(() {
-          connection = true;
-        });
+        if (this.mounted) {
+          setState(() {
+            connection = true;
+          });
+        }
       } else {
         var jsonData = json.decode(res.body);
-        setState(() {
-          total = jsonData[0]['total'];
-        });
+        if (this.mounted) {
+          setState(() {
+            total = jsonData[0]['total'];
+          });
+        }
         for (var data in jsonData) {
           VDataDetails vdata = VDataDetails(
             date: data['date'],
@@ -2559,9 +2693,11 @@ class _VDataState extends State<VData> {
           vDataDetails.add(vdata);
           vDataDetails1.add(vdata);
         }
-        setState(() {
-          connection = true;
-        });
+        if (this.mounted) {
+          setState(() {
+            connection = true;
+          });
+        }
       }
     }).catchError((err) {
       print("Get more data error: " + (err).toString());
@@ -2601,9 +2737,11 @@ class _VDataState extends State<VData> {
       }
       _startDate = DateFormat("yyyy-MM-dd").parse(minimumDate);
       _endDate = DateTime.now();
-      setState(() {
-        link = true;
-      });
+      if (this.mounted) {
+        setState(() {
+          link = true;
+        });
+      }
       if (link == true && vData == true && executive == true) {
         // Navigator.pop(context);
         getOfflineData();
@@ -2639,9 +2777,11 @@ class _VDataState extends State<VData> {
           }
         }
       }
-      setState(() {
-        executive = true;
-      });
+      if (this.mounted) {
+        setState(() {
+          executive = true;
+        });
+      }
       if (link == true && vData == true && executive == true) {
         // Navigator.pop(context);
         getOfflineData();
@@ -2682,10 +2822,12 @@ class _VDataState extends State<VData> {
   Future<void> offline() async {
     vdataDB = await VDataDB.instance.database;
     offlineVData = await vdataDB.query(VDataDB.table);
-    setState(() {
-      link = true;
-      vData = true;
-    });
+    if (this.mounted) {
+      setState(() {
+        link = true;
+        vData = true;
+      });
+    }
   }
 
   setStatus(int index, String newVal) async {
@@ -2703,10 +2845,12 @@ class _VDataState extends State<VData> {
         if (res.body == "success") {
           Toast.show("Status changed", context,
               duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
-          setState(() {
-            vDataDetails[index].status = newVal;
-            connection = true;
-          });
+          if (this.mounted) {
+            setState(() {
+              vDataDetails[index].status = newVal;
+              connection = true;
+            });
+          }
         } else {
           Toast.show(
               "Status can't change, please contact VVIN help desk", context,
@@ -2758,27 +2902,16 @@ class _VDataState extends State<VData> {
           linkID = linksID[i].link_type + linksID[i].link_id;
         }
       }
-      setState(() {
-        nodata = false;
-        type = type;
-        channel = channel;
-        linkID = linkID;
-        search = search;
-        total = null;
-      });
-      // print(startDate +
-      //     ", " +
-      //     type +
-      //     ", " +
-      //     channel +
-      //     ", " +
-      //     apps +
-      //     ", " +
-      //     linkID +
-      //     ", " +
-      //     endDate +
-      //     ", " +
-      //     _byStatus);
+      if (this.mounted) {
+        setState(() {
+          nodata = false;
+          type = type;
+          channel = channel;
+          linkID = linkID;
+          search = search;
+          total = null;
+        });
+      }
       http.post(urlVData, body: {
         "companyID": companyID,
         "level": level,
@@ -2799,18 +2932,22 @@ class _VDataState extends State<VData> {
         // print("Filter status:" + (res.statusCode).toString());
         // print("Filter body: " + res.body.toString());
         if (res.body == "nodata") {
-          setState(() {
-            vDataDetails.clear();
-            vDataDetails1.clear();
-            connection = true;
-            nodata = true;
-            total = 0;
-          });
+          if (this.mounted) {
+            setState(() {
+              vDataDetails.clear();
+              vDataDetails1.clear();
+              connection = true;
+              nodata = true;
+              total = 0;
+            });
+          }
         } else {
           var jsonData = json.decode(res.body);
-          setState(() {
-            total = jsonData[0]['total'];
-          });
+          if (this.mounted) {
+            setState(() {
+              total = jsonData[0]['total'];
+            });
+          }
           vDataDetails.clear();
           vDataDetails1.clear();
           for (var data in jsonData) {
@@ -2829,9 +2966,11 @@ class _VDataState extends State<VData> {
             vDataDetails.add(vdata);
             vDataDetails1.add(vdata);
           }
-          setState(() {
-            connection = true;
-          });
+          if (this.mounted) {
+            setState(() {
+              connection = true;
+            });
+          }
         }
       }).catchError((err) {
         print("Filter error: " + (err).toString());
@@ -2843,10 +2982,12 @@ class _VDataState extends State<VData> {
   }
 
   Future<void> _search(String value) async {
-    setState(() {
-      search = value.toLowerCase();
-      nodata = false;
-    });
+    if (this.mounted) {
+      setState(() {
+        search = value.toLowerCase();
+        nodata = false;
+      });
+    }
     if (connection == true) {
       var connectivityResult = await (Connectivity().checkConnectivity());
       if (connectivityResult == ConnectivityResult.wifi ||
@@ -2888,18 +3029,22 @@ class _VDataState extends State<VData> {
           // print("Filter status:" + (res.statusCode).toString());
           // print("Search body: " + res.body.toString());
           if (res.body == "nodata") {
-            setState(() {
-              vDataDetails.clear();
-              vDataDetails1.clear();
-              connection = true;
-              nodata = true;
-              total = 0;
-            });
+            if (this.mounted) {
+              setState(() {
+                vDataDetails.clear();
+                vDataDetails1.clear();
+                connection = true;
+                nodata = true;
+                total = 0;
+              });
+            }
           } else {
             var jsonData = json.decode(res.body);
-            setState(() {
-              total = jsonData[0]['total'];
-            });
+            if (this.mounted) {
+              setState(() {
+                total = jsonData[0]['total'];
+              });
+            }
             vDataDetails.clear();
             vDataDetails1.clear();
             for (var data in jsonData) {
@@ -2918,9 +3063,11 @@ class _VDataState extends State<VData> {
               vDataDetails.add(vdata);
               vDataDetails1.add(vdata);
             }
-            setState(() {
-              connection = true;
-            });
+            if (this.mounted) {
+              setState(() {
+                connection = true;
+              });
+            }
           }
         }).catchError((err) {
           Toast.show("Something wrong, please contact VVIN IT deesk", context,
@@ -2942,32 +3089,35 @@ class _VDataState extends State<VData> {
               "%' OR status LIKE '%" +
               value +
               "%'");
-      setState(() {
-        connection = false;
-      });
+      if (this.mounted) {
+        setState(() {
+          connection = false;
+        });
+      }
     }
   }
 
-  String _dateFormat(String fullDate) {
-    String result, date, month, year;
-    date = fullDate.substring(8, 10);
-    month = fullDate.substring(5, 7);
-    year = fullDate.substring(0, 4);
-    result = date + "/" + month + "/" + year;
-    return result;
-  }
+  // String _dateFormat(String fullDate) {
+  //   String result, date, month, year;
+  //   date = fullDate.substring(8, 10);
+  //   month = fullDate.substring(5, 7);
+  //   year = fullDate.substring(0, 4);
+  //   result = date + "/" + month + "/" + year;
+  //   return result;
+  // }
 
   Future<Null> _handleRefresh() async {
     var connectivityResult = await (Connectivity().checkConnectivity());
     if (connectivityResult == ConnectivityResult.wifi ||
         connectivityResult == ConnectivityResult.mobile) {
-      setState(() {
-        connection = false;
-        vData = false;
-        link = false;
-        total = null;
-      });
-      // _onLoading();
+      if (this.mounted) {
+        setState(() {
+          connection = false;
+          vData = false;
+          link = false;
+          total = null;
+        });
+      }
       getData();
       getLinks();
     } else {

@@ -15,9 +15,11 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class MainScreen extends StatefulWidget {
   final CurrentIndex index;
+  final int number;
   const MainScreen({
     Key key,
     this.index,
+    this.number,
   }) : super(key: key);
 
   @override
@@ -41,6 +43,7 @@ class _MainScreenState extends State<MainScreen> {
     totalNotification = "0";
     gotData = false;
     notification();
+    checking();
     super.initState();
     tabs = [
       VAnalytics(),
@@ -58,6 +61,13 @@ class _MainScreenState extends State<MainScreen> {
     } catch (err) {
       print("Main Screen checking error: " + err.toString());
     }
+    try {
+      if (widget.number != null) {
+        setState(() {
+          totalNotification = (int.parse(totalNotification) - 1).toString();
+        });
+      }
+    } catch (err) {}
   }
 
   onTapped(int index) {
@@ -83,34 +93,48 @@ class _MainScreenState extends State<MainScreen> {
         type: BottomNavigationBarType.fixed,
         items: [
           BottomNavigationBarItem(
-            icon: Icon(Icons.trending_up, size: ScreenUtil().setHeight(40),),
+            icon: Icon(
+              Icons.trending_up,
+              size: ScreenUtil().setHeight(40),
+            ),
             title: Text(
               "VAnalytics",
-              style: TextStyle(fontSize: ScreenUtil().setSp(24, allowFontScalingSelf: false),),
+              style: TextStyle(
+                fontSize: ScreenUtil().setSp(24, allowFontScalingSelf: false),
+              ),
             ),
           ),
           BottomNavigationBarItem(
             icon: Icon(
-              Icons.insert_chart, size: ScreenUtil().setHeight(40),
+              Icons.insert_chart,
+              size: ScreenUtil().setHeight(40),
             ),
             title: Text(
               "VData",
-              style: TextStyle(fontSize: ScreenUtil().setSp(24, allowFontScalingSelf: false),),
+              style: TextStyle(
+                fontSize: ScreenUtil().setSp(24, allowFontScalingSelf: false),
+              ),
             ),
           ),
           BottomNavigationBarItem(
             icon: Icon(
-              Icons.assignment, size: ScreenUtil().setHeight(40),
+              Icons.assignment,
+              size: ScreenUtil().setHeight(40),
             ),
             title: Text(
               "My Works",
-              style: TextStyle(fontSize: ScreenUtil().setSp(24, allowFontScalingSelf: false),),
+              style: TextStyle(
+                fontSize: ScreenUtil().setSp(24, allowFontScalingSelf: false),
+              ),
             ),
           ),
           BottomNavigationBarItem(
             icon: Stack(
               children: <Widget>[
-                Icon(Icons.notifications, size: ScreenUtil().setHeight(40),),
+                Icon(
+                  Icons.notifications,
+                  size: ScreenUtil().setHeight(40),
+                ),
                 Positioned(
                     right: 0,
                     child: (totalNotification != "0")
@@ -128,7 +152,8 @@ class _MainScreenState extends State<MainScreen> {
                               '$totalNotification',
                               style: TextStyle(
                                 color: Colors.white,
-                                fontSize: ScreenUtil().setSp(20, allowFontScalingSelf: false),
+                                fontSize: ScreenUtil()
+                                    .setSp(20, allowFontScalingSelf: false),
                               ),
                               textAlign: TextAlign.center,
                             ),
@@ -138,16 +163,21 @@ class _MainScreenState extends State<MainScreen> {
             ),
             title: Text(
               "Notifications",
-              style: TextStyle(fontSize: ScreenUtil().setSp(24, allowFontScalingSelf: false),),
+              style: TextStyle(
+                fontSize: ScreenUtil().setSp(24, allowFontScalingSelf: false),
+              ),
             ),
           ),
           BottomNavigationBarItem(
             icon: Icon(
-              Icons.menu, size: ScreenUtil().setHeight(40),
+              Icons.menu,
+              size: ScreenUtil().setHeight(40),
             ),
             title: Text(
               "More",
-              style: TextStyle(fontSize: ScreenUtil().setSp(24, allowFontScalingSelf: false),),
+              style: TextStyle(
+                fontSize: ScreenUtil().setSp(24, allowFontScalingSelf: false),
+              ),
             ),
           )
         ],
@@ -156,7 +186,6 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   Future<void> notification() async {
-    checking();
     SharedPreferences prefs = await SharedPreferences.getInstance();
     userID = prefs.getString('userID');
     companyID = prefs.getString('companyID');
@@ -172,8 +201,8 @@ class _MainScreenState extends State<MainScreen> {
         "user_type": userType,
       }).then((res) async {
         setState(() {
-            totalNotification = res.body;
-          });
+          totalNotification = res.body;
+        });
         setMainNoti();
       }).catchError((err) {
         print("Notification error: " + err.toString());

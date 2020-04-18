@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:vvin/data.dart';
+import 'package:uni_links/uni_links.dart';
+import 'package:vvin/myworks.dart';
 import 'package:vvin/vanalytics.dart';
-import 'package:vvin/vdata.dart';
 import 'login.dart';
-import 'mainscreen.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 void main() => runApp(SplashScreen());
+
+enum UniLinksType { string, uri }
 
 class SplashScreen extends StatelessWidget {
   @override
@@ -27,13 +28,15 @@ class Checking extends StatefulWidget {
 }
 
 class _CheckingState extends State<Checking> {
+  UniLinksType _type = UniLinksType.string;
+
   @override
   void initState() {
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.dark.copyWith(
       statusBarColor: Colors.white, // Color for Android
     ));
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-    Future.delayed(const Duration(seconds: 1), () => mainScreen());
+    mainScreen();
     super.initState();
   }
 
@@ -49,19 +52,23 @@ class _CheckingState extends State<Checking> {
             Container(
               width: MediaQuery.of(context).size.width * 0.9,
               height: ScreenUtil().setHeight(300),
-              child: Image.asset(
-                'assets/images/splash.png',
+              child: Row(
+                children: <Widget>[
+                  Expanded(
+                    flex: 1,
+                    child: Image.asset(
+                      'assets/images/main_logo.gif',
+                    ),
+                  ),
+                  Expanded(
+                    flex: 3,
+                    child: Image.asset(
+                      'assets/images/splash.png',
+                    ),
+                  ),
+                ],
               ),
             ),
-            // Text(
-            //   "Results are everything",
-            //   style: TextStyle(
-            //     fontStyle: FontStyle.italic,
-            //     color: Colors.blue,
-            //     fontFamily: 'Roboto',
-            //     fontSize: ScreenUtil().setSp(45, allowFontScalingSelf: false),
-            //   ),
-            // ),
           ],
         ),
       ),
@@ -71,33 +78,32 @@ class _CheckingState extends State<Checking> {
   Future<void> mainScreen() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     if (prefs.getString('userID') != null) {
-      if (prefs.getString('level') == "0") {
-        CurrentIndex index = new CurrentIndex(index: 0);
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder: (context) => MainScreen(
-              index: index,
-            ),
-          ),
-        );
-      } else if (prefs.getString('level') == "3") {
-        CurrentIndex index = new CurrentIndex(index: 1);
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder: (context) => MainScreen(
-              index: index,
-            ),
-          ),
-        );
-      } else {
-        CurrentIndex index = new CurrentIndex(index: 2);
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder: (context) => MainScreen(
-              index: index,
-            ),
-          ),
-        );
+      if (_type == UniLinksType.string) {
+        String initialLink;
+        try {
+          initialLink = await getInitialLink();
+          if (initialLink != null) {
+            print('initial link: $initialLink');
+            prefs.setString('url', '1');
+            Future.delayed(const Duration(seconds: 1), () {
+              // CurrentIndex index = new CurrentIndex(index: 0);
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(
+                  builder: (context) => VAnalytics(),
+                ),
+              );
+            });
+          } else {
+            Future.delayed(const Duration(seconds: 1), () {
+              // CurrentIndex index = new CurrentIndex(index: 2);
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(
+                  builder: (context) => MyWorks(),
+                ),
+              );
+            });
+          }
+        } catch (e) {}
       }
     } else {
       Navigator.push(context, MaterialPageRoute(builder: (context) => Login()));

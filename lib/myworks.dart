@@ -13,16 +13,17 @@ import 'package:toast/toast.dart';
 import 'package:vvin/data.dart';
 import 'package:vvin/loader.dart';
 import 'package:http/http.dart' as http;
+import 'package:vvin/more.dart';
 import 'package:vvin/myworksDB.dart';
 import 'dart:io';
-import 'package:logger/logger.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_web_browser/flutter_web_browser.dart';
 import 'package:draggable_scrollbar/draggable_scrollbar.dart';
-import 'package:vvin/mainscreen.dart';
-import 'package:flutter_open_whatsapp/flutter_open_whatsapp.dart';
+import 'package:vvin/notifications.dart';
+import 'package:vvin/vanalytics.dart';
+import 'package:vvin/vdata.dart';
 import 'package:vvin/whatsappForward.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 
@@ -56,7 +57,14 @@ class _MyWorksState extends State<MyWorks> {
   List handlerAllList = [];
   List handlerAllList1 = [];
   Database db;
-  int total, startTime, endTime, imageIndex, linkIndex, totalQR, totalLink;
+  int total,
+      startTime,
+      endTime,
+      imageIndex,
+      linkIndex,
+      totalQR,
+      totalLink,
+      currentTabIndex;
   bool isOffline, status, vtagStatus, connection, nodata, link, image;
   String search,
       companyID,
@@ -69,7 +77,9 @@ class _MyWorksState extends State<MyWorks> {
       linkInternet,
       typeInternet,
       location,
-      base64Image;
+      base64Image,
+      totalNotification;
+  String urlNoti = "https://vvinoa.vvin.com/api/notiTotalNumber.php";
   String urlMyWorks = "https://vvinoa.vvin.com/api/myWorks.php";
   String urlHandler = "https://vvinoa.vvin.com/api/getHandler.php";
   String assignURL = "https://vvinoa.vvin.com/api/assign.php";
@@ -80,7 +90,6 @@ class _MyWorksState extends State<MyWorks> {
   SharedPreferences prefs;
   File pickedImage;
   bool isImageLoaded;
-  bool _phoneEmpty, _nameEmpty, _phoneInvalid;
   List<String> scanner = [];
   List<String> phoneList = [];
   List<String> otherList = [];
@@ -93,27 +102,6 @@ class _MyWorksState extends State<MyWorks> {
     imageCache.clear();
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
     refreshKey = GlobalKey<RefreshIndicatorState>();
-    _phoneEmpty = false;
-    _nameEmpty = false;
-    _phoneInvalid = false;
-    isOffline = false;
-    status = false;
-    vtagStatus = false;
-    connection = false;
-    nodata = false;
-    link = false;
-    isImageLoaded = false;
-    base64Image = "";
-    _phonecontroller.text = "";
-    _namecontroller.text = "";
-    _companycontroller.text = "";
-    _remarkcontroller.text = "";
-    search = "";
-    category = "all";
-    total = 0;
-    imageIndex = 0;
-    linkIndex = 0;
-    checkConnection();
     _firebaseMessaging.configure(
       onMessage: (Map<String, dynamic> message) async {
         bool noti = false;
@@ -134,9 +122,11 @@ class _MyWorksState extends State<MyWorks> {
                         onPressed: () {
                           Navigator.of(context).pop();
                           Navigator.of(context).pop();
-                          setState(() {
-                            noti = false;
-                          });
+                          if (this.mounted) {
+                            setState(() {
+                              noti = false;
+                            });
+                          }
                         },
                       ),
                       FlatButton(
@@ -144,12 +134,10 @@ class _MyWorksState extends State<MyWorks> {
                         onPressed: () {
                           Navigator.of(context).pop();
                           Navigator.of(context).pop();
-                          CurrentIndex index = new CurrentIndex(index: 3);
+                          // CurrentIndex index = new CurrentIndex(index: 3);
                           Navigator.of(context).pushReplacement(
                             MaterialPageRoute(
-                              builder: (context) => MainScreen(
-                                index: index,
-                              ),
+                              builder: (context) => Notifications(),
                             ),
                           );
                         },
@@ -159,8 +147,87 @@ class _MyWorksState extends State<MyWorks> {
           noti = true;
         }
       },
+      onResume: (Map<String, dynamic> message) async {
+        List time = message.toString().split('google.sent_time: ');
+        String noti = time[1].toString().substring(0, 13);
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        if (prefs.getString('newNoti') != noti) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (context) => Notifications(),
+            ),
+          );
+        }
+      },
+      onLaunch: (Map<String, dynamic> message) async {
+        List time = message.toString().split('google.sent_time: ');
+        String noti = time[1].toString().substring(0, 13);
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        if (prefs.getString('newNoti') != noti) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (context) => Notifications(),
+            ),
+          );
+        }
+      },
     );
+    totalNotification = "0";
+    currentTabIndex = 2;
+    isOffline = false;
+    status = false;
+    vtagStatus = false;
+    connection = false;
+    nodata = false;
+    link = false;
+    isImageLoaded = false;
+    base64Image = "";
+    _phonecontroller.text = "";
+    _namecontroller.text = "";
+    _companycontroller.text = "";
+    _remarkcontroller.text = "";
+    search = "";
+    category = "all";
+    total = 0;
+    imageIndex = 0;
+    linkIndex = 0;
+    checkConnection();
     super.initState();
+  }
+
+  void onTapped(int index) {
+    if (index != 2) {
+      switch (index) {
+        case 0:
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (context) => VAnalytics(),
+            ),
+          );
+          break;
+        case 1:
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (context) => VData(),
+            ),
+          );
+          break;
+        case 3:
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (context) => Notifications(),
+            ),
+          );
+          break;
+        case 4:
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (context) => More(),
+            ),
+          );
+          break;
+      }
+    }
   }
 
   @override
@@ -175,6 +242,102 @@ class _MyWorksState extends State<MyWorks> {
       onWillPop: _onBackPressAppBar,
       child: Scaffold(
         backgroundColor: Color.fromRGBO(235, 235, 255, 1),
+        bottomNavigationBar: BottomNavigationBar(
+          backgroundColor: Colors.white,
+          onTap: onTapped,
+          currentIndex: currentTabIndex,
+          type: BottomNavigationBarType.fixed,
+          items: [
+            BottomNavigationBarItem(
+              icon: Icon(
+                Icons.trending_up,
+                size: ScreenUtil().setHeight(40),
+              ),
+              title: Text(
+                "VAnalytics",
+                style: TextStyle(
+                  fontSize: ScreenUtil().setSp(24, allowFontScalingSelf: false),
+                ),
+              ),
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(
+                Icons.insert_chart,
+                size: ScreenUtil().setHeight(40),
+              ),
+              title: Text(
+                "VData",
+                style: TextStyle(
+                  fontSize: ScreenUtil().setSp(24, allowFontScalingSelf: false),
+                ),
+              ),
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(
+                Icons.assignment,
+                size: ScreenUtil().setHeight(40),
+              ),
+              title: Text(
+                "My Works",
+                style: TextStyle(
+                  fontSize: ScreenUtil().setSp(24, allowFontScalingSelf: false),
+                ),
+              ),
+            ),
+            BottomNavigationBarItem(
+              icon: Stack(
+                children: <Widget>[
+                  Icon(
+                    Icons.notifications,
+                    size: ScreenUtil().setHeight(40),
+                  ),
+                  Positioned(
+                      right: 0,
+                      child: (totalNotification != "0")
+                          ? Container(
+                              padding: EdgeInsets.all(1),
+                              decoration: BoxDecoration(
+                                color: Colors.red,
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              constraints: BoxConstraints(
+                                minWidth: 12,
+                                minHeight: 12,
+                              ),
+                              child: Text(
+                                '$totalNotification',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: ScreenUtil()
+                                      .setSp(20, allowFontScalingSelf: false),
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            )
+                          : Container())
+                ],
+              ),
+              title: Text(
+                "Notifications",
+                style: TextStyle(
+                  fontSize: ScreenUtil().setSp(24, allowFontScalingSelf: false),
+                ),
+              ),
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(
+                Icons.menu,
+                size: ScreenUtil().setHeight(40),
+              ),
+              title: Text(
+                "More",
+                style: TextStyle(
+                  fontSize: ScreenUtil().setSp(24, allowFontScalingSelf: false),
+                ),
+              ),
+            )
+          ],
+        ),
         appBar: PreferredSize(
           preferredSize: Size.fromHeight(
             ScreenUtil().setHeight(85),
@@ -344,134 +507,22 @@ class _MyWorksState extends State<MyWorks> {
                                                   children: <Widget>[
                                                     Text(
                                                       (connection == false)
-                                                          ? _dateFormat(
-                                                              offlineLink[index]
-                                                                  ['date'])
-                                                          : _dateFormat(
-                                                              myWorks[index]
-                                                                  .date),
+                                                          ? offlineLink[index]
+                                                              ['date']
+                                                          : myWorks[index].date,
                                                       style: TextStyle(
                                                         fontSize: font12,
                                                         color: Colors.grey,
                                                       ),
                                                     ),
-                                                    PopupMenuButton<String>(
-                                                        padding:
-                                                            EdgeInsets.all(0.1),
-                                                        child: Container(
-                                                          height: ScreenUtil()
-                                                              .setHeight(40),
-                                                          width: ScreenUtil()
-                                                              .setHeight(30),
-                                                          child: Icon(
-                                                            Icons.more_vert,
-                                                            size: ScreenUtil()
-                                                                .setHeight(38),
-                                                            color: Colors.grey,
-                                                          ),
-                                                        ),
-                                                        itemBuilder: (level !=
-                                                                "0")
-                                                            ? (BuildContext
-                                                                    context) =>
-                                                                <
-                                                                    PopupMenuEntry<
-                                                                        String>>[
-                                                                  PopupMenuItem<
-                                                                      String>(
-                                                                    value:
-                                                                        "visit url",
-                                                                    child: Text(
-                                                                      "Visit URL",
-                                                                      style:
-                                                                          TextStyle(
-                                                                        fontSize:
-                                                                            font14,
-                                                                      ),
-                                                                    ),
-                                                                  ),
-                                                                ]
-                                                            : (myWorks[index]
-                                                                        .category !=
-                                                                    "VForm")
-                                                                ? (BuildContext
-                                                                        context) =>
-                                                                    <
-                                                                        PopupMenuEntry<
-                                                                            String>>[
-                                                                      PopupMenuItem<
-                                                                          String>(
-                                                                        value:
-                                                                            "assign",
-                                                                        child:
-                                                                            Text(
-                                                                          "Assign",
-                                                                          style:
-                                                                              TextStyle(
-                                                                            fontSize:
-                                                                                font14,
-                                                                          ),
-                                                                        ),
-                                                                      ),
-                                                                      PopupMenuItem<
-                                                                          String>(
-                                                                        value:
-                                                                            "visit url",
-                                                                        child:
-                                                                            Text(
-                                                                          "Visit URL",
-                                                                          style:
-                                                                              TextStyle(
-                                                                            fontSize:
-                                                                                font14,
-                                                                          ),
-                                                                        ),
-                                                                      ),
-                                                                    ]
-                                                                : (BuildContext
-                                                                        context) =>
-                                                                    <
-                                                                        PopupMenuEntry<
-                                                                            String>>[
-                                                                      PopupMenuItem<
-                                                                          String>(
-                                                                        value:
-                                                                            "visit url",
-                                                                        child:
-                                                                            Text(
-                                                                          "Visit URL",
-                                                                          style:
-                                                                              TextStyle(
-                                                                            fontSize:
-                                                                                font14,
-                                                                          ),
-                                                                        ),
-                                                                      ),
-                                                                    ],
-                                                        onSelected:
-                                                            (selectedItem) async {
-                                                          switch (
-                                                              selectedItem) {
-                                                            case "assign":
-                                                              {
-                                                                _assign(
-                                                                    myWorks[index]
-                                                                        .handlers,
-                                                                    myWorks[index]
-                                                                            .category +
-                                                                        "-" +
-                                                                        myWorks[index]
-                                                                            .id);
-                                                              }
-                                                              break;
-                                                            case "visit url":
-                                                              {
-                                                                _visitURL(
-                                                                    index);
-                                                              }
-                                                              break;
-                                                          }
-                                                        }),
+                                                    (level != "0")
+                                                        ? Container()
+                                                        : (myWorks[index]
+                                                                    .category !=
+                                                                "VForm")
+                                                            ? popupMenuButton(
+                                                                index)
+                                                            : Container(),
                                                   ],
                                                 ),
                                               ),
@@ -486,7 +537,7 @@ class _MyWorksState extends State<MyWorks> {
                                                         : myWorks[index]
                                                             .category,
                                                     style: TextStyle(
-                                                      color: Colors.blue,
+                                                      // color: Colors.blue,
                                                       fontSize: font12,
                                                     ),
                                                   ),
@@ -500,15 +551,29 @@ class _MyWorksState extends State<MyWorks> {
                                                 mainAxisAlignment:
                                                     MainAxisAlignment.start,
                                                 children: <Widget>[
-                                                  Text(
-                                                    (connection == false)
-                                                        ? offlineLink[index]
-                                                            ['title']
-                                                        : myWorks[index].title,
-                                                    style: TextStyle(
-                                                        fontSize: font15,
-                                                        fontWeight:
-                                                            FontWeight.bold),
+                                                  InkWell(
+                                                    onTap: () {
+                                                      if (connection != false) {
+                                                        _visitURL(index);
+                                                      }
+                                                    },
+                                                    child: Text(
+                                                      (connection == false)
+                                                          ? offlineLink[index]
+                                                              ['title']
+                                                          : myWorks[index]
+                                                              .title,
+                                                      overflow:
+                                                          TextOverflow.ellipsis,
+                                                      style: TextStyle(
+                                                          decoration:
+                                                              TextDecoration
+                                                                  .underline,
+                                                          fontSize: font15,
+                                                          color: Colors.blue,
+                                                          fontWeight:
+                                                              FontWeight.bold),
+                                                    ),
                                                   ),
                                                 ],
                                               ),
@@ -563,11 +628,14 @@ class _MyWorksState extends State<MyWorks> {
                                                                       onChanged:
                                                                           (bool
                                                                               value) {
-                                                                        setState(
-                                                                            () {
-                                                                          myWorks[index].offLine =
-                                                                              value;
-                                                                        });
+                                                                        if (this
+                                                                            .mounted) {
+                                                                          setState(
+                                                                              () {
+                                                                            myWorks[index].offLine =
+                                                                                value;
+                                                                          });
+                                                                        }
                                                                       },
                                                                     ),
                                                                   )
@@ -769,12 +837,15 @@ class _MyWorksState extends State<MyWorks> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: <Widget>[
                               JumpingText('Loading...'),
-                              SizedBox(height: MediaQuery.of(context).size.height * 0.02),
+                              SizedBox(
+                                  height: MediaQuery.of(context).size.height *
+                                      0.02),
                               SpinKitRing(
-                                  lineWidth: 3,
-                                  color: Colors.blue,
-                                  size: 30.0,
-                                  duration: Duration(milliseconds: 600),),
+                                lineWidth: 3,
+                                color: Colors.blue,
+                                size: 30.0,
+                                duration: Duration(milliseconds: 600),
+                              ),
                             ],
                           ),
                         ),
@@ -785,6 +856,41 @@ class _MyWorksState extends State<MyWorks> {
         ),
       ),
     );
+  }
+
+  Widget popupMenuButton(int index) {
+    return PopupMenuButton<String>(
+        padding: EdgeInsets.all(0.1),
+        child: Container(
+          height: ScreenUtil().setHeight(40),
+          width: ScreenUtil().setHeight(30),
+          child: Icon(
+            Icons.more_vert,
+            size: ScreenUtil().setHeight(38),
+            color: Colors.grey,
+          ),
+        ),
+        itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+              PopupMenuItem<String>(
+                value: "assign",
+                child: Text(
+                  "Assign",
+                  style: TextStyle(
+                    fontSize: font14,
+                  ),
+                ),
+              ),
+            ],
+        onSelected: (selectedItem) async {
+          switch (selectedItem) {
+            case "assign":
+              {
+                _assign(myWorks[index].handlers,
+                    myWorks[index].category + "-" + myWorks[index].id);
+              }
+              break;
+          }
+        });
   }
 
   void _whatsappForward(String url) async {
@@ -1147,9 +1253,11 @@ class _MyWorksState extends State<MyWorks> {
                           onTap: () {
                             if (handler == "-" || handler == "") {
                             } else {
-                              setState(() {
-                                handlerList.add(handler);
-                              });
+                              if (this.mounted) {
+                                setState(() {
+                                  handlerList.add(handler);
+                                });
+                              }
                             }
                             Navigator.pop(context);
                             _assign(handlerList, id);
@@ -1188,1297 +1296,6 @@ class _MyWorksState extends State<MyWorks> {
       },
     );
   }
-
-  // void _whatsappForward(String status, String url) async {
-  //   if (status != "continue") {
-  //     setState(() {
-  //       _phoneEmpty = false;
-  //       _phoneInvalid = false;
-  //       isImageLoaded = false;
-  //       seletedVTag.clear();
-  //       _phonecontroller.text = "";
-  //       _namecontroller.text = "";
-  //       _companycontroller.text = "";
-  //       _remarkcontroller.text = "";
-  //     });
-  //   }
-  //   var connectivityResult = await (Connectivity().checkConnectivity());
-  //   if (connectivityResult == ConnectivityResult.wifi ||
-  //       connectivityResult == ConnectivityResult.mobile) {
-  //     showModalBottomSheet(
-  //         isScrollControlled: true,
-  //         isDismissible: false,
-  //         context: context,
-  //         builder: (context) {
-  //           return StatefulBuilder(
-  //               builder: (BuildContext context, StateSetter setModalState) {
-  //             return Container(
-  //                 height: MediaQuery.of(context).size.height * 0.97,
-  //                 child: Column(
-  //                   children: <Widget>[
-  //                     Flexible(
-  //                       child: Scaffold(
-  //                         resizeToAvoidBottomInset: true,
-  //                         body: SingleChildScrollView(
-  //                           physics: ScrollPhysics(),
-  //                           controller: whatsappController,
-  //                           child: Container(
-  //                             margin: EdgeInsets.fromLTRB(
-  //                                 ScreenUtil().setHeight(30),
-  //                                 ScreenUtil().setHeight(20),
-  //                                 ScreenUtil().setHeight(30),
-  //                                 ScreenUtil().setHeight(30)),
-  //                             child: Column(
-  //                               children: <Widget>[
-  //                                 Row(
-  //                                   mainAxisAlignment: MainAxisAlignment.end,
-  //                                   children: <Widget>[
-  //                                     InkWell(
-  //                                       borderRadius: BorderRadius.circular(20),
-  //                                       child: Icon(
-  //                                         FontAwesomeIcons.timesCircle,
-  //                                         color: Colors.blue,
-  //                                         size: ScreenUtil().setHeight(40),
-  //                                       ),
-  //                                       onTap: () {
-  //                                         Navigator.of(context).pop();
-  //                                       },
-  //                                     )
-  //                                   ],
-  //                                 ),
-  //                                 Row(
-  //                                   mainAxisAlignment: MainAxisAlignment.center,
-  //                                   children: <Widget>[
-  //                                     Text(
-  //                                       "Whatsapp Forward",
-  //                                       style: TextStyle(
-  //                                           fontSize: font18,
-  //                                           fontWeight: FontWeight.bold,
-  //                                           color: Colors.black),
-  //                                     ),
-  //                                   ],
-  //                                 ),
-  //                                 SizedBox(
-  //                                   height: ScreenUtil().setHeight(50),
-  //                                 ),
-  //                                 Row(
-  //                                   mainAxisAlignment: MainAxisAlignment.start,
-  //                                   children: <Widget>[
-  //                                     Text(
-  //                                       "Recipient Name Card",
-  //                                       style: TextStyle(
-  //                                           color: Colors.black,
-  //                                           fontSize: font14),
-  //                                     ),
-  //                                   ],
-  //                                 ),
-  //                                 (isImageLoaded)
-  //                                     ? Container()
-  //                                     : Column(
-  //                                         children: <Widget>[
-  //                                           SizedBox(
-  //                                             height: ScreenUtil().setHeight(5),
-  //                                           ),
-  //                                           Row(
-  //                                             mainAxisAlignment:
-  //                                                 MainAxisAlignment.start,
-  //                                             children: <Widget>[
-  //                                               Flexible(
-  //                                                 child: Text(
-  //                                                   "Snap a photo of the recipient’s name card to fill form faster.",
-  //                                                   style: TextStyle(
-  //                                                       color: Colors.grey,
-  //                                                       fontSize: font14),
-  //                                                 ),
-  //                                               ),
-  //                                             ],
-  //                                           ),
-  //                                         ],
-  //                                       ),
-  //                                 SizedBox(
-  //                                   height: ScreenUtil().setHeight(10),
-  //                                 ),
-  //                                 (isImageLoaded)
-  //                                     ? Center(
-  //                                         child: Container(
-  //                                           height: 177,
-  //                                           width: 280,
-  //                                           decoration: BoxDecoration(
-  //                                             image: DecorationImage(
-  //                                                 image: FileImage(pickedImage),
-  //                                                 fit: BoxFit.contain),
-  //                                           ),
-  //                                         ),
-  //                                       )
-  //                                     : Stack(
-  //                                         children: <Widget>[
-  //                                           Stack(
-  //                                             children: <Widget>[
-  //                                               Container(
-  //                                                 width: ScreenUtil()
-  //                                                     .setWidth(140),
-  //                                                 height: ScreenUtil()
-  //                                                     .setHeight(140),
-  //                                                 decoration: BoxDecoration(
-  //                                                   color: Color.fromARGB(
-  //                                                       100, 220, 220, 220),
-  //                                                   shape: BoxShape.rectangle,
-  //                                                   borderRadius:
-  //                                                       BorderRadius.all(
-  //                                                           Radius.circular(
-  //                                                               10.0)),
-  //                                                 ),
-  //                                               ),
-  //                                               Positioned(
-  //                                                 top: ScreenUtil()
-  //                                                     .setHeight(20),
-  //                                                 left:
-  //                                                     ScreenUtil().setWidth(20),
-  //                                                 child: Container(
-  //                                                     width: ScreenUtil()
-  //                                                         .setWidth(100),
-  //                                                     height: ScreenUtil()
-  //                                                         .setHeight(100),
-  //                                                     decoration: BoxDecoration(
-  //                                                       shape:
-  //                                                           BoxShape.rectangle,
-  //                                                       color:
-  //                                                           Colors.transparent,
-  //                                                       borderRadius:
-  //                                                           BorderRadius.all(
-  //                                                               Radius.circular(
-  //                                                                   10.0)),
-  //                                                     ),
-  //                                                     child: Icon(
-  //                                                       FontAwesomeIcons
-  //                                                           .addressCard,
-  //                                                       color: Colors.grey,
-  //                                                       size: ScreenUtil()
-  //                                                           .setHeight(40),
-  //                                                     )),
-  //                                               ),
-  //                                             ],
-  //                                           ),
-  //                                           Container(
-  //                                             margin: EdgeInsets.fromLTRB(
-  //                                                 ScreenUtil().setHeight(150),
-  //                                                 ScreenUtil().setHeight(40),
-  //                                                 0,
-  //                                                 0),
-  //                                             child: Column(
-  //                                               children: <Widget>[
-  //                                                 Row(
-  //                                                   mainAxisAlignment:
-  //                                                       MainAxisAlignment.start,
-  //                                                   children: <Widget>[],
-  //                                                 ),
-  //                                                 SizedBox(
-  //                                                   height: ScreenUtil()
-  //                                                       .setHeight(20),
-  //                                                 ),
-  //                                                 Row(
-  //                                                   mainAxisAlignment:
-  //                                                       MainAxisAlignment.start,
-  //                                                   children: <Widget>[
-  //                                                     InkWell(
-  //                                                         onTap: () {
-  //                                                           _scanner(url);
-  //                                                         },
-  //                                                         child: Text(
-  //                                                           "Take Photo",
-  //                                                           style: TextStyle(
-  //                                                               color:
-  //                                                                   Colors.blue,
-  //                                                               fontSize:
-  //                                                                   font14),
-  //                                                         )),
-  //                                                   ],
-  //                                                 ),
-  //                                               ],
-  //                                             ),
-  //                                           )
-  //                                         ],
-  //                                       ),
-  //                                 SizedBox(
-  //                                   height: ScreenUtil().setHeight(30),
-  //                                 ),
-  //                                 Row(
-  //                                   mainAxisAlignment: MainAxisAlignment.start,
-  //                                   children: <Widget>[
-  //                                     Text("Recipient Phone Number",
-  //                                         style: TextStyle(fontSize: font14)),
-  //                                     Text(" - Required",
-  //                                         style: TextStyle(
-  //                                             color: Colors.grey,
-  //                                             fontSize: font14,
-  //                                             fontStyle: FontStyle.italic))
-  //                                   ],
-  //                                 ),
-  //                                 SizedBox(
-  //                                   height: ScreenUtil().setHeight(5),
-  //                                 ),
-  //                                 Container(
-  //                                   height: ScreenUtil().setHeight(60),
-  //                                   padding: EdgeInsets.all(0.5),
-  //                                   decoration: BoxDecoration(
-  //                                     color: Colors.white,
-  //                                     borderRadius: BorderRadius.circular(5),
-  //                                     border: Border.all(
-  //                                         color: Colors.grey.shade400,
-  //                                         style: BorderStyle.solid),
-  //                                   ),
-  //                                   child: Row(
-  //                                     children: <Widget>[
-  //                                       Expanded(
-  //                                         child: TextField(
-  //                                           controller: _phonecontroller,
-  //                                           style: TextStyle(
-  //                                             height: 1,
-  //                                             fontSize: font14,
-  //                                           ),
-  //                                           keyboardType: TextInputType.number,
-  //                                           decoration: InputDecoration(
-  //                                             hintText: "eg. 6012XXXXXXXX",
-  //                                             border: InputBorder.none,
-  //                                             focusedBorder: InputBorder.none,
-  //                                             contentPadding: EdgeInsets.only(
-  //                                                 left: ScreenUtil()
-  //                                                     .setHeight(10),
-  //                                                 bottom: ScreenUtil()
-  //                                                     .setHeight(20),
-  //                                                 top: ScreenUtil()
-  //                                                     .setHeight(-15),
-  //                                                 right: ScreenUtil()
-  //                                                     .setHeight(20)),
-  //                                           ),
-  //                                         ),
-  //                                       ),
-  //                                       (isImageLoaded == true)
-  //                                           ? InkWell(
-  //                                               onTap: () {
-  //                                                 if (phoneList.length != 0) {
-  //                                                   _showBottomSheet("phone");
-  //                                                 } else {
-  //                                                   Toast.show(
-  //                                                       "No phone number detected",
-  //                                                       context,
-  //                                                       duration:
-  //                                                           Toast.LENGTH_LONG,
-  //                                                       gravity: Toast.BOTTOM);
-  //                                                 }
-  //                                               },
-  //                                               child: Container(
-  //                                                 height: ScreenUtil()
-  //                                                     .setHeight(60),
-  //                                                 width: ScreenUtil()
-  //                                                     .setHeight(60),
-  //                                                 child: Center(
-  //                                                   child: Icon(
-  //                                                     Icons.arrow_drop_down,
-  //                                                     color: Colors.black,
-  //                                                   ),
-  //                                                 ),
-  //                                               ),
-  //                                             )
-  //                                           : Container()
-  //                                     ],
-  //                                   ),
-  //                                 ),
-  //                                 (_phoneEmpty == true)
-  //                                     ? Row(
-  //                                         mainAxisAlignment:
-  //                                             MainAxisAlignment.start,
-  //                                         children: <Widget>[
-  //                                           Text(
-  //                                             "Phone number can't be empty",
-  //                                             style: TextStyle(
-  //                                                 color: Colors.red,
-  //                                                 fontSize: font12),
-  //                                           )
-  //                                         ],
-  //                                       )
-  //                                     : Row(),
-  //                                 (_phoneInvalid == true)
-  //                                     ? Row(
-  //                                         mainAxisAlignment:
-  //                                             MainAxisAlignment.start,
-  //                                         children: <Widget>[
-  //                                           Text(
-  //                                             "Invalid phone number",
-  //                                             style: TextStyle(
-  //                                                 color: Colors.red,
-  //                                                 fontSize: font12),
-  //                                           )
-  //                                         ],
-  //                                       )
-  //                                     : Row(),
-  //                                 SizedBox(
-  //                                   height: ScreenUtil().setHeight(30),
-  //                                 ),
-  //                                 Row(
-  //                                   mainAxisAlignment: MainAxisAlignment.start,
-  //                                   children: <Widget>[
-  //                                     Text("Recipient Name"),
-  //                                     Text(" - Required",
-  //                                         style: TextStyle(
-  //                                             color: Colors.grey,
-  //                                             fontSize: font14,
-  //                                             fontStyle: FontStyle.italic))
-  //                                   ],
-  //                                 ),
-  //                                 SizedBox(
-  //                                   height: ScreenUtil().setHeight(5),
-  //                                 ),
-  //                                 Container(
-  //                                   height: ScreenUtil().setHeight(60),
-  //                                   padding: EdgeInsets.all(0.5),
-  //                                   decoration: BoxDecoration(
-  //                                     color: Colors.white,
-  //                                     borderRadius: BorderRadius.circular(5),
-  //                                     border: Border.all(
-  //                                         color: Colors.grey.shade400,
-  //                                         style: BorderStyle.solid),
-  //                                   ),
-  //                                   child: Row(
-  //                                     children: <Widget>[
-  //                                       Expanded(
-  //                                         child: TextField(
-  //                                           controller: _namecontroller,
-  //                                           style: TextStyle(
-  //                                             height: 1,
-  //                                             fontSize: font14,
-  //                                           ),
-  //                                           keyboardType: TextInputType.text,
-  //                                           decoration: InputDecoration(
-  //                                             hintText: "eg. David",
-  //                                             border: InputBorder.none,
-  //                                             contentPadding: EdgeInsets.only(
-  //                                                 left: ScreenUtil()
-  //                                                     .setHeight(10),
-  //                                                 bottom: ScreenUtil()
-  //                                                     .setHeight(20),
-  //                                                 top: ScreenUtil()
-  //                                                     .setHeight(-15),
-  //                                                 right: ScreenUtil()
-  //                                                     .setHeight(20)),
-  //                                           ),
-  //                                         ),
-  //                                       ),
-  //                                       (isImageLoaded == true)
-  //                                           ? InkWell(
-  //                                               onTap: () {
-  //                                                 _showBottomSheet(
-  //                                                     "_namecontroller");
-  //                                               },
-  //                                               child: Container(
-  //                                                 height: ScreenUtil()
-  //                                                     .setHeight(60),
-  //                                                 width: ScreenUtil()
-  //                                                     .setHeight(60),
-  //                                                 child: Center(
-  //                                                   child: Icon(
-  //                                                     Icons.arrow_drop_down,
-  //                                                     color: Colors.black,
-  //                                                   ),
-  //                                                 ),
-  //                                               ),
-  //                                             )
-  //                                           : Container()
-  //                                     ],
-  //                                   ),
-  //                                 ),
-  //                                 (_nameEmpty == true)
-  //                                     ? Row(
-  //                                         mainAxisAlignment:
-  //                                             MainAxisAlignment.start,
-  //                                         children: <Widget>[
-  //                                           Text(
-  //                                             "Name can't be empty",
-  //                                             style: TextStyle(
-  //                                                 color: Colors.red,
-  //                                                 fontSize: font12),
-  //                                           )
-  //                                         ],
-  //                                       )
-  //                                     : Row(),
-  //                                 SizedBox(
-  //                                   height: ScreenUtil().setHeight(30),
-  //                                 ),
-  //                                 Row(
-  //                                   mainAxisAlignment: MainAxisAlignment.start,
-  //                                   children: <Widget>[Text("Company Name")],
-  //                                 ),
-  //                                 SizedBox(
-  //                                   height: ScreenUtil().setHeight(5),
-  //                                 ),
-  //                                 Container(
-  //                                   height: ScreenUtil().setHeight(60),
-  //                                   padding: EdgeInsets.all(0.5),
-  //                                   decoration: BoxDecoration(
-  //                                     color: Colors.white,
-  //                                     borderRadius: BorderRadius.circular(5),
-  //                                     border: Border.all(
-  //                                         color: Colors.grey.shade400,
-  //                                         style: BorderStyle.solid),
-  //                                   ),
-  //                                   child: Row(
-  //                                     children: <Widget>[
-  //                                       Expanded(
-  //                                         child: TextField(
-  //                                           controller: _companycontroller,
-  //                                           style: TextStyle(
-  //                                             height: 1,
-  //                                             fontSize: font14,
-  //                                           ),
-  //                                           keyboardType: TextInputType.text,
-  //                                           decoration: InputDecoration(
-  //                                             hintText: "eg. JTApps Sdn Bhd",
-  //                                             border: InputBorder.none,
-  //                                             focusedBorder: InputBorder.none,
-  //                                             contentPadding: EdgeInsets.only(
-  //                                                 left: ScreenUtil()
-  //                                                     .setHeight(10),
-  //                                                 bottom: ScreenUtil()
-  //                                                     .setHeight(20),
-  //                                                 top: ScreenUtil()
-  //                                                     .setHeight(-15),
-  //                                                 right: ScreenUtil()
-  //                                                     .setHeight(20)),
-  //                                           ),
-  //                                         ),
-  //                                       ),
-  //                                       (isImageLoaded == true)
-  //                                           ? InkWell(
-  //                                               onTap: () {
-  //                                                 _showBottomSheet(
-  //                                                     "_companycontroller");
-  //                                               },
-  //                                               child: Container(
-  //                                                 height: ScreenUtil()
-  //                                                     .setHeight(60),
-  //                                                 width: ScreenUtil()
-  //                                                     .setHeight(60),
-  //                                                 child: Center(
-  //                                                   child: Icon(
-  //                                                     Icons.arrow_drop_down,
-  //                                                     color: Colors.black,
-  //                                                   ),
-  //                                                 ),
-  //                                               ),
-  //                                             )
-  //                                           : Container()
-  //                                     ],
-  //                                   ),
-  //                                 ),
-  //                                 SizedBox(
-  //                                   height: ScreenUtil().setHeight(30),
-  //                                 ),
-  //                                 Row(
-  //                                   mainAxisAlignment: MainAxisAlignment.start,
-  //                                   children: <Widget>[Text("Remark")],
-  //                                 ),
-  //                                 SizedBox(
-  //                                   height: ScreenUtil().setHeight(5),
-  //                                 ),
-  //                                 Container(
-  //                                   height: ScreenUtil().setHeight(60),
-  //                                   padding: EdgeInsets.all(0.5),
-  //                                   decoration: BoxDecoration(
-  //                                     color: Colors.white,
-  //                                     borderRadius: BorderRadius.circular(5),
-  //                                     border: Border.all(
-  //                                         color: Colors.grey.shade400,
-  //                                         style: BorderStyle.solid),
-  //                                   ),
-  //                                   child: Row(
-  //                                     children: <Widget>[
-  //                                       Expanded(
-  //                                         child: TextField(
-  //                                           controller: _remarkcontroller,
-  //                                           style: TextStyle(
-  //                                             height: 1,
-  //                                             fontSize: font14,
-  //                                           ),
-  //                                           keyboardType: TextInputType.text,
-  //                                           decoration: InputDecoration(
-  //                                             hintText:
-  //                                                 "eg. from KLCC exhibition",
-  //                                             border: InputBorder.none,
-  //                                             focusedBorder: InputBorder.none,
-  //                                             contentPadding: EdgeInsets.only(
-  //                                                 left: ScreenUtil()
-  //                                                     .setHeight(10),
-  //                                                 bottom: ScreenUtil()
-  //                                                     .setHeight(20),
-  //                                                 top: ScreenUtil()
-  //                                                     .setHeight(-15),
-  //                                                 right: ScreenUtil()
-  //                                                     .setHeight(20)),
-  //                                           ),
-  //                                         ),
-  //                                       ),
-  //                                       (isImageLoaded == true)
-  //                                           ? InkWell(
-  //                                               onTap: () {
-  //                                                 _showBottomSheet(
-  //                                                     "_remarkcontroller");
-  //                                               },
-  //                                               child: Container(
-  //                                                 height: ScreenUtil()
-  //                                                     .setHeight(60),
-  //                                                 width: ScreenUtil()
-  //                                                     .setHeight(60),
-  //                                                 child: Center(
-  //                                                   child: Icon(
-  //                                                     Icons.arrow_drop_down,
-  //                                                     color: Colors.black,
-  //                                                   ),
-  //                                                 ),
-  //                                               ),
-  //                                             )
-  //                                           : Container()
-  //                                     ],
-  //                                   ),
-  //                                 ),
-  //                                 SizedBox(
-  //                                   height: ScreenUtil().setHeight(30),
-  //                                 ),
-  //                                 Row(
-  //                                   mainAxisAlignment: MainAxisAlignment.start,
-  //                                   children: <Widget>[Text("VTag")],
-  //                                 ),
-  //                                 SizedBox(
-  //                                   height: ScreenUtil().setHeight(5),
-  //                                 ),
-  //                                 Container(
-  //                                   padding: EdgeInsets.all(0.5),
-  //                                   decoration: BoxDecoration(
-  //                                     color: Colors.white,
-  //                                     borderRadius: BorderRadius.circular(5),
-  //                                     border: Border.all(
-  //                                         color: Colors.grey.shade400,
-  //                                         style: BorderStyle.solid),
-  //                                   ),
-  //                                   child: Row(
-  //                                     children: <Widget>[
-  //                                       Expanded(
-  //                                         child: Container(
-  //                                           margin: EdgeInsets.fromLTRB(
-  //                                               ScreenUtil().setHeight(10),
-  //                                               0,
-  //                                               0,
-  //                                               0),
-  //                                           child: (seletedVTag.length == 0)
-  //                                               ? Row(
-  //                                                   mainAxisAlignment:
-  //                                                       MainAxisAlignment.start,
-  //                                                   children: <Widget>[
-  //                                                     Text(
-  //                                                       "Please Select",
-  //                                                       style: TextStyle(
-  //                                                           fontSize: font14,
-  //                                                           color: Colors
-  //                                                               .grey.shade600),
-  //                                                     )
-  //                                                   ],
-  //                                                 )
-  //                                               : Wrap(
-  //                                                   direction: Axis.horizontal,
-  //                                                   alignment:
-  //                                                       WrapAlignment.start,
-  //                                                   children: <Widget>[
-  //                                                     for (int i = 0;
-  //                                                         i <
-  //                                                             seletedVTag
-  //                                                                 .length;
-  //                                                         i++)
-  //                                                       InkWell(
-  //                                                         onTap: () {
-  //                                                           setModalState(() {
-  //                                                             seletedVTag
-  //                                                                 .removeAt(i);
-  //                                                           });
-  //                                                         },
-  //                                                         child: Container(
-  //                                                           width: ScreenUtil().setWidth(
-  //                                                               (seletedVTag[i]
-  //                                                                           .length *
-  //                                                                       16.8) +
-  //                                                                   62.8),
-  //                                                           margin: EdgeInsets
-  //                                                               .all(ScreenUtil()
-  //                                                                   .setHeight(
-  //                                                                       5)),
-  //                                                           decoration:
-  //                                                               BoxDecoration(
-  //                                                             color: Color
-  //                                                                 .fromRGBO(
-  //                                                                     235,
-  //                                                                     235,
-  //                                                                     255,
-  //                                                                     1),
-  //                                                             borderRadius:
-  //                                                                 BorderRadius
-  //                                                                     .circular(
-  //                                                                         100),
-  //                                                           ),
-  //                                                           padding:
-  //                                                               EdgeInsets.all(
-  //                                                             ScreenUtil()
-  //                                                                 .setHeight(
-  //                                                                     10),
-  //                                                           ),
-  //                                                           child: Row(
-  //                                                             mainAxisAlignment:
-  //                                                                 MainAxisAlignment
-  //                                                                     .center,
-  //                                                             children: <
-  //                                                                 Widget>[
-  //                                                               Text(
-  //                                                                 seletedVTag[
-  //                                                                     i],
-  //                                                                 style:
-  //                                                                     TextStyle(
-  //                                                                   color: Colors
-  //                                                                       .black,
-  //                                                                   fontSize:
-  //                                                                       12,
-  //                                                                 ),
-  //                                                               ),
-  //                                                               SizedBox(
-  //                                                                 width: ScreenUtil()
-  //                                                                     .setHeight(
-  //                                                                         5),
-  //                                                               ),
-  //                                                               Icon(
-  //                                                                 FontAwesomeIcons
-  //                                                                     .timesCircle,
-  //                                                                 size: ScreenUtil()
-  //                                                                     .setHeight(
-  //                                                                         30),
-  //                                                                 color: Colors
-  //                                                                     .grey,
-  //                                                               )
-  //                                                             ],
-  //                                                           ),
-  //                                                         ),
-  //                                                       ),
-  //                                                   ],
-  //                                                 ),
-  //                                         ),
-  //                                       ),
-  //                                       InkWell(
-  //                                         onTap: () {
-  //                                           _selectVTag(status, url);
-  //                                         },
-  //                                         child: Container(
-  //                                           height: ScreenUtil().setHeight(60),
-  //                                           width: ScreenUtil().setHeight(60),
-  //                                           child: Center(
-  //                                             child: Icon(
-  //                                               Icons.arrow_drop_down,
-  //                                               color: Colors.black,
-  //                                             ),
-  //                                           ),
-  //                                         ),
-  //                                       )
-  //                                     ],
-  //                                   ),
-  //                                 ),
-  //                                 SizedBox(
-  //                                   height: ScreenUtil().setHeight(50),
-  //                                 ),
-  //                                 Row(
-  //                                   mainAxisAlignment: MainAxisAlignment.center,
-  //                                   children: <Widget>[
-  //                                     Container(
-  //                                       width: ScreenUtil().setWidth(500),
-  //                                       height: ScreenUtil().setHeight(80),
-  //                                       margin: EdgeInsets.fromLTRB(
-  //                                           0,
-  //                                           ScreenUtil().setHeight(10),
-  //                                           ScreenUtil().setHeight(10),
-  //                                           ScreenUtil().setHeight(10)),
-  //                                       decoration: BoxDecoration(
-  //                                         color: Colors.blue,
-  //                                         borderRadius:
-  //                                             BorderRadius.circular(5),
-  //                                         border: Border(
-  //                                           top: BorderSide(
-  //                                               width: 1, color: Colors.grey),
-  //                                           right: BorderSide(
-  //                                               width: 1, color: Colors.grey),
-  //                                           bottom: BorderSide(
-  //                                               width: 1, color: Colors.grey),
-  //                                           left: BorderSide(
-  //                                               width: 1, color: Colors.grey),
-  //                                         ),
-  //                                       ),
-  //                                       child: FlatButton(
-  //                                         onPressed: () {
-  //                                           bool send = true;
-  //                                           setModalState(() {
-  //                                             if (_phonecontroller
-  //                                                 .text.isEmpty) {
-  //                                               _phoneEmpty = true;
-  //                                               send = false;
-  //                                             } else {
-  //                                               _phoneEmpty = false;
-  //                                             }
-  //                                           });
-  //                                           setModalState(() {
-  //                                             if (_namecontroller
-  //                                                 .text.isEmpty) {
-  //                                               _nameEmpty = true;
-  //                                               send = false;
-  //                                             } else {
-  //                                               _nameEmpty = false;
-  //                                             }
-  //                                           });
-  //                                           if (_phoneEmpty == false) {
-  //                                             bool _isNumeric(String phoneNo) {
-  //                                               if (phoneNo.length < 10) {
-  //                                                 return false;
-  //                                               }
-  //                                               return num.tryParse(phoneNo) !=
-  //                                                   null;
-  //                                             }
-
-  //                                             bool valid = _isNumeric(
-  //                                                 _phonecontroller.text);
-  //                                             if (valid == false) {
-  //                                               setModalState(() {
-  //                                                 _phoneInvalid = true;
-  //                                               });
-  //                                             } else {
-  //                                               setModalState(() {
-  //                                                 _phoneInvalid = false;
-  //                                               });
-  //                                             }
-
-  //                                             if (valid == true &&
-  //                                                 send == true) {
-  //                                               String vtag;
-  //                                               if (seletedVTag.length == 0) {
-  //                                                 vtag = "";
-  //                                               } else {
-  //                                                 for (int i = 0;
-  //                                                     i < seletedVTag.length;
-  //                                                     i++) {
-  //                                                   if (i == 0) {
-  //                                                     vtag = seletedVTag[i];
-  //                                                   } else {
-  //                                                     vtag = vtag +
-  //                                                         "," +
-  //                                                         seletedVTag[i];
-  //                                                   }
-  //                                                 }
-  //                                               }
-  //                                               _send(
-  //                                                   _phonecontroller.text,
-  //                                                   _namecontroller.text,
-  //                                                   _companycontroller.text,
-  //                                                   _remarkcontroller.text,
-  //                                                   vtag,
-  //                                                   url);
-  //                                             }
-  //                                           }
-  //                                         },
-  //                                         child: Text(
-  //                                           'Send',
-  //                                           style: TextStyle(
-  //                                             fontSize: font14,
-  //                                             color: Colors.white,
-  //                                           ),
-  //                                         ),
-  //                                       ),
-  //                                     ),
-  //                                   ],
-  //                                 )
-  //                               ],
-  //                             ),
-  //                           ),
-  //                         ),
-  //                       ),
-  //                     ),
-  //                   ],
-  //                 ));
-  //           });
-  //         });
-  //   } else {
-  //     Toast.show("This feature need Internet connection", context,
-  //         duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
-  //   }
-  // }
-
-  void _send(String phoneNo, String name, String companyName, String remark,
-      String vtag, String url) async {
-    if (phoneNo.substring(0, 1) != "6") {
-      phoneNo = "6" + phoneNo;
-    }
-    var connectivityResult = await (Connectivity().checkConnectivity());
-    if (connectivityResult == ConnectivityResult.wifi ||
-        connectivityResult == ConnectivityResult.mobile) {
-      http.post(urlWhatsApp, body: {
-        "companyID": companyID,
-        "userID": userID,
-        "user_type": userType,
-        "level": level,
-        "phoneNo": phoneNo,
-        "name": name,
-        "companyName": companyName,
-        "remark": remark,
-        "vtag": vtag,
-        "url": url,
-        "nameCard": base64Image,
-      }).then((res) {
-        // print("Hi " + res.body);
-      }).catchError((err) {
-        print("WhatsApp Forward error: " + (err).toString());
-      });
-      FlutterOpenWhatsapp.sendSingleMessage(phoneNo,
-          "Hello " + name + "! Reply 'hi' to enable the URL link. " + url);
-      Navigator.of(context).pop();
-    } else {
-      Toast.show("No Internet Connection", context,
-          duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
-    }
-  }
-
-  // void _selectVTag(String status, String url) {
-  //   String selectedTag = "";
-  //   if (vtagList.length != 0) {
-  //     showModalBottomSheet(
-  //       isDismissible: false,
-  //       context: context,
-  //       builder: (context) {
-  //         return StatefulBuilder(
-  //           builder: (BuildContext context, StateSetter setModalState) {
-  //             return Container(
-  //               height: MediaQuery.of(context).size.height * 0.3,
-  //               child: Column(
-  //                 children: <Widget>[
-  //                   Container(
-  //                     decoration: BoxDecoration(
-  //                       border: Border(
-  //                         bottom:
-  //                             BorderSide(width: 1, color: Colors.grey.shade300),
-  //                       ),
-  //                     ),
-  //                     child: Row(
-  //                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-  //                       children: <Widget>[
-  //                         Container(
-  //                           padding: EdgeInsets.all(
-  //                             ScreenUtil().setHeight(20),
-  //                           ),
-  //                           child: Text(
-  //                             "Select",
-  //                             style: TextStyle(
-  //                               fontWeight: FontWeight.bold,
-  //                               fontSize: font14,
-  //                             ),
-  //                           ),
-  //                         ),
-  //                         InkWell(
-  //                           borderRadius: BorderRadius.circular(20),
-  //                           child: Container(
-  //                             decoration: BoxDecoration(
-  //                               borderRadius: BorderRadius.circular(100),
-  //                             ),
-  //                             padding: EdgeInsets.all(
-  //                               ScreenUtil().setHeight(20),
-  //                             ),
-  //                             child: Text(
-  //                               "Done",
-  //                               style: TextStyle(
-  //                                 color: Colors.blue,
-  //                                 fontSize: font14,
-  //                               ),
-  //                             ),
-  //                           ),
-  //                           onTap: () {
-  //                             Navigator.pop(context);
-  //                             if (selectedTag != "") {
-  //                               if (seletedVTag.length != 0) {
-  //                                 bool cancelAdd = false;
-  //                                 for (int i = 0; i < seletedVTag.length; i++) {
-  //                                   if (selectedTag == seletedVTag[i]) {
-  //                                     cancelAdd = true;
-  //                                   }
-  //                                 }
-  //                                 if (cancelAdd == false) {
-  //                                   seletedVTag.add(selectedTag);
-  //                                 }
-  //                               } else {
-  //                                 seletedVTag.add(selectedTag);
-  //                               }
-  //                             }
-  //                             Navigator.pop(context);
-  //                             _whatsappForward("continue", url);
-  //                           },
-  //                         ),
-  //                       ],
-  //                     ),
-  //                   ),
-  //                   Flexible(
-  //                     child: Container(
-  //                       color: Colors.white,
-  //                       child: CupertinoPicker(
-  //                         backgroundColor: Colors.white,
-  //                         itemExtent: 28,
-  //                         scrollController:
-  //                             FixedExtentScrollController(initialItem: 0),
-  //                         onSelectedItemChanged: (int index) {
-  //                           if (index != 0) {
-  //                             setState(() {
-  //                               selectedTag = vtagList[index];
-  //                             });
-  //                           }
-  //                         },
-  //                         children: <Widget>[
-  //                           for (var each in vtagList)
-  //                             Text(
-  //                               each,
-  //                               style: TextStyle(
-  //                                 fontSize: font14,
-  //                               ),
-  //                             )
-  //                         ],
-  //                       ),
-  //                     ),
-  //                   ),
-  //                 ],
-  //               ),
-  //             );
-  //           },
-  //         );
-  //       },
-  //     );
-  //   } else {
-  //     Toast.show("VTag list is empty", context,
-  //         duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
-  //   }
-  // }
-
-  // void _showBottomSheet(String type) {
-  //   if (type == "phone") {
-  //     int position;
-  //     for (int i = 0; i < phoneList.length; i++) {
-  //       if (_phonecontroller.text == phoneList[i]) {
-  //         position = i;
-  //       }
-  //     }
-  //     showModalBottomSheet(
-  //       isDismissible: false,
-  //       context: context,
-  //       builder: (context) {
-  //         return StatefulBuilder(
-  //           builder: (BuildContext context, StateSetter setModalState) {
-  //             return Container(
-  //               height: MediaQuery.of(context).size.height * 0.3,
-  //               child: Column(
-  //                 children: <Widget>[
-  //                   Container(
-  //                     decoration: BoxDecoration(
-  //                       border: Border(
-  //                         bottom:
-  //                             BorderSide(width: 1, color: Colors.grey.shade300),
-  //                       ),
-  //                     ),
-  //                     child: Row(
-  //                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-  //                       children: <Widget>[
-  //                         Container(
-  //                           padding: EdgeInsets.all(
-  //                             ScreenUtil().setHeight(20),
-  //                           ),
-  //                           child: Text(
-  //                             "Select",
-  //                             style: TextStyle(
-  //                               fontWeight: FontWeight.bold,
-  //                               fontSize: font14,
-  //                             ),
-  //                           ),
-  //                         ),
-  //                         InkWell(
-  //                           borderRadius: BorderRadius.circular(20),
-  //                           child: Container(
-  //                             decoration: BoxDecoration(
-  //                               borderRadius: BorderRadius.circular(100),
-  //                             ),
-  //                             padding: EdgeInsets.all(
-  //                               ScreenUtil().setHeight(20),
-  //                             ),
-  //                             child: Text(
-  //                               "Done",
-  //                               style: TextStyle(
-  //                                 color: Colors.blue,
-  //                                 fontSize: font14,
-  //                               ),
-  //                             ),
-  //                           ),
-  //                           onTap: () {
-  //                             Navigator.pop(context);
-  //                             setState(() {
-  //                               _phonecontroller.text = phoneList[position];
-  //                             });
-  //                           },
-  //                         ),
-  //                       ],
-  //                     ),
-  //                   ),
-  //                   Flexible(
-  //                       child: Container(
-  //                     color: Colors.white,
-  //                     child: CupertinoPicker(
-  //                       backgroundColor: Colors.white,
-  //                       itemExtent: 28,
-  //                       scrollController:
-  //                           FixedExtentScrollController(initialItem: position),
-  //                       onSelectedItemChanged: (int index) {
-  //                         if (position != index) {
-  //                           setState(() {
-  //                             position = index;
-  //                           });
-  //                         }
-  //                       },
-  //                       children: <Widget>[
-  //                         for (var each in phoneList)
-  //                           Text(
-  //                             each,
-  //                             style: TextStyle(
-  //                               fontSize: font14,
-  //                             ),
-  //                           )
-  //                       ],
-  //                     ),
-  //                   ))
-  //                 ],
-  //               ),
-  //             );
-  //           },
-  //         );
-  //       },
-  //     );
-  //   } else {
-  //     showModalBottomSheet(
-  //       isDismissible: false,
-  //       context: context,
-  //       builder: (context) {
-  //         return StatefulBuilder(
-  //           builder: (BuildContext context, StateSetter setModalState) {
-  //             return Container(
-  //               height: MediaQuery.of(context).size.height * 0.3,
-  //               child: Column(
-  //                 children: <Widget>[
-  //                   Container(
-  //                     decoration: BoxDecoration(
-  //                       border: Border(
-  //                         bottom:
-  //                             BorderSide(width: 1, color: Colors.grey.shade300),
-  //                       ),
-  //                     ),
-  //                     child: Row(
-  //                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-  //                       children: <Widget>[
-  //                         Container(
-  //                           padding: EdgeInsets.all(
-  //                             ScreenUtil().setHeight(20),
-  //                           ),
-  //                           child: Text(
-  //                             "Select",
-  //                             style: TextStyle(
-  //                               fontWeight: FontWeight.bold,
-  //                               fontSize: font14,
-  //                             ),
-  //                           ),
-  //                         ),
-  //                         InkWell(
-  //                           borderRadius: BorderRadius.circular(20),
-  //                           child: Container(
-  //                             decoration: BoxDecoration(
-  //                               borderRadius: BorderRadius.circular(100),
-  //                             ),
-  //                             padding: EdgeInsets.all(
-  //                               ScreenUtil().setHeight(20),
-  //                             ),
-  //                             child: Text(
-  //                               "Done",
-  //                               style: TextStyle(
-  //                                 color: Colors.blue,
-  //                                 fontSize: font14,
-  //                               ),
-  //                             ),
-  //                           ),
-  //                           onTap: () {
-  //                             if (tempText != "-") {
-  //                               Navigator.pop(context);
-  //                               setState(() {
-  //                                 _checkTextField(type).text =
-  //                                     _checkTextField(type).text + tempText;
-  //                                 tempText = "";
-  //                               });
-  //                             } else {
-  //                               Navigator.pop(context);
-  //                             }
-  //                           },
-  //                         ),
-  //                       ],
-  //                     ),
-  //                   ),
-  //                   Flexible(
-  //                       child: Container(
-  //                     color: Colors.white,
-  //                     child: CupertinoPicker(
-  //                       backgroundColor: Colors.white,
-  //                       itemExtent: 28,
-  //                       scrollController:
-  //                           FixedExtentScrollController(initialItem: 0),
-  //                       onSelectedItemChanged: (int index) {
-  //                         tempText = otherList[index];
-  //                       },
-  //                       children: <Widget>[
-  //                         for (var each in otherList)
-  //                           Text(
-  //                             each,
-  //                             style: TextStyle(
-  //                               fontSize: font14,
-  //                             ),
-  //                           )
-  //                       ],
-  //                     ),
-  //                   ))
-  //                 ],
-  //               ),
-  //             );
-  //           },
-  //         );
-  //       },
-  //     );
-  //   }
-  // }
-
-  // TextEditingController _checkTextField(String textfield) {
-  //   TextEditingController controller;
-  //   switch (textfield) {
-  //     case "_namecontroller":
-  //       controller = _namecontroller;
-  //       break;
-  //     case "_companycontroller":
-  //       controller = _companycontroller;
-  //       break;
-  //     case "_remarkcontroller":
-  //       controller = _remarkcontroller;
-  //       break;
-  //   }
-  //   return controller;
-  // }
-
-  // void _scanner(String url) async {
-  //   showCupertinoModalPopup(
-  //       context: context,
-  //       builder: (context) {
-  //         return CupertinoActionSheet(
-  //           title: Text(
-  //             "Action",
-  //             style: TextStyle(
-  //               fontSize: font14,
-  //             ),
-  //           ),
-  //           cancelButton: CupertinoActionSheetAction(
-  //             onPressed: () {
-  //               Navigator.of(context).pop();
-  //             },
-  //             child: Text(
-  //               "Cancel",
-  //               style: TextStyle(
-  //                 fontSize: font18,
-  //               ),
-  //             ),
-  //           ),
-  //           actions: <Widget>[
-  //             CupertinoActionSheetAction(
-  //               onPressed: () async {
-  //                 Navigator.of(context).pop();
-  //                 var tempStore =
-  //                     await ImagePicker.pickImage(source: ImageSource.gallery);
-  //                 if (tempStore != null) {
-  //                   setState(() {
-  //                     pickedImage = tempStore;
-  //                     isImageLoaded = true;
-  //                     base64Image = base64Encode(pickedImage.readAsBytesSync());
-  //                   });
-  //                   readText(url);
-  //                 }
-  //               },
-  //               child: Text(
-  //                 "Browse Gallery",
-  //                 style: TextStyle(
-  //                   fontSize: font18,
-  //                 ),
-  //               ),
-  //             ),
-  //             CupertinoActionSheetAction(
-  //               onPressed: () async {
-  //                 Navigator.of(context).pop();
-  //                 var tempStore =
-  //                     await ImagePicker.pickImage(source: ImageSource.camera);
-  //                 if (tempStore != null) {
-  //                   setState(() {
-  //                     pickedImage = tempStore;
-  //                     base64Image = base64Encode(pickedImage.readAsBytesSync());
-  //                   });
-  //                   readText(url);
-  //                 }
-  //               },
-  //               child: Text(
-  //                 "Take Photo",
-  //                 style: TextStyle(
-  //                   fontSize: font18,
-  //                 ),
-  //               ),
-  //             ),
-  //           ],
-  //         );
-  //       });
-  // }
-
-  // Future readText(String url) async {
-  //   // Navigator.of(context).pop();
-  //   otherList.add("-");
-  //   FirebaseVisionImage ourImage = FirebaseVisionImage.fromFile(pickedImage);
-  //   TextRecognizer recognizeText = FirebaseVision.instance.textRecognizer();
-  //   VisionText readText = await recognizeText.processImage(ourImage);
-
-  //   String patttern = r'[0-9]';
-  //   RegExp regExp = new RegExp(patttern);
-  //   for (TextBlock block in readText.blocks) {
-  //     for (TextLine line in block.lines) {
-  //       String temPhone = "";
-  //       for (int i = 0; i < line.text.length; i++) {
-  //         if (regExp.hasMatch(line.text[i])) {
-  //           temPhone = temPhone + line.text[i];
-  //         }
-  //       }
-  //       if (temPhone.length >= 10) {
-  //         if (temPhone.substring(0, 1).toString() != "6") {
-  //           phoneList.add("6" + temPhone);
-  //         } else {
-  //           phoneList.add(temPhone);
-  //         }
-  //       } else {
-  //         otherList.add(line.text);
-  //       }
-  //     }
-  //   }
-  //   setState(() {
-  //     isImageLoaded = true;
-  //     _phonecontroller.text = phoneList[0];
-  //   });
-  //   Navigator.of(context).pop();
-  //   _whatsappForward("continue", url);
-  // }
 
   Future<bool> _onBackPressAppBar() async {
     SystemNavigator.pop();
@@ -2583,30 +1400,8 @@ class _MyWorksState extends State<MyWorks> {
                                             color: (category == "all")
                                                 ? Colors.blue
                                                 : Colors.white,
-                                            border: Border(
-                                              top: BorderSide(
-                                                  width: 1,
-                                                  color: (category == "all")
-                                                      ? Colors.blue
-                                                      : Colors.grey.shade300),
-                                              right: BorderSide(
-                                                  width: 1,
-                                                  color: (category == "all")
-                                                      ? Colors.blue
-                                                      : Colors.grey.shade300),
-                                              bottom: BorderSide(
-                                                  width: 1,
-                                                  color: (category == "all")
-                                                      ? Colors.blue
-                                                      : Colors.grey.shade300),
-                                              left: BorderSide(
-                                                  width: 1,
-                                                  color: (category == "all")
-                                                      ? Colors.blue
-                                                      : Colors.grey.shade300),
-                                            ),
                                           ),
-                                          child: FlatButton(
+                                          child: OutlineButton(
                                             onPressed: () {
                                               setModalState(() {
                                                 category = "all";
@@ -2635,30 +1430,8 @@ class _MyWorksState extends State<MyWorks> {
                                             color: (category == "vcard")
                                                 ? Colors.blue
                                                 : Colors.white,
-                                            border: Border(
-                                              top: BorderSide(
-                                                  width: 1,
-                                                  color: (category == "vcard")
-                                                      ? Colors.blue
-                                                      : Colors.grey.shade300),
-                                              right: BorderSide(
-                                                  width: 1,
-                                                  color: (category == "vcard")
-                                                      ? Colors.blue
-                                                      : Colors.grey.shade300),
-                                              bottom: BorderSide(
-                                                  width: 1,
-                                                  color: (category == "vcard")
-                                                      ? Colors.blue
-                                                      : Colors.grey.shade300),
-                                              left: BorderSide(
-                                                  width: 1,
-                                                  color: (category == "vcard")
-                                                      ? Colors.blue
-                                                      : Colors.grey.shade300),
-                                            ),
                                           ),
-                                          child: FlatButton(
+                                          child: OutlineButton(
                                             onPressed: () {
                                               setModalState(() {
                                                 category = "vcard";
@@ -2687,30 +1460,8 @@ class _MyWorksState extends State<MyWorks> {
                                             color: (category == "vflex")
                                                 ? Colors.blue
                                                 : Colors.white,
-                                            border: Border(
-                                              top: BorderSide(
-                                                  width: 1,
-                                                  color: (category == "vflex")
-                                                      ? Colors.blue
-                                                      : Colors.grey.shade300),
-                                              right: BorderSide(
-                                                  width: 1,
-                                                  color: (category == "vflex")
-                                                      ? Colors.blue
-                                                      : Colors.grey.shade300),
-                                              bottom: BorderSide(
-                                                  width: 1,
-                                                  color: (category == "vflex")
-                                                      ? Colors.blue
-                                                      : Colors.grey.shade300),
-                                              left: BorderSide(
-                                                  width: 1,
-                                                  color: (category == "vflex")
-                                                      ? Colors.blue
-                                                      : Colors.grey.shade300),
-                                            ),
                                           ),
-                                          child: FlatButton(
+                                          child: OutlineButton(
                                             onPressed: () {
                                               setModalState(() {
                                                 category = "vflex";
@@ -2739,34 +1490,8 @@ class _MyWorksState extends State<MyWorks> {
                                             color: (category == "vcatalogue")
                                                 ? Colors.blue
                                                 : Colors.white,
-                                            border: Border(
-                                              top: BorderSide(
-                                                  width: 1,
-                                                  color: (category ==
-                                                          "vcatalogue")
-                                                      ? Colors.blue
-                                                      : Colors.grey.shade300),
-                                              right: BorderSide(
-                                                  width: 1,
-                                                  color: (category ==
-                                                          "vcatalogue")
-                                                      ? Colors.blue
-                                                      : Colors.grey.shade300),
-                                              bottom: BorderSide(
-                                                  width: 1,
-                                                  color: (category ==
-                                                          "vcatalogue")
-                                                      ? Colors.blue
-                                                      : Colors.grey.shade300),
-                                              left: BorderSide(
-                                                  width: 1,
-                                                  color: (category ==
-                                                          "vcatalogue")
-                                                      ? Colors.blue
-                                                      : Colors.grey.shade300),
-                                            ),
                                           ),
-                                          child: FlatButton(
+                                          child: OutlineButton(
                                             onPressed: () {
                                               setModalState(() {
                                                 category = "vcatalogue";
@@ -2793,33 +1518,41 @@ class _MyWorksState extends State<MyWorks> {
                                               ScreenUtil().setHeight(10),
                                               0),
                                           decoration: BoxDecoration(
+                                            color: (category == "vbrochure")
+                                                ? Colors.blue
+                                                : Colors.white,
+                                          ),
+                                          child: OutlineButton(
+                                            onPressed: () {
+                                              setModalState(() {
+                                                category = "vbrochure";
+                                              });
+                                            },
+                                            child: Text(
+                                              'VBrochure',
+                                              style: TextStyle(
+                                                fontSize: font10,
+                                                color: (category == "vbrochure")
+                                                    ? Colors.white
+                                                    : Colors.grey,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                        Container(
+                                          width: ScreenUtil().setHeight(160),
+                                          height: ScreenUtil().setHeight(70),
+                                          margin: EdgeInsets.fromLTRB(
+                                              0,
+                                              ScreenUtil().setHeight(10),
+                                              ScreenUtil().setHeight(10),
+                                              0),
+                                          decoration: BoxDecoration(
                                             color: (category == "vform")
                                                 ? Colors.blue
                                                 : Colors.white,
-                                            border: Border(
-                                              top: BorderSide(
-                                                  width: 1,
-                                                  color: (category == "vform")
-                                                      ? Colors.blue
-                                                      : Colors.grey.shade300),
-                                              right: BorderSide(
-                                                  width: 1,
-                                                  color: (category == "vform")
-                                                      ? Colors.blue
-                                                      : Colors.grey.shade300),
-                                              bottom: BorderSide(
-                                                  width: 1,
-                                                  color: (category == "vform")
-                                                      ? Colors.blue
-                                                      : Colors.grey.shade300),
-                                              left: BorderSide(
-                                                  width: 1,
-                                                  color: (category == "vform")
-                                                      ? Colors.blue
-                                                      : Colors.grey.shade300),
-                                            ),
                                           ),
-                                          child: FlatButton(
+                                          child: OutlineButton(
                                             onPressed: () {
                                               setModalState(() {
                                                 category = "vform";
@@ -2899,9 +1632,11 @@ class _MyWorksState extends State<MyWorks> {
                 }
               }
             }
-            setState(() {
-              connection = true;
-            });
+            if (this.mounted) {
+              setState(() {
+                connection = true;
+              });
+            }
           } else {
             if (search == "") {
               offlineLink = await db.rawQuery("SELECT * FROM myworks");
@@ -2909,9 +1644,11 @@ class _MyWorksState extends State<MyWorks> {
               offlineLink = await db.rawQuery(
                   "SELECT * FROM myworks WHERE title LIKE '%" + search + "%'");
             }
-            setState(() {
-              connection = false;
-            });
+            if (this.mounted) {
+              setState(() {
+                connection = false;
+              });
+            }
           }
         }
         break;
@@ -2956,9 +1693,11 @@ class _MyWorksState extends State<MyWorks> {
                 }
               }
             }
-            setState(() {
-              connection = true;
-            });
+            if (this.mounted) {
+              setState(() {
+                connection = true;
+              });
+            }
           } else {
             if (search == "") {
               offlineLink = await db
@@ -2969,9 +1708,11 @@ class _MyWorksState extends State<MyWorks> {
                       search +
                       "%'");
             }
-            setState(() {
-              connection = false;
-            });
+            if (this.mounted) {
+              setState(() {
+                connection = false;
+              });
+            }
           }
         }
         break;
@@ -3016,9 +1757,11 @@ class _MyWorksState extends State<MyWorks> {
                 }
               }
             }
-            setState(() {
-              connection = true;
-            });
+            if (this.mounted) {
+              setState(() {
+                connection = true;
+              });
+            }
           } else {
             if (search == "") {
               offlineLink = await db
@@ -3029,9 +1772,11 @@ class _MyWorksState extends State<MyWorks> {
                       search +
                       "%'");
             }
-            setState(() {
-              connection = false;
-            });
+            if (this.mounted) {
+              setState(() {
+                connection = false;
+              });
+            }
           }
         }
         break;
@@ -3076,9 +1821,11 @@ class _MyWorksState extends State<MyWorks> {
                 }
               }
             }
-            setState(() {
-              connection = true;
-            });
+            if (this.mounted) {
+              setState(() {
+                connection = true;
+              });
+            }
           } else {
             if (search == "") {
               offlineLink = await db
@@ -3089,9 +1836,75 @@ class _MyWorksState extends State<MyWorks> {
                       search +
                       "%'");
             }
-            setState(() {
-              connection = false;
-            });
+            if (this.mounted) {
+              setState(() {
+                connection = false;
+              });
+            }
+          }
+        }
+        break;
+
+      case "vbrochure":
+        {
+          Navigator.pop(context);
+          myWorks.clear();
+          if (connection == true) {
+            for (int i = 0; i < myWorks1.length; i++) {
+              if (search == "" && myWorks1[i].category == "VBrochure") {
+                Myworks mywork = Myworks(
+                    date: myWorks1[i].date,
+                    title: myWorks1[i].title,
+                    url: myWorks1[i].url,
+                    urlName: myWorks1[i].urlName,
+                    link: myWorks1[i].link,
+                    category: myWorks1[i].category,
+                    qr: myWorks1[i].qr,
+                    id: myWorks1[i].id,
+                    handlers: myWorks1[i].handlers,
+                    offLine: false);
+                myWorks.add(mywork);
+              } else {
+                if (myWorks1[i]
+                        .title
+                        .toLowerCase()
+                        .contains(search.toLowerCase()) &&
+                    myWorks1[i].category == "VBrochure") {
+                  Myworks mywork = Myworks(
+                      date: myWorks1[i].date,
+                      title: myWorks1[i].title,
+                      url: myWorks1[i].url,
+                      urlName: myWorks1[i].urlName,
+                      link: myWorks1[i].link,
+                      category: myWorks1[i].category,
+                      qr: myWorks1[i].qr,
+                      id: myWorks1[i].id,
+                      handlers: myWorks1[i].handlers,
+                      offLine: false);
+                  myWorks.add(mywork);
+                }
+              }
+            }
+            if (this.mounted) {
+              setState(() {
+                connection = true;
+              });
+            }
+          } else {
+            if (search == "") {
+              offlineLink = await db
+                  .rawQuery("SELECT * FROM myworks WHERE type = 'VBrochure'");
+            } else {
+              offlineLink = await db.rawQuery(
+                  "SELECT * FROM myworks WHERE type = 'VBrochure' AND title LIKE '%" +
+                      search +
+                      "%'");
+            }
+            if (this.mounted) {
+              setState(() {
+                connection = false;
+              });
+            }
           }
         }
         break;
@@ -3136,9 +1949,11 @@ class _MyWorksState extends State<MyWorks> {
                 }
               }
             }
-            setState(() {
-              connection = true;
-            });
+            if (this.mounted) {
+              setState(() {
+                connection = true;
+              });
+            }
           } else {
             if (search == "") {
               offlineLink = await db
@@ -3149,16 +1964,18 @@ class _MyWorksState extends State<MyWorks> {
                       search +
                       "%'");
             }
-            setState(() {
-              connection = false;
-            });
+            if (this.mounted) {
+              setState(() {
+                connection = false;
+              });
+            }
           }
         }
         break;
     }
   }
 
-  void _visitURL(int index) async {
+  Future<void> _visitURL(int index) async {
     if (connection == true) {
       if (myWorks[index].offLine == false) {
         var connectivityResult = await (Connectivity().checkConnectivity());
@@ -3168,8 +1985,17 @@ class _MyWorksState extends State<MyWorks> {
             url: myWorks[index].link,
           );
         } else {
-          Toast.show("No Internet Connection", context,
-              duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
+          var path = location +
+              "/" +
+              myWorks[index].category +
+              myWorks[index].id +
+              "/VVIN.html";
+          if (File(path).existsSync() == true) {
+            await OpenFile.open(path);
+          } else {
+            Toast.show("This offline link still in downloading", context,
+                duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
+          }
         }
       } else {
         var path = location +
@@ -3224,13 +2050,20 @@ class _MyWorksState extends State<MyWorks> {
     print("MyWork Loading Time: " + result.toString());
   }
 
-  void checkConnection() async {
+  Future<void> checkConnection() async {
     startTime = DateTime.now().millisecondsSinceEpoch;
     final _devicePath = await getApplicationDocumentsDirectory();
     location = _devicePath.path.toString();
     db = await MyWorksDB.instance.database;
     offlineLink = await db.query(MyWorksDB.table);
     prefs = await SharedPreferences.getInstance();
+    if (prefs.getString("noti") != null) {
+      if (this.mounted) {
+        setState(() {
+          totalNotification = prefs.getString("noti");
+        });
+      }
+    }
     totalQR = int.parse(prefs.getString('totalQR') ?? "0");
     totalLink = int.parse(prefs.getString('totalLink') ?? "0");
     var connectivityResult = await (Connectivity().checkConnectivity());
@@ -3246,11 +2079,30 @@ class _MyWorksState extends State<MyWorks> {
       getLink();
       getVTag();
       getHandlerList();
+      notification();
     } else {
       initialize();
       Toast.show("No Internet, the data shown is not up to date", context,
           duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
     }
+  }
+
+  void notification() {
+    http.post(urlNoti, body: {
+      "userID": userID,
+      "companyID": companyID,
+      "level": level,
+      "user_type": userType,
+    }).then((res) {
+      if (this.mounted) {
+        setState(() {
+          totalNotification = res.body;
+        });
+      }
+      prefs.setString('noti', res.body);
+    }).catchError((err) {
+      print("Notification error: " + err.toString());
+    });
   }
 
   void getHandlerList() {
@@ -3286,21 +2138,21 @@ class _MyWorksState extends State<MyWorks> {
     });
   }
 
-  void _onLoading() {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => Dialog(
-        elevation: 0.0,
-        backgroundColor: Colors.transparent,
-        child: Container(
-          width: 50.0,
-          height: 50.0,
-          child: Loader(),
-        ),
-      ),
-    );
-  }
+  // void _onLoading() {
+  //   showDialog(
+  //     context: context,
+  //     barrierDismissible: false,
+  //     builder: (_) => Dialog(
+  //       elevation: 0.0,
+  //       backgroundColor: Colors.transparent,
+  //       child: Container(
+  //         width: 50.0,
+  //         height: 50.0,
+  //         child: Loader(),
+  //       ),
+  //     ),
+  //   );
+  // }
 
   void getVTag() {
     http.post(urlVTag, body: {
@@ -3317,9 +2169,11 @@ class _MyWorksState extends State<MyWorks> {
         vtagList = jsonData;
         vtagList.insert(0, "-");
       }
-      setState(() {
-        vtagStatus = true;
-      });
+      if (this.mounted) {
+        setState(() {
+          vtagStatus = true;
+        });
+      }
     }).catchError((err) {
       print("Get Link error: " + (err).toString());
     });
@@ -3344,9 +2198,11 @@ class _MyWorksState extends State<MyWorks> {
       } else {
         var jsonData = json.decode(res.body);
         if (total == 0) {
-          setState(() {
-            total = int.parse(jsonData[0]);
-          });
+          if (this.mounted) {
+            setState(() {
+              total = int.parse(jsonData[0]);
+            });
+          }
           for (int i = 1; i < jsonData.length; i++) {
             Myworks mywork = Myworks(
                 date: jsonData[i]['date'],
@@ -3365,10 +2221,12 @@ class _MyWorksState extends State<MyWorks> {
           if (myWorks.length != total) {
             getLink();
           } else {
-            setState(() {
-              status = true;
-              connection = true;
-            });
+            if (this.mounted) {
+              setState(() {
+                status = true;
+                connection = true;
+              });
+            }
             _save();
           }
         } else {
@@ -3390,10 +2248,12 @@ class _MyWorksState extends State<MyWorks> {
           if (myWorks.length != total) {
             getLink();
           } else {
-            setState(() {
-              status = true;
-              connection = true;
-            });
+            if (this.mounted) {
+              setState(() {
+                status = true;
+                connection = true;
+              });
+            }
             _save();
           }
         }
@@ -3420,9 +2280,11 @@ class _MyWorksState extends State<MyWorks> {
         if (File(imagePath).existsSync() == true) {
           totalQRcount += 1;
           if (totalQRcount > totalQR && totalQRcount < myWorks.length) {
-            setState(() {
-              totalQR = totalQRcount;
-            });
+            if (this.mounted) {
+              setState(() {
+                totalQR = totalQRcount;
+              });
+            }
             await prefs.setString('totalQR', totalQRcount.toString());
           }
         } else {
@@ -3433,9 +2295,11 @@ class _MyWorksState extends State<MyWorks> {
         if (File(linkPath).existsSync() == true) {
           totalLinkcount += 1;
           if (totalLinkcount > totalLink && totalLinkcount < myWorks.length) {
-            setState(() {
-              totalLink = totalLinkcount;
-            });
+            if (this.mounted) {
+              setState(() {
+                totalLink = totalLinkcount;
+              });
+            }
             await prefs.setString('totalLink', totalLinkcount.toString());
           }
         } else {
@@ -3478,16 +2342,20 @@ class _MyWorksState extends State<MyWorks> {
 
   Future<void> initialize() async {
     if (offlineLink.length == 0) {
-      setState(() {
-        nodata = true;
-        status = true;
-        vtagStatus = true;
-      });
+      if (this.mounted) {
+        setState(() {
+          nodata = true;
+          status = true;
+          vtagStatus = true;
+        });
+      }
     } else {
-      setState(() {
-        status = true;
-        vtagStatus = true;
-      });
+      if (this.mounted) {
+        setState(() {
+          status = true;
+          vtagStatus = true;
+        });
+      }
     }
   }
 
@@ -3496,9 +2364,11 @@ class _MyWorksState extends State<MyWorks> {
       Toast.show("Please wait for loading", context,
           duration: Toast.LENGTH_LONG, gravity: Toast.CENTER);
     } else {
-      setState(() {
-        search = value;
-      });
+      if (this.mounted) {
+        setState(() {
+          search = value;
+        });
+      }
       switch (category) {
         case "all":
           {
@@ -3523,15 +2393,19 @@ class _MyWorksState extends State<MyWorks> {
                   myWorks.add(mywork);
                 }
               }
-              setState(() {
-                connection = true;
-              });
+              if (this.mounted) {
+                setState(() {
+                  connection = true;
+                });
+              }
             } else {
               offlineLink = await db.rawQuery(
                   "SELECT * FROM myworks WHERE title LIKE '%" + value + "%'");
-              setState(() {
-                connection = false;
-              });
+              if (this.mounted) {
+                setState(() {
+                  connection = false;
+                });
+              }
             }
           }
           break;
@@ -3560,17 +2434,21 @@ class _MyWorksState extends State<MyWorks> {
                   myWorks.add(mywork);
                 }
               }
-              setState(() {
-                connection = true;
-              });
+              if (this.mounted) {
+                setState(() {
+                  connection = true;
+                });
+              }
             } else {
               offlineLink = await db.rawQuery(
                   "SELECT * FROM myworks WHERE type = 'VCard' AND title LIKE '%" +
                       value +
                       "%'");
-              setState(() {
-                connection = false;
-              });
+              if (this.mounted) {
+                setState(() {
+                  connection = false;
+                });
+              }
             }
           }
           break;
@@ -3599,17 +2477,21 @@ class _MyWorksState extends State<MyWorks> {
                   myWorks.add(mywork);
                 }
               }
-              setState(() {
-                connection = true;
-              });
+              if (this.mounted) {
+                setState(() {
+                  connection = true;
+                });
+              }
             } else {
               offlineLink = await db.rawQuery(
                   "SELECT * FROM myworks WHERE type = 'VFlex' AND title LIKE '%" +
                       value +
                       "%'");
-              setState(() {
-                connection = false;
-              });
+              if (this.mounted) {
+                setState(() {
+                  connection = false;
+                });
+              }
             }
           }
           break;
@@ -3638,17 +2520,21 @@ class _MyWorksState extends State<MyWorks> {
                   myWorks.add(mywork);
                 }
               }
-              setState(() {
-                connection = true;
-              });
+              if (this.mounted) {
+                setState(() {
+                  connection = true;
+                });
+              }
             } else {
               offlineLink = await db.rawQuery(
                   "SELECT * FROM myworks WHERE type = 'VCatalogue' AND title LIKE '%" +
                       value +
                       "%'");
-              setState(() {
-                connection = false;
-              });
+              if (this.mounted) {
+                setState(() {
+                  connection = false;
+                });
+              }
             }
           }
           break;
@@ -3656,14 +2542,14 @@ class _MyWorksState extends State<MyWorks> {
     }
   }
 
-  String _dateFormat(String fullDate) {
-    String result, date, month, year;
-    date = fullDate.substring(8, 10);
-    month = fullDate.substring(5, 7);
-    year = fullDate.substring(0, 4);
-    result = date + "/" + month + "/" + year;
-    return result;
-  }
+  // String _dateFormat(String fullDate) {
+  //   String result, date, month, year;
+  //   date = fullDate.substring(8, 10);
+  //   month = fullDate.substring(5, 7);
+  //   year = fullDate.substring(0, 4);
+  //   result = date + "/" + month + "/" + year;
+  //   return result;
+  // }
 
   Future<String> get _localDevicePath async {
     final _devicePath = await getApplicationDocumentsDirectory();
@@ -3677,16 +2563,13 @@ class _MyWorksState extends State<MyWorks> {
         final _file = await _localFile(
             path: myWorks[i].category + myWorks[i].id, name: "VVIN");
         final _saveFile = await _file.writeAsBytes(_response.bodyBytes);
-        // Logger().i("File write complete. File Path ${_saveFile.path}");
-        setState(() {
-          filePath = _saveFile.path;
-          totalLink += 1;
-        });
+        if (this.mounted) {
+          setState(() {
+            filePath = _saveFile.path;
+            totalLink += 1;
+          });
+        }
         await prefs.setString('totalLink', totalLink.toString());
-        // print("Link " + i.toString());
-      } else {
-        // print("Download link error at " + i.toString());
-        Logger().e(_response.statusCode);
       }
     }
   }
@@ -3702,21 +2585,20 @@ class _MyWorksState extends State<MyWorks> {
     if (_response.statusCode == 200) {
       final _file = await _localFile1(path: path, name: name);
       final _saveFile = await _file.writeAsBytes(_response.bodyBytes);
-      // Logger().i("File write complete. File Path ${_saveFile.path}");
-      setState(() {
-        filePath = _saveFile.path;
-      });
-      if (totalLink < myWorks.length) {
+      if (this.mounted) {
         setState(() {
-          totalLink += 1;
+          filePath = _saveFile.path;
         });
+      }
+      if (totalLink < myWorks.length) {
+        if (this.mounted) {
+          setState(() {
+            totalLink += 1;
+          });
+        }
         await prefs.setString('totalLink', totalLink.toString());
       }
-      // print("Link " + index.toString());
-    } else {
-      // print("Download link error at " + index.toString());
-      Logger().e(_response.statusCode);
-    }
+    } 
   }
 
   Future<File> _localFile1({String path, String name}) async {
@@ -3730,12 +2612,11 @@ class _MyWorksState extends State<MyWorks> {
     if (_response.statusCode == 200) {
       final _file = await _editLocalFile1(path: path, name: name);
       final _saveFile = await _file.writeAsBytes(_response.bodyBytes);
-      // Logger().i("File write complete. File Path ${_saveFile.path}");
-      setState(() {
-        filePath = _saveFile.path;
-      });
-    } else {
-      Logger().e(_response.statusCode);
+      if (this.mounted) {
+        setState(() {
+          filePath = _saveFile.path;
+        });
+      }
     }
   }
 
@@ -3754,14 +2635,16 @@ class _MyWorksState extends State<MyWorks> {
               path: myWorks[i].category + myWorks[i].id, name: "VVIN");
           final _saveFile = await _file.writeAsBytes(_response.bodyBytes);
           // Logger().i("File write complete. File Path ${_saveFile.path}");
-          setState(() {
-            filePath = _saveFile.path;
-            totalQR += 1;
-          });
+          if (this.mounted) {
+            setState(() {
+              filePath = _saveFile.path;
+              totalQR += 1;
+            });
+          }
           await prefs.setString('totalQR', totalQR.toString());
           // print("Image " + i.toString());
         } else {
-          Logger().e(_response.statusCode);
+          // Logger().e(_response.statusCode);
           print("Image error at: " + i.toString());
         }
       }
@@ -3782,18 +2665,22 @@ class _MyWorksState extends State<MyWorks> {
         final _file = await _localImage1(path: path, name: name);
         final _saveFile = await _file.writeAsBytes(_response.bodyBytes);
         // Logger().i("File write complete. File Path ${_saveFile.path}");
-        setState(() {
-          filePath = _saveFile.path;
-        });
-        if (totalQR < myWorks.length) {
+        if (this.mounted) {
           setState(() {
-            totalQR += 1;
+            filePath = _saveFile.path;
           });
+        }
+        if (totalQR < myWorks.length) {
+          if (this.mounted) {
+            setState(() {
+              totalQR += 1;
+            });
+          }
           await prefs.setString('totalQR', totalQR.toString());
         }
         // print("Image " + index.toString());
       } else {
-        Logger().e(_response.statusCode);
+        // Logger().e(_response.statusCode);
         print("Image error at: " + index.toString());
       }
     }
@@ -3811,12 +2698,12 @@ class _MyWorksState extends State<MyWorks> {
     if (_response.statusCode == 200) {
       final _file = await _editLocalImage1(path: path, name: name);
       final _saveFile = await _file.writeAsBytes(_response.bodyBytes);
-      // Logger().i("File write complete. File Path ${_saveFile.path}");
-      setState(() {
-        filePath = _saveFile.path;
-      });
+      if (this.mounted) {
+        setState(() {
+          filePath = _saveFile.path;
+        });
+      }
     } else {
-      Logger().e(_response.statusCode);
       print("Image error at: " + index.toString());
     }
   }
@@ -3831,12 +2718,13 @@ class _MyWorksState extends State<MyWorks> {
     var connectivityResult = await (Connectivity().checkConnectivity());
     if (connectivityResult == ConnectivityResult.wifi ||
         connectivityResult == ConnectivityResult.mobile) {
-      // _onLoading();
-      setState(() {
-        status = false;
-        total = 0;
-        category = "all";
-      });
+      if (this.mounted) {
+        setState(() {
+          status = false;
+          total = 0;
+          category = "all";
+        });
+      }
       myWorks.clear();
       myWorks1.clear();
       getLink();

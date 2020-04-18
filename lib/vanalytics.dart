@@ -6,39 +6,47 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_web_browser/flutter_web_browser.dart';
 import 'package:intl/intl.dart';
 import 'package:progress_indicators/progress_indicators.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:toast/toast.dart';
+import 'package:uni_links/uni_links.dart';
 import 'package:vvin/data.dart';
 import 'package:vvin/leadsDB.dart';
 import 'package:vvin/lineChart.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 import 'package:vvin/loader.dart';
 import 'package:http/http.dart' as http;
-import 'package:vvin/mainscreen.dart';
+import 'package:vvin/more.dart';
+import 'package:vvin/myworks.dart';
+import 'package:vvin/notifications.dart';
 import 'package:vvin/topViewDB.dart';
 import 'package:vvin/vanalyticsDB.dart';
+import 'package:vvin/vdata.dart';
 import 'package:vvin/vdataNoHandler.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:vvin/vprofile.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:package_info/package_info.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:vvin/main.dart';
 
 final ScrollController controller = ScrollController();
 const PLAY_STORE_URL =
     'https://play.google.com/store/apps/details?id=com.my.jtapps.vvin';
 
 class VAnalytics extends StatefulWidget {
-  const VAnalytics({Key key}) : super(key: key);
+  final String url;
+  const VAnalytics({Key key, this.url}) : super(key: key);
 
   @override
   _VAnalyticsState createState() => _VAnalyticsState();
 }
 
 class _VAnalyticsState extends State<VAnalytics> {
+  UniLinksType _type = UniLinksType.string;
   FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
   GlobalKey<RefreshIndicatorState> refreshKey;
   List<Map> offlineVAnalyticsData;
@@ -48,6 +56,7 @@ class _VAnalyticsState extends State<VAnalytics> {
   List<TopView> topViews = [];
   List<LeadData> leadsDatas = [];
   List<LeadData> offlineLeadsDatas = [];
+  SharedPreferences prefs;
   String dateBanner,
       companyID,
       level,
@@ -81,12 +90,13 @@ class _VAnalyticsState extends State<VAnalytics> {
       minimumDate,
       dateBannerLocal,
       currentVersion,
-      newVersion;
-
+      newVersion,
+      totalNotification;
+  String urlNoti = "https://vvinoa.vvin.com/api/notiTotalNumber.php";
   String urlVAnalytics = "https://vvinoa.vvin.com/api/vanalytics.php";
   String urlTopViews = "https://vvinoa.vvin.com/api/topview.php";
   String urlLeads = "https://vvinoa.vvin.com/api/leads.php";
-  int load, startTime, endTime;
+  int load, startTime, endTime, currentTabIndex;
   double font12 = ScreenUtil().setSp(27.6, allowFontScalingSelf: false);
   double font14 = ScreenUtil().setSp(32.2, allowFontScalingSelf: false);
   double font18 = ScreenUtil().setSp(41.4, allowFontScalingSelf: false);
@@ -105,14 +115,6 @@ class _VAnalyticsState extends State<VAnalytics> {
   @override
   void initState() {
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-    refreshKey = GlobalKey<RefreshIndicatorState>();
-    newVersion = "";
-    editor = false;
-    connection = false;
-    nodata = false;
-    refresh = false;
-    load = 0;
-    _initialize();
     _firebaseMessaging.configure(
       onMessage: (Map<String, dynamic> message) async {
         bool noti = false;
@@ -133,9 +135,11 @@ class _VAnalyticsState extends State<VAnalytics> {
                         onPressed: () {
                           Navigator.of(context).pop();
                           Navigator.of(context).pop();
-                          setState(() {
-                            noti = false;
-                          });
+                          if (this.mounted) {
+                            setState(() {
+                              noti = false;
+                            });
+                          }
                         },
                       ),
                       FlatButton(
@@ -143,12 +147,10 @@ class _VAnalyticsState extends State<VAnalytics> {
                         onPressed: () {
                           Navigator.of(context).pop();
                           Navigator.of(context).pop();
-                          CurrentIndex index = new CurrentIndex(index: 3);
+                          // CurrentIndex index = new CurrentIndex(index: 3);
                           Navigator.of(context).pushReplacement(
                             MaterialPageRoute(
-                              builder: (context) => MainScreen(
-                                index: index,
-                              ),
+                              builder: (context) => Notifications(),
                             ),
                           );
                         },
@@ -158,8 +160,113 @@ class _VAnalyticsState extends State<VAnalytics> {
           noti = true;
         }
       },
+      // onLaunch: (Map<String, dynamic> message) async {
+      //   SharedPreferences prefs = await SharedPreferences.getInstance();
+      //   if (prefs.getString('newNoti') != null) {
+      //     int time = int.parse((prefs.getString('newNoti')));
+      //     int now = DateTime.now().millisecondsSinceEpoch;
+      //     if (now - time < 200) {
+      //       Navigator.of(context).pushReplacement(
+      //         MaterialPageRoute(
+      //           builder: (context) => Notifications(),
+      //         ),
+      //       );
+      //       prefs.setString(
+      //           'newNoti', (DateTime.now().millisecondsSinceEpoch).toString());
+      //     }
+      //   } else {
+      //     Navigator.of(context).pushReplacement(
+      //       MaterialPageRoute(
+      //         builder: (context) => Notifications(),
+      //       ),
+      //     );
+      //     prefs.setString(
+      //         'newNoti', (DateTime.now().millisecondsSinceEpoch).toString());
+      //   }
+      // },
+      onResume: (Map<String, dynamic> message) async {
+        List time = message.toString().split('google.sent_time: ');
+        String noti = time[1].toString().substring(0, 13);
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        if (prefs.getString('newNoti') != noti) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (context) => Notifications(),
+            ),
+          );
+        }
+      },
     );
+    check();
+    refreshKey = GlobalKey<RefreshIndicatorState>();
+    newVersion = "";
+    totalNotification = "0";
+    currentTabIndex = 0;
+    editor = false;
+    connection = false;
+    nodata = false;
+    refresh = false;
+    load = 0;
+    _initialize();
+    _firebaseMessaging.requestNotificationPermissions(
+        const IosNotificationSettings(sound: true, badge: true, alert: true));
+    _firebaseMessaging.onIosSettingsRegistered
+        .listen((IosNotificationSettings settings) {});
     super.initState();
+  }
+
+  void onTapped(int index) {
+    if (index != 0) {
+      switch (index) {
+        case 1:
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (context) => VData(),
+            ),
+          );
+          break;
+        case 2:
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (context) => MyWorks(),
+            ),
+          );
+          break;
+        case 3:
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (context) => Notifications(),
+            ),
+          );
+          break;
+        case 4:
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (context) => More(),
+            ),
+          );
+          break;
+      }
+    }
+  }
+
+  void check() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    if (prefs.getString('url') != null) {
+      if (_type == UniLinksType.string) {
+        String initialLink;
+        try {
+          initialLink = await getInitialLink();
+          if (initialLink != null) {
+            print('initial link: $initialLink');
+            FlutterWebBrowser.openWebPage(
+              url: "https://" + initialLink.substring(12),
+            );
+            prefs.setString('url', null);
+          }
+        } catch (e) {}
+      }
+    }
   }
 
   @override
@@ -175,41 +282,139 @@ class _VAnalyticsState extends State<VAnalytics> {
       child: Scaffold(
         // backgroundColor: Color.fromARGB(50, 220, 220, 220),
         backgroundColor: Color.fromRGBO(235, 235, 255, 1),
+        bottomNavigationBar: BottomNavigationBar(
+          backgroundColor: Colors.white,
+          onTap: onTapped,
+          currentIndex: currentTabIndex,
+          type: BottomNavigationBarType.fixed,
+          items: [
+            BottomNavigationBarItem(
+              icon: Icon(
+                Icons.trending_up,
+                size: ScreenUtil().setHeight(40),
+              ),
+              title: Text(
+                "VAnalytics",
+                style: TextStyle(
+                  fontSize: ScreenUtil().setSp(24, allowFontScalingSelf: false),
+                ),
+              ),
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(
+                Icons.insert_chart,
+                size: ScreenUtil().setHeight(40),
+              ),
+              title: Text(
+                "VData",
+                style: TextStyle(
+                  fontSize: ScreenUtil().setSp(24, allowFontScalingSelf: false),
+                ),
+              ),
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(
+                Icons.assignment,
+                size: ScreenUtil().setHeight(40),
+              ),
+              title: Text(
+                "My Works",
+                style: TextStyle(
+                  fontSize: ScreenUtil().setSp(24, allowFontScalingSelf: false),
+                ),
+              ),
+            ),
+            BottomNavigationBarItem(
+              icon: Stack(
+                children: <Widget>[
+                  Icon(
+                    Icons.notifications,
+                    size: ScreenUtil().setHeight(40),
+                  ),
+                  Positioned(
+                      right: 0,
+                      child: (totalNotification != "0")
+                          ? Container(
+                              padding: EdgeInsets.all(1),
+                              decoration: BoxDecoration(
+                                color: Colors.red,
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              constraints: BoxConstraints(
+                                minWidth: 12,
+                                minHeight: 12,
+                              ),
+                              child: Text(
+                                '$totalNotification',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: ScreenUtil()
+                                      .setSp(20, allowFontScalingSelf: false),
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            )
+                          : Container())
+                ],
+              ),
+              title: Text(
+                "Notifications",
+                style: TextStyle(
+                  fontSize: ScreenUtil().setSp(24, allowFontScalingSelf: false),
+                ),
+              ),
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(
+                Icons.menu,
+                size: ScreenUtil().setHeight(40),
+              ),
+              title: Text(
+                "More",
+                style: TextStyle(
+                  fontSize: ScreenUtil().setSp(24, allowFontScalingSelf: false),
+                ),
+              ),
+            )
+          ],
+        ),
         appBar: PreferredSize(
           preferredSize: Size.fromHeight(
             ScreenUtil().setHeight(85),
           ),
           child: AppBar(
-              brightness: Brightness.light,
-              backgroundColor: Colors.white,
-              elevation: 1,
-              centerTitle: true,
-              title: Text(
-                "VAnalytics",
-                style: TextStyle(
-                    color: Colors.black,
-                    fontSize: font18,
-                    fontWeight: FontWeight.bold),
-              )),
+            brightness: Brightness.light,
+            backgroundColor: Colors.white,
+            elevation: 1,
+            centerTitle: true,
+            title: Text(
+              "VAnalytics",
+              style: TextStyle(
+                  color: Colors.black,
+                  fontSize: font18,
+                  fontWeight: FontWeight.bold),
+            ),
+          ),
         ),
         body: (editor == true)
             ? Container(
                 child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  Center(
-                    child: Text(
-                      "You have no permission to enter this page",
-                      style: TextStyle(
-                        fontStyle: FontStyle.italic,
-                        color: Colors.grey,
-                        fontSize:
-                            ScreenUtil().setSp(35, allowFontScalingSelf: false),
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    Center(
+                      child: Text(
+                        "You have no permission to enter this page",
+                        style: TextStyle(
+                          fontStyle: FontStyle.italic,
+                          color: Colors.grey,
+                          fontSize: ScreenUtil()
+                              .setSp(35, allowFontScalingSelf: false),
+                        ),
                       ),
                     ),
-                  ),
-                ],
-              ))
+                  ],
+                ),
+              )
             : RefreshIndicator(
                 key: refreshKey,
                 onRefresh: _handleRefresh,
@@ -2433,6 +2638,13 @@ class _VAnalyticsState extends State<VAnalytics> {
 
   void _initialize() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
+    if (prefs.getString("noti") != null) {
+      if (this.mounted) {
+        setState(() {
+          totalNotification = prefs.getString("noti");
+        });
+      }
+    }
     if (prefs.getString("level") != "1") {
       var connectivityResult = await (Connectivity().checkConnectivity());
       if (connectivityResult == ConnectivityResult.wifi ||
@@ -2446,9 +2658,11 @@ class _VAnalyticsState extends State<VAnalytics> {
             duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
       }
     } else {
-      setState(() {
-        editor = true;
-      });
+      if (this.mounted) {
+        setState(() {
+          editor = true;
+        });
+      }
     }
   }
 
@@ -2458,9 +2672,11 @@ class _VAnalyticsState extends State<VAnalytics> {
     Database topViewDB = await TopViewDB.instance.database;
     offlineTopViewData = await topViewDB.query(TopViewDB.table);
     if (offlineTopViewData.length == 0) {
-      setState(() {
-        nodata = true;
-      });
+      if (this.mounted) {
+        setState(() {
+          nodata = true;
+        });
+      }
     }
     Database leadsDB = await LeadsDB.instance.database;
     offlineChartData = await leadsDB.query(LeadsDB.table);
@@ -2490,12 +2706,14 @@ class _VAnalyticsState extends State<VAnalytics> {
         endDay +
         ", " +
         endYear;
-    setState(() {
-      timeBar = true;
-      topView = true;
-      vanalytic = true;
-      chartData = true;
-    });
+    if (this.mounted) {
+      setState(() {
+        timeBar = true;
+        topView = true;
+        vanalytic = true;
+        chartData = true;
+      });
+    }
   }
 
   String checkMonth(String month) {
@@ -2569,7 +2787,7 @@ class _VAnalyticsState extends State<VAnalytics> {
   }
 
   Future<void> getPreference() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs = await SharedPreferences.getInstance();
     companyID = prefs.getString('companyID');
     level = prefs.getString('level');
     userID = prefs.getString('userID');
@@ -2586,12 +2804,33 @@ class _VAnalyticsState extends State<VAnalytics> {
     getTopViewData();
     getVanalyticsData();
     getChartData();
+    notification();
+  }
+
+  void notification() {
+    http.post(urlNoti, body: {
+      "userID": userID,
+      "companyID": companyID,
+      "level": level,
+      "user_type": userType,
+    }).then((res) async {
+      if (this.mounted) {
+        setState(() {
+          totalNotification = res.body;
+        });
+      }
+      prefs.setString('noti', res.body);
+    }).catchError((err) {
+      print("Notification error: " + err.toString());
+    });
   }
 
   void getTopViewData() {
-    setState(() {
-      topView = false;
-    });
+    if (this.mounted) {
+      setState(() {
+        topView = false;
+      });
+    }
     http.post(urlTopViews, body: {
       "companyID": companyID,
       "level": level,
@@ -2603,11 +2842,13 @@ class _VAnalyticsState extends State<VAnalytics> {
       // print("VAnalytics top view status:" + (res.statusCode).toString());
       // print("VAnalytics top view body: " + res.body);
       if (res.body == "nodata") {
-        setState(() {
-          connection = true;
-          topView = true;
-          nodata = true;
-        });
+        if (this.mounted) {
+          setState(() {
+            connection = true;
+            topView = true;
+            nodata = true;
+          });
+        }
       } else {
         var jsonData = json.decode(res.body);
         topViews.clear();
@@ -2621,11 +2862,13 @@ class _VAnalyticsState extends State<VAnalytics> {
           );
           topViews.add(topView);
         }
-        setState(() {
-          topView = true;
-          connection = true;
-          load += 1;
-        });
+        if (this.mounted) {
+          setState(() {
+            topView = true;
+            connection = true;
+            load += 1;
+          });
+        }
       }
       if (timeBar == true &&
           topView == true &&
@@ -2740,9 +2983,11 @@ class _VAnalyticsState extends State<VAnalytics> {
   }
 
   void getChartData() {
-    setState(() {
-      chartData = false;
-    });
+    if (this.mounted) {
+      setState(() {
+        chartData = false;
+      });
+    }
     http.post(urlLeads, body: {
       "companyID": companyID,
       "level": level,
@@ -2770,12 +3015,13 @@ class _VAnalyticsState extends State<VAnalytics> {
           leadsDatas.add(leadsData);
         }
       }
-
-      setState(() {
-        chartData = true;
-        connection = true;
-        _startdate = _startDate.toString();
-      });
+      if (this.mounted) {
+        setState(() {
+          chartData = true;
+          connection = true;
+          _startdate = _startDate.toString();
+        });
+      }
       if (timeBar == true &&
           topView == true &&
           vanalytic == true &&
@@ -2793,9 +3039,11 @@ class _VAnalyticsState extends State<VAnalytics> {
   }
 
   void getVanalyticsData() {
-    setState(() {
-      vanalytic = false;
-    });
+    if (this.mounted) {
+      setState(() {
+        vanalytic = false;
+      });
+    }
     http.post(urlVAnalytics, body: {
       "companyID": companyID,
       "level": level,
@@ -2869,10 +3117,13 @@ class _VAnalyticsState extends State<VAnalytics> {
       } catch (e) {
         print("VersionCheck error: " + e.toString());
       }
-      setState(() {
-        vanalytic = true;
-        connection = true;
-      });
+      if (this.mounted) {
+        setState(() {
+          vanalytic = true;
+          connection = true;
+        });
+      }
+
       if (timeBar == true &&
           topView == true &&
           vanalytic == true &&
@@ -2890,9 +3141,12 @@ class _VAnalyticsState extends State<VAnalytics> {
   }
 
   void setupDateTimeBar() {
-    setState(() {
-      timeBar = false;
-    });
+    if (this.mounted) {
+      setState(() {
+        timeBar = false;
+      });
+    }
+
     String startYear = _startDate.toString().substring(0, 4);
     String endYear = _endDate.toString().substring(0, 4);
     String startMonth = checkMonth(_startDate.toString().substring(5, 7));
@@ -2910,10 +3164,13 @@ class _VAnalyticsState extends State<VAnalytics> {
         endDay +
         ", " +
         endYear;
-    setState(() {
-      connection = true;
-      timeBar = true;
-    });
+    if (this.mounted) {
+      setState(() {
+        connection = true;
+        timeBar = true;
+      });
+    }
+
     if (timeBar == true &&
         topView == true &&
         vanalytic == true &&
@@ -2932,10 +3189,13 @@ class _VAnalyticsState extends State<VAnalytics> {
           _endDate.toString() == _enddate) {
         Navigator.of(context).pop();
       } else {
-        setState(() {
-          startDate = _startDate.toString().substring(0, 10);
-          endDate = _endDate.toString().substring(0, 10);
-        });
+        if (this.mounted) {
+          setState(() {
+            startDate = _startDate.toString().substring(0, 10);
+            endDate = _endDate.toString().substring(0, 10);
+          });
+        }
+
         Navigator.of(context).pop();
         // _onLoading();
         getTopViewData();
@@ -2947,19 +3207,21 @@ class _VAnalyticsState extends State<VAnalytics> {
         String endMonth = checkMonth(_endDate.toString().substring(5, 7));
         String startDay = _startDate.toString().substring(8, 10);
         String endDay = _endDate.toString().substring(8, 10);
-        setState(() {
-          dateBanner = startMonth +
-              " " +
-              startDay +
-              ", " +
-              startYear +
-              " - " +
-              endMonth +
-              " " +
-              endDay +
-              ", " +
-              endYear;
-        });
+        if (this.mounted) {
+          setState(() {
+            dateBanner = startMonth +
+                " " +
+                startDay +
+                ", " +
+                startYear +
+                " - " +
+                endMonth +
+                " " +
+                endDay +
+                ", " +
+                endYear;
+          });
+        }
       }
     } else {
       Navigator.pop(context);
@@ -2972,14 +3234,17 @@ class _VAnalyticsState extends State<VAnalytics> {
     var connectivityResult = await (Connectivity().checkConnectivity());
     if (connectivityResult == ConnectivityResult.wifi ||
         connectivityResult == ConnectivityResult.mobile) {
-      setState(() {
-        refresh = true;
-        load = 0;
-        timeBar = false;
-        topView = false;
-        vanalytic = false;
-        chartData = false;
-      });
+      if (this.mounted) {
+        setState(() {
+          refresh = true;
+          load = 0;
+          timeBar = false;
+          topView = false;
+          vanalytic = false;
+          chartData = false;
+        });
+      }
+
       // _onLoading();
       _startDate = DateTime(DateTime.now().year, DateTime.now().month - 1,
           DateTime.now().day + 1);

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:vvin/data.dart';
-import 'package:vvin/mainscreen.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class NotiDetail extends StatefulWidget {
@@ -16,10 +15,16 @@ class _NotiDetailState extends State<NotiDetail> {
   double font12 = ScreenUtil().setSp(27.6, allowFontScalingSelf: false);
   double font14 = ScreenUtil().setSp(32.2, allowFontScalingSelf: false);
   double font18 = ScreenUtil().setSp(41.4, allowFontScalingSelf: false);
+  List name = [];
+  List number = [];
 
   @override
   void initState() {
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+    try {
+      name = widget.notification.subtitle1.toString().split("Number");
+      number = name[1].toString().split("Make");
+    } catch (e) {}
     super.initState();
   }
 
@@ -36,7 +41,9 @@ class _NotiDetailState extends State<NotiDetail> {
       child: Scaffold(
           // backgroundColor: Color.fromRGBO(235, 235, 255, 1),
           appBar: PreferredSize(
-            preferredSize: Size.fromHeight(ScreenUtil().setHeight(85),),
+            preferredSize: Size.fromHeight(
+              ScreenUtil().setHeight(85),
+            ),
             child: AppBar(
               brightness: Brightness.light,
               leading: IconButton(
@@ -79,25 +86,92 @@ class _NotiDetailState extends State<NotiDetail> {
                   ],
                 ),
               ),
-              Padding(
-                padding: EdgeInsets.all(10),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: <Widget>[
-                    Flexible(
-                      child: Text(
-                        (widget.notification.subtitle2 != "")
-                            ? widget.notification.subtitle1 + ","
-                            : widget.notification.subtitle1,
-                        style: TextStyle(
-                          color: Colors.grey.shade700,
-                          fontSize: font12,
+              (widget.notification.subtitle1.substring(0, 7) == "Details")
+                  ? Column(
+                      children: <Widget>[
+                        Padding(
+                          padding: EdgeInsets.fromLTRB(10, 10, 10, 5),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: <Widget>[
+                              Text(
+                                "Details:",
+                                style: TextStyle(
+                                  color: Colors.grey.shade700,
+                                  fontSize: font12,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
+                        Padding(
+                          padding: EdgeInsets.fromLTRB(10, 5, 10, 5),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: <Widget>[
+                              Text(
+                                "Name: " + name[0].toString().substring(13),
+                                style: TextStyle(
+                                  color: Colors.grey.shade700,
+                                  fontSize: font12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Padding(
+                          padding: EdgeInsets.fromLTRB(10, 5, 10, 5),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: <Widget>[
+                              Text(
+                                "Number: " + number[0].toString().substring(2),
+                                style: TextStyle(
+                                  color: Colors.grey.shade700,
+                                  fontSize: font12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Padding(
+                          padding: EdgeInsets.fromLTRB(10, 20, 10, 5),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: <Widget>[
+                              Flexible(
+                                child: Text(
+                                  "Make" + number[1].toString().substring(0, number[1].toString().length - 18),
+                                  style: TextStyle(
+                                    color: Colors.grey.shade700,
+                                    fontSize: font12,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    )
+                  : Padding(
+                      padding: EdgeInsets.all(10),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: <Widget>[
+                          Flexible(
+                            child: Text(
+                              (widget.notification.subtitle2 != "")
+                                  ? widget.notification.subtitle1 + ","
+                                  : widget.notification.subtitle1,
+                              style: TextStyle(
+                                color: Colors.grey.shade700,
+                                fontSize: font12,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  ],
-                ),
-              ),
               (widget.notification.subtitle2 != "")
                   ? Padding(
                       padding: EdgeInsets.all(10),
@@ -137,7 +211,7 @@ class _NotiDetailState extends State<NotiDetail> {
                     )
                   : Container(),
               Padding(
-                padding: EdgeInsets.fromLTRB(10, 30, 10, 10),
+                padding: EdgeInsets.fromLTRB(10, 20, 10, 10),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: <Widget>[
@@ -176,19 +250,7 @@ class _NotiDetailState extends State<NotiDetail> {
   }
 
   Future<bool> _onBackPressAppBar() async {
-    CurrentIndex index = new CurrentIndex(index: 3);
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(
-        builder: (context) => MainScreen(
-          index: index,
-        ),
-      ),
-    );
+    Navigator.pop(context);
     return Future.value(false);
   }
-
-  // Future<bool> _onBackPressAppBar() async {
-  //   Navigator.pop(context);
-  //   return Future.value(false);
-  // }
 }

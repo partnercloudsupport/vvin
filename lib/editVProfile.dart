@@ -7,13 +7,14 @@ import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'package:progress_indicators/progress_indicators.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:toast/toast.dart';
 import 'package:vvin/VProfile.dart';
 import 'package:vvin/data.dart';
 import 'package:vvin/loader.dart';
-import 'package:vvin/mainscreen.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:vvin/notifications.dart';
 
 final ScrollController controller = ScrollController();
 final TextEditingController _nameController = TextEditingController();
@@ -389,9 +390,11 @@ class _EditVProfileState extends State<EditVProfile> {
                         onPressed: () {
                           Navigator.of(context).pop();
                           Navigator.of(context).pop();
-                          setState(() {
-                            noti = false;
-                          });
+                          if (this.mounted) {
+                            setState(() {
+                              noti = false;
+                            });
+                          }
                         },
                       ),
                       FlatButton(
@@ -399,12 +402,10 @@ class _EditVProfileState extends State<EditVProfile> {
                         onPressed: () {
                           Navigator.of(context).pop();
                           Navigator.of(context).pop();
-                          CurrentIndex index = new CurrentIndex(index: 3);
+                          // CurrentIndex index = new CurrentIndex(index: 3);
                           Navigator.of(context).pushReplacement(
                             MaterialPageRoute(
-                              builder: (context) => MainScreen(
-                                index: index,
-                              ),
+                              builder: (context) => Notifications(),
                             ),
                           );
                         },
@@ -412,6 +413,18 @@ class _EditVProfileState extends State<EditVProfile> {
                     ],
                   ));
           noti = true;
+        }
+      },
+      onResume: (Map<String, dynamic> message) async {
+        List time = message.toString().split('google.sent_time: ');
+        String noti = time[1].toString().substring(0, 13);
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        if (prefs.getString('newNoti') != noti) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (context) => Notifications(),
+            ),
+          );
         }
       },
     );
@@ -1422,10 +1435,12 @@ class _EditVProfileState extends State<EditVProfile> {
 
   void _deleteTag(int index) {
     String vtag = widget.vtag[index];
-    setState(() {
-      widget.vtag.removeAt(index);
-      vtagList.insert(1, vtag);
-    });
+    if (this.mounted) {
+      setState(() {
+        widget.vtag.removeAt(index);
+        vtagList.insert(1, vtag);
+      });
+    }
   }
 
   void _selectHandler() {
@@ -1486,10 +1501,12 @@ class _EditVProfileState extends State<EditVProfile> {
                                   vtagList.removeAt(j);
                                 }
                               }
-                              setState(() {
-                                widget.vtag.add(selectedTag);
-                                selectedTag = "";
-                              });
+                              if (this.mounted) {
+                                setState(() {
+                                  widget.vtag.add(selectedTag);
+                                  selectedTag = "";
+                                });
+                              }
                             }
                           },
                         ),
@@ -1606,10 +1623,12 @@ class _EditVProfileState extends State<EditVProfile> {
                             ? DateTime.parse("1970-01-01")
                             : DateTime.parse(widget.vprofileData.dob),
                         onDateTimeChanged: (dob) {
-                          setState(() {
-                            widget.vprofileData.dob =
-                                dob.toString().substring(0, 10);
-                          });
+                          if (this.mounted) {
+                            setState(() {
+                              widget.vprofileData.dob =
+                                  dob.toString().substring(0, 10);
+                            });
+                          }
                         },
                       ),
                     ),
@@ -1676,11 +1695,13 @@ class _EditVProfileState extends State<EditVProfile> {
                           onTap: () {
                             if (handlerIndex != 0) {
                               Navigator.pop(context);
-                              setState(() {
-                                widget.handler.add(handler);
-                                handlerList.removeAt(handlerIndex);
-                                handlerIndex = 0;
-                              });
+                              if (this.mounted) {
+                                setState(() {
+                                  widget.handler.add(handler);
+                                  handlerList.removeAt(handlerIndex);
+                                  handlerIndex = 0;
+                                });
+                              }
                             } else {
                               Navigator.pop(context);
                             }
@@ -1698,10 +1719,12 @@ class _EditVProfileState extends State<EditVProfile> {
                       scrollController:
                           FixedExtentScrollController(initialItem: 0),
                       onSelectedItemChanged: (int index) {
-                        setState(() {
-                          handlerIndex = index;
-                          handler = handlerList[index].handler;
-                        });
+                        if (this.mounted) {
+                          setState(() {
+                            handlerIndex = index;
+                            handler = handlerList[index].handler;
+                          });
+                        }
                       },
                       children: <Widget>[
                         for (var each in handlerList)
@@ -1802,10 +1825,12 @@ class _EditVProfileState extends State<EditVProfile> {
                             scrollController: FixedExtentScrollController(
                                 initialItem: position),
                             onSelectedItemChanged: (int index) {
-                              setState(() {
-                                widget.vprofileData.gender =
-                                    genderList[index].gender;
-                              });
+                              if (this.mounted) {
+                                setState(() {
+                                  widget.vprofileData.gender =
+                                      genderList[index].gender;
+                                });
+                              }
                             },
                             children: <Widget>[
                               for (var each in genderList)
@@ -1907,10 +1932,12 @@ class _EditVProfileState extends State<EditVProfile> {
                             scrollController: FixedExtentScrollController(
                                 initialItem: position),
                             onSelectedItemChanged: (int index) {
-                              setState(() {
-                                widget.vprofileData.industry =
-                                    industryList[index].industry;
-                              });
+                              if (this.mounted) {
+                                setState(() {
+                                  widget.vprofileData.industry =
+                                      industryList[index].industry;
+                                });
+                              }
                             },
                             children: <Widget>[
                               for (var data in industryList)
@@ -2012,10 +2039,12 @@ class _EditVProfileState extends State<EditVProfile> {
                             scrollController: FixedExtentScrollController(
                                 initialItem: position),
                             onSelectedItemChanged: (int index) {
-                              setState(() {
-                                widget.vprofileData.country =
-                                    countryList[index].country;
-                              });
+                              if (this.mounted) {
+                                setState(() {
+                                  widget.vprofileData.country =
+                                      countryList[index].country;
+                                });
+                              }
                             },
                             children: <Widget>[
                               for (var each in countryList)
@@ -2114,10 +2143,12 @@ class _EditVProfileState extends State<EditVProfile> {
                             scrollController: FixedExtentScrollController(
                                 initialItem: position),
                             onSelectedItemChanged: (int index) {
-                              setState(() {
-                                widget.vprofileData.state =
-                                    statesList[index].state;
-                              });
+                              if (this.mounted) {
+                                setState(() {
+                                  widget.vprofileData.state =
+                                      statesList[index].state;
+                                });
+                              }
                             },
                             children: <Widget>[
                               for (var each in statesList)
@@ -2202,9 +2233,11 @@ class _EditVProfileState extends State<EditVProfile> {
         Toast.show("Something wrong, please contact VVIN IT help desk", context,
             duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
       }
-      setState(() {
-        allHandler = true;
-      });
+      if (this.mounted) {
+        setState(() {
+          allHandler = true;
+        });
+      }
       if (allHandler == true && allTag == true) {
         Navigator.pop(context);
       }
@@ -2241,9 +2274,11 @@ class _EditVProfileState extends State<EditVProfile> {
           }
         }
       }
-      setState(() {
-        allTag = true;
-      });
+      if (this.mounted) {
+        setState(() {
+          allTag = true;
+        });
+      }
       if (allHandler == true && allTag == true) {
         Navigator.pop(context);
       }
@@ -2305,10 +2340,11 @@ class _EditVProfileState extends State<EditVProfile> {
   }
 
   void _deleteHandler(int i) {
-    setState(() {
-      widget.handler.removeAt(i);
-    });
-
+    if (this.mounted) {
+      setState(() {
+        widget.handler.removeAt(i);
+      });
+    }
     handlerList.clear();
     for (int i = 0; i < handlerList1.length; i++) {
       Handler handler = Handler(
@@ -2338,27 +2374,35 @@ class _EditVProfileState extends State<EditVProfile> {
       String vtag = "";
       if (widget.vprofileData.gender == "-" ||
           widget.vprofileData.gender == "") {
-        setState(() {
-          widget.vprofileData.gender = "";
-        });
+        if (this.mounted) {
+          setState(() {
+            widget.vprofileData.gender = "";
+          });
+        }
       } else {
         widget.vprofileData.gender =
             widget.vprofileData.gender.toUpperCase().substring(0, 1);
       }
       if (widget.vprofileData.industry == "-") {
-        setState(() {
-          widget.vprofileData.industry = "";
-        });
+        if (this.mounted) {
+          setState(() {
+            widget.vprofileData.industry = "";
+          });
+        }
       }
       if (widget.vprofileData.state == "-") {
-        setState(() {
-          widget.vprofileData.state = "";
-        });
+        if (this.mounted) {
+          setState(() {
+            widget.vprofileData.state = "";
+          });
+        }
       }
       if (widget.vprofileData.country == "-") {
-        setState(() {
-          widget.vprofileData.country = "";
-        });
+        if (this.mounted) {
+          setState(() {
+            widget.vprofileData.country = "";
+          });
+        }
       }
       for (int i = 0; i < widget.vtag.length; i++) {
         if (i == 0) {

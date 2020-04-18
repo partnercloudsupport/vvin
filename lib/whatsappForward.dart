@@ -12,11 +12,12 @@ import 'package:progress_indicators/progress_indicators.dart';
 import 'package:toast/toast.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:vvin/data.dart';
-import 'package:vvin/mainscreen.dart';
 import 'package:firebase_ml_vision/firebase_ml_vision.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:flutter_native_image/flutter_native_image.dart';
+import 'package:vvin/myworks.dart';
+import 'package:vvin/vdata.dart';
 
 class WhatsAppForward extends StatefulWidget {
   final WhatsappForward whatsappForward;
@@ -558,10 +559,12 @@ class _WhatsAppForwardState extends State<WhatsAppForward> {
                                                       i++)
                                                     InkWell(
                                                       onTap: () {
-                                                        setState(() {
-                                                          seletedVTag
-                                                              .removeAt(i);
-                                                        });
+                                                        if (this.mounted) {
+                                                          setState(() {
+                                                            seletedVTag
+                                                                .removeAt(i);
+                                                          });
+                                                        }
                                                       },
                                                       child: Container(
                                                         width: ScreenUtil()
@@ -738,22 +741,26 @@ class _WhatsAppForwardState extends State<WhatsAppForward> {
                                           : Colors.grey,
                                       onPressed: () {
                                         bool send = true;
-                                        setState(() {
-                                          if (_phonecontroller.text.isEmpty) {
-                                            _phoneEmpty = true;
-                                            send = false;
-                                          } else {
-                                            _phoneEmpty = false;
-                                          }
-                                        });
-                                        setState(() {
-                                          if (_namecontroller.text.isEmpty) {
-                                            _nameEmpty = true;
-                                            send = false;
-                                          } else {
-                                            _nameEmpty = false;
-                                          }
-                                        });
+                                        if (this.mounted) {
+                                          setState(() {
+                                            if (_phonecontroller.text.isEmpty) {
+                                              _phoneEmpty = true;
+                                              send = false;
+                                            } else {
+                                              _phoneEmpty = false;
+                                            }
+                                          });
+                                        }
+                                        if (this.mounted) {
+                                          setState(() {
+                                            if (_namecontroller.text.isEmpty) {
+                                              _nameEmpty = true;
+                                              send = false;
+                                            } else {
+                                              _nameEmpty = false;
+                                            }
+                                          });
+                                        }
                                         if (_phoneEmpty == false) {
                                           bool _isNumeric(String phoneNo) {
                                             if (phoneNo.length < 10) {
@@ -766,13 +773,17 @@ class _WhatsAppForwardState extends State<WhatsAppForward> {
                                           bool valid =
                                               _isNumeric(_phonecontroller.text);
                                           if (valid == false) {
-                                            setState(() {
-                                              _phoneInvalid = true;
-                                            });
+                                            if (this.mounted) {
+                                              setState(() {
+                                                _phoneInvalid = true;
+                                              });
+                                            }
                                           } else {
-                                            setState(() {
-                                              _phoneInvalid = false;
-                                            });
+                                            if (this.mounted) {
+                                              setState(() {
+                                                _phoneInvalid = false;
+                                              });
+                                            }
                                           }
 
                                           if (valid == true && send == true) {
@@ -862,10 +873,11 @@ class _WhatsAppForwardState extends State<WhatsAppForward> {
         connectivityResult == ConnectivityResult.mobile) {
       _onLoading1();
       if (isSend == false) {
-        setState(() {
-          isSend = true;
-        });
-        // _onLoading1();
+        if (this.mounted) {
+          setState(() {
+            isSend = true;
+          });
+        }
         if (_phonecontroller.text.substring(0, 1) != "6") {
           _phonecontroller.text = "6" + _phonecontroller.text;
         }
@@ -885,14 +897,18 @@ class _WhatsAppForwardState extends State<WhatsAppForward> {
           "system": platform,
         }).then((res) {
           Navigator.pop(context);
-          FlutterOpenWhatsapp.sendSingleMessage(_phonecontroller.text, "Hello " + _namecontroller.text + "! Reply 'hi' to enable the URL link. " + widget.whatsappForward.url + res.body);
+          FlutterOpenWhatsapp.sendSingleMessage(
+              _phonecontroller.text,
+              "Hello " +
+                  _namecontroller.text +
+                  "! Reply 'hi' to enable the URL link. " +
+                  widget.whatsappForward.url +
+                  res.body);
           // launch(res.body);
-          CurrentIndex index = new CurrentIndex(index: 2);
+          // CurrentIndex index = new CurrentIndex(index: 2);
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(
-              builder: (context) => MainScreen(
-                index: index,
-              ),
+              builder: (context) => VData(),
             ),
           );
         }).catchError((err) {
@@ -1001,14 +1017,23 @@ class _WhatsAppForwardState extends State<WhatsAppForward> {
                                     }
                                   }
                                   if (cancelAdd == false) {
+                                    if (this.mounted) {
+                                      setState(() {
+                                        seletedVTag.add(selectedTag);
+                                      });
+                                    }
+                                    if (this.mounted) {
+                                      setState(() {
+                                        seletedVTag.add(selectedTag);
+                                      });
+                                    }
+                                  }
+                                } else {
+                                  if (this.mounted) {
                                     setState(() {
                                       seletedVTag.add(selectedTag);
                                     });
                                   }
-                                } else {
-                                  setState(() {
-                                    seletedVTag.add(selectedTag);
-                                  });
                                 }
                               }
                               Navigator.pop(context);
@@ -1027,10 +1052,12 @@ class _WhatsAppForwardState extends State<WhatsAppForward> {
                               FixedExtentScrollController(initialItem: 0),
                           onSelectedItemChanged: (int index) {
                             if (index != 0) {
-                              setState(() {
-                                selectedTag =
-                                    widget.whatsappForward.vtagList[index];
-                              });
+                              if (this.mounted) {
+                                setState(() {
+                                  selectedTag =
+                                      widget.whatsappForward.vtagList[index];
+                                });
+                              }
                             }
                           },
                           children: <Widget>[
@@ -1117,9 +1144,11 @@ class _WhatsAppForwardState extends State<WhatsAppForward> {
                             ),
                             onTap: () {
                               Navigator.pop(context);
-                              setState(() {
-                                _phonecontroller.text = phoneList[position];
-                              });
+                              if (this.mounted) {
+                                setState(() {
+                                  _phonecontroller.text = phoneList[position];
+                                });
+                              }
                             },
                           ),
                         ],
@@ -1135,9 +1164,11 @@ class _WhatsAppForwardState extends State<WhatsAppForward> {
                             FixedExtentScrollController(initialItem: position),
                         onSelectedItemChanged: (int index) {
                           if (position != index) {
-                            setState(() {
-                              position = index;
-                            });
+                            if (this.mounted) {
+                              setState(() {
+                                position = index;
+                              });
+                            }
                           }
                         },
                         children: <Widget>[
@@ -1211,11 +1242,13 @@ class _WhatsAppForwardState extends State<WhatsAppForward> {
                             onTap: () {
                               if (tempText != "-") {
                                 Navigator.pop(context);
-                                setState(() {
-                                  _checkTextField(type).text =
-                                      _checkTextField(type).text + tempText;
-                                  tempText = "";
-                                });
+                                if (this.mounted) {
+                                  setState(() {
+                                    _checkTextField(type).text =
+                                        _checkTextField(type).text + tempText;
+                                    tempText = "";
+                                  });
+                                }
                               } else {
                                 Navigator.pop(context);
                               }
@@ -1301,11 +1334,12 @@ class _WhatsAppForwardState extends State<WhatsAppForward> {
                   var tempStore =
                       await ImagePicker.pickImage(source: ImageSource.gallery);
                   if (tempStore != null) {
-                    setState(() {
-                      pickedImage = tempStore;
-                      isImageLoaded = true;
-                      // base64Image = base64Encode(pickedImage.readAsBytesSync());
-                    });
+                    if (this.mounted) {
+                      setState(() {
+                        pickedImage = tempStore;
+                        isImageLoaded = true;
+                      });
+                    }
                     readText();
                   }
                 },
@@ -1322,11 +1356,12 @@ class _WhatsAppForwardState extends State<WhatsAppForward> {
                   var tempStore =
                       await ImagePicker.pickImage(source: ImageSource.camera);
                   if (tempStore != null) {
-                    setState(() {
-                      pickedImage = tempStore;
-                      isImageLoaded = true;
-                      // base64Image = base64Encode(pickedImage.readAsBytesSync());
-                    });
+                    if (this.mounted) {
+                      setState(() {
+                        pickedImage = tempStore;
+                        isImageLoaded = true;
+                      });
+                    }
                     readText();
                   }
                 },
@@ -1393,19 +1428,19 @@ class _WhatsAppForwardState extends State<WhatsAppForward> {
         }
       }
     }
-    setState(() {
-      isImageLoaded = true;
-      _phonecontroller.text = phoneList[0];
-    });
+    if (this.mounted) {
+      setState(() {
+        isImageLoaded = true;
+        _phonecontroller.text = phoneList[0];
+      });
+    }
   }
 
   Future<bool> _onBackPressAppBar() async {
-    CurrentIndex index = new CurrentIndex(index: 2);
+    // CurrentIndex index = new CurrentIndex(index: 2);
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(
-        builder: (context) => MainScreen(
-          index: index,
-        ),
+        builder: (context) => MyWorks(),
       ),
     );
     return Future.value(false);

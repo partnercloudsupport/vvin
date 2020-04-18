@@ -11,8 +11,11 @@ import 'package:sqflite/sqflite.dart';
 import 'package:toast/toast.dart';
 import 'package:vvin/data.dart';
 import 'package:vvin/loader.dart';
-import 'package:vvin/mainscreen.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:vvin/more.dart';
+import 'package:vvin/myworks.dart';
+import 'package:vvin/notifications.dart';
+import 'package:vvin/vanalytics.dart';
 import 'package:vvin/vprofile.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -151,8 +154,7 @@ class _VDataNoHandlerState extends State<VDataNoHandler> {
                     title: Text(
                       "You have 1 new notification",
                       style: TextStyle(
-                        fontSize:
-                            font14,
+                        fontSize: font14,
                       ),
                     ),
                     actions: <Widget>[
@@ -161,9 +163,11 @@ class _VDataNoHandlerState extends State<VDataNoHandler> {
                         onPressed: () {
                           Navigator.of(context).pop();
                           Navigator.of(context).pop();
-                          setState(() {
-                            noti = false;
-                          });
+                          if (this.mounted) {
+                            setState(() {
+                              noti = false;
+                            });
+                          }
                         },
                       ),
                       FlatButton(
@@ -171,12 +175,10 @@ class _VDataNoHandlerState extends State<VDataNoHandler> {
                         onPressed: () {
                           Navigator.of(context).pop();
                           Navigator.of(context).pop();
-                          CurrentIndex index = new CurrentIndex(index: 3);
+                          // CurrentIndex index = new CurrentIndex(index: 3);
                           Navigator.of(context).pushReplacement(
                             MaterialPageRoute(
-                              builder: (context) => MainScreen(
-                                index: index,
-                              ),
+                              builder: (context) => Notifications(),
                             ),
                           );
                         },
@@ -184,6 +186,18 @@ class _VDataNoHandlerState extends State<VDataNoHandler> {
                     ],
                   ));
           noti = true;
+        }
+      },
+      onResume: (Map<String, dynamic> message) async {
+        List time = message.toString().split('google.sent_time: ');
+        String noti = time[1].toString().substring(0, 13);
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        if (prefs.getString('newNoti') != noti) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (context) => Notifications(),
+            ),
+          );
         }
       },
     );
@@ -195,15 +209,39 @@ class _VDataNoHandlerState extends State<VDataNoHandler> {
     super.dispose();
   }
 
-  onTapped(int index) {
-    CurrentIndex index1 = new CurrentIndex(index: index);
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(
-        builder: (context) => MainScreen(
-          index: index1,
-        ),
-      ),
-    );
+  void onTapped(int index) {
+    if (index != 1) {
+      switch (index) {
+        case 0:
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (context) => VAnalytics(),
+            ),
+          );
+          break;
+        case 2:
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (context) => MyWorks(),
+            ),
+          );
+          break;
+        case 3:
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (context) => Notifications(),
+            ),
+          );
+          break;
+        case 4:
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (context) => More(),
+            ),
+          );
+          break;
+      }
+    }
   }
 
   @override
@@ -325,8 +363,7 @@ class _VDataNoHandlerState extends State<VDataNoHandler> {
                 "VData",
                 style: TextStyle(
                     color: Colors.black,
-                    fontSize:
-                        font18,
+                    fontSize: font18,
                     fontWeight: FontWeight.bold),
               )),
         ),
@@ -412,14 +449,15 @@ class _VDataNoHandlerState extends State<VDataNoHandler> {
                         "Total Entries: ",
                         style: TextStyle(color: Colors.grey, fontSize: font12),
                       ),
-                      Text((connection == true)
-                          ? (total == null) ? "" : total.toString()
-                          : (link == true && vData == true)
-                              ? (offlineVData.length != 0)
-                                  ? offlineVData[0]['total']
-                                  : "0"
-                              : "data loading...",
-                              style: TextStyle(fontSize: font12)),
+                      Text(
+                          (connection == true)
+                              ? (total == null) ? "" : total.toString()
+                              : (link == true && vData == true)
+                                  ? (offlineVData.length != 0)
+                                      ? offlineVData[0]['total']
+                                      : "0"
+                                  : "data loading...",
+                          style: TextStyle(fontSize: font12)),
                     ],
                   ),
                 ),
@@ -575,7 +613,8 @@ class _VDataNoHandlerState extends State<VDataNoHandler> {
                                                                         TextOverflow
                                                                             .ellipsis,
                                                                     style: TextStyle(
-                                                                        fontSize: font14,
+                                                                        fontSize:
+                                                                            font14,
                                                                         fontWeight:
                                                                             FontWeight.w900),
                                                                   ),
@@ -610,7 +649,8 @@ class _VDataNoHandlerState extends State<VDataNoHandler> {
                                                                         TextStyle(
                                                                       color: Colors
                                                                           .grey,
-                                                                      fontSize: font12,
+                                                                      fontSize:
+                                                                          font12,
                                                                     ),
                                                                   ),
                                                                 ),
@@ -636,7 +676,8 @@ class _VDataNoHandlerState extends State<VDataNoHandler> {
                                                                   child: Text(
                                                                     "Link",
                                                                     style: TextStyle(
-                                                                        fontSize: font12,
+                                                                        fontSize:
+                                                                            font12,
                                                                         fontWeight:
                                                                             FontWeight.w600),
                                                                   ),
@@ -661,11 +702,13 @@ class _VDataNoHandlerState extends State<VDataNoHandler> {
                                                                     overflow:
                                                                         TextOverflow
                                                                             .ellipsis,
-                                                                    style: TextStyle(
-                                                                        color: Colors
-                                                                            .grey,
-                                                                            fontSize:
-                                                                          font12,),
+                                                                    style:
+                                                                        TextStyle(
+                                                                      color: Colors
+                                                                          .grey,
+                                                                      fontSize:
+                                                                          font12,
+                                                                    ),
                                                                   ),
                                                                 ),
                                                               ],
@@ -690,7 +733,8 @@ class _VDataNoHandlerState extends State<VDataNoHandler> {
                                                                 Text(
                                                                   "Remark",
                                                                   style: TextStyle(
-                                                                      fontSize: font12,
+                                                                      fontSize:
+                                                                          font12,
                                                                       fontWeight:
                                                                           FontWeight
                                                                               .w600),
@@ -738,9 +782,8 @@ class _VDataNoHandlerState extends State<VDataNoHandler> {
                                             ),
                                           ),
                                           SizedBox(
-                                                    height: ScreenUtil()
-                                                        .setHeight(10),
-                                                  ),
+                                            height: ScreenUtil().setHeight(10),
+                                          ),
                                           Container(
                                             padding: EdgeInsets.all(
                                               ScreenUtil().setHeight(8),
@@ -775,39 +818,14 @@ class _VDataNoHandlerState extends State<VDataNoHandler> {
                                                           Icons.call,
                                                           size: ScreenUtil()
                                                               .setHeight(32.2),
-                                                          color: Colors.blue,
+                                                          color: Colors.white,
                                                         ),
                                                         decoration:
                                                             BoxDecoration(
+                                                          color: Colors.blue,
                                                           borderRadius:
                                                               BorderRadius
                                                                   .circular(5),
-                                                          border: Border(
-                                                            bottom: BorderSide(
-                                                                width: ScreenUtil()
-                                                                    .setHeight(
-                                                                        2),
-                                                                color: Colors
-                                                                    .blue),
-                                                            left: BorderSide(
-                                                                width: ScreenUtil()
-                                                                    .setHeight(
-                                                                        2),
-                                                                color: Colors
-                                                                    .blue),
-                                                            right: BorderSide(
-                                                                width: ScreenUtil()
-                                                                    .setHeight(
-                                                                        2),
-                                                                color: Colors
-                                                                    .blue),
-                                                            top: BorderSide(
-                                                                width: ScreenUtil()
-                                                                    .setHeight(
-                                                                        2),
-                                                                color: Colors
-                                                                    .blue),
-                                                          ),
                                                         ),
                                                       ),
                                                     ),
@@ -848,42 +866,19 @@ class _VDataNoHandlerState extends State<VDataNoHandler> {
                                                         width: ScreenUtil()
                                                             .setWidth(98),
                                                         child: Icon(
-                                                            FontAwesomeIcons
-                                                                .whatsapp,
-                                                            color: Colors.blue,
-                                                            size: ScreenUtil()
-                                                              .setHeight(32.2),),
+                                                          FontAwesomeIcons
+                                                              .whatsapp,
+                                                          color: Colors.white,
+                                                          size: ScreenUtil()
+                                                              .setHeight(32.2),
+                                                        ),
                                                         decoration:
                                                             BoxDecoration(
+                                                          color: Color.fromRGBO(
+                                                              37, 211, 102, 1),
                                                           borderRadius:
                                                               BorderRadius
                                                                   .circular(5),
-                                                          border: Border(
-                                                            bottom: BorderSide(
-                                                                width: ScreenUtil()
-                                                                    .setHeight(
-                                                                        2),
-                                                                color: Colors
-                                                                    .blue),
-                                                            left: BorderSide(
-                                                                width: ScreenUtil()
-                                                                    .setHeight(
-                                                                        2),
-                                                                color: Colors
-                                                                    .blue),
-                                                            right: BorderSide(
-                                                                width: ScreenUtil()
-                                                                    .setHeight(
-                                                                        2),
-                                                                color: Colors
-                                                                    .blue),
-                                                            top: BorderSide(
-                                                                width: ScreenUtil()
-                                                                    .setHeight(
-                                                                        2),
-                                                                color: Colors
-                                                                    .blue),
-                                                          ),
                                                         ),
                                                       ),
                                                     ),
@@ -965,12 +960,15 @@ class _VDataNoHandlerState extends State<VDataNoHandler> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: <Widget>[
                               JumpingText('Loading...'),
-                              SizedBox(height: MediaQuery.of(context).size.height * 0.02),
+                              SizedBox(
+                                  height: MediaQuery.of(context).size.height *
+                                      0.02),
                               SpinKitRing(
-                                  lineWidth: 3,
-                                  color: Colors.blue,
-                                  size: 30.0,
-                                  duration: Duration(milliseconds: 600),),
+                                lineWidth: 3,
+                                color: Colors.blue,
+                                size: 30.0,
+                                duration: Duration(milliseconds: 600),
+                              ),
                             ],
                           ),
                         ),
@@ -995,9 +993,11 @@ class _VDataNoHandlerState extends State<VDataNoHandler> {
       "level": level,
       "user_type": userType,
     }).then((res) async {
-      setState(() {
-        totalNotification = res.body;
-      });
+      if (this.mounted) {
+        setState(() {
+          totalNotification = res.body;
+        });
+      }
     }).catchError((err) {
       print("Notification error: " + err.toString());
     });
@@ -1065,8 +1065,11 @@ class _VDataNoHandlerState extends State<VDataNoHandler> {
                       child: SingleChildScrollView(
                         physics: ScrollPhysics(),
                         child: Container(
-                          padding: EdgeInsets.fromLTRB(ScreenUtil().setHeight(10), ScreenUtil().setHeight(20), ScreenUtil().setHeight(10), ScreenUtil().setHeight(10)
-                          ),
+                          padding: EdgeInsets.fromLTRB(
+                              ScreenUtil().setHeight(10),
+                              ScreenUtil().setHeight(20),
+                              ScreenUtil().setHeight(10),
+                              ScreenUtil().setHeight(10)),
                           child: Column(
                             children: <Widget>[
                               Row(
@@ -1255,7 +1258,8 @@ class _VDataNoHandlerState extends State<VDataNoHandler> {
                                             child: Text(
                                               'Assigned',
                                               style: TextStyle(
-                                                fontSize: font12,                                                color: (type == "assigned")
+                                                fontSize: font12,
+                                                color: (type == "assigned")
                                                     ? Colors.white
                                                     : Colors.grey,
                                               ),
@@ -1775,7 +1779,6 @@ class _VDataNoHandlerState extends State<VDataNoHandler> {
                               SizedBox(
                                 height: ScreenUtil().setHeight(20),
                               ),
-
                               Container(
                                 child: (level == "0")
                                     ? Column(
@@ -1848,7 +1851,8 @@ class _VDataNoHandlerState extends State<VDataNoHandler> {
                                                                   TextOverflow
                                                                       .ellipsis,
                                                               style: TextStyle(
-                                                                fontSize: font14,
+                                                                fontSize:
+                                                                    font14,
                                                               ),
                                                             ),
                                                           ),
@@ -2045,10 +2049,12 @@ class _VDataNoHandlerState extends State<VDataNoHandler> {
                               scrollController: FixedExtentScrollController(
                                   initialItem: position),
                               onSelectedItemChanged: (int index) {
-                                setState(() {
-                                  _byLink = linksID[index].link_type +
-                                      linksID[index].link;
-                                });
+                                if (this.mounted) {
+                                  setState(() {
+                                    _byLink = linksID[index].link_type +
+                                        linksID[index].link;
+                                  });
+                                }
                               },
                               children: <Widget>[
                                 for (var each in linksID)
@@ -2148,9 +2154,11 @@ class _VDataNoHandlerState extends State<VDataNoHandler> {
                               scrollController: FixedExtentScrollController(
                                   initialItem: position),
                               onSelectedItemChanged: (int index) {
-                                setState(() {
-                                  _byStatus = status[index];
-                                });
+                                if (this.mounted) {
+                                  setState(() {
+                                    _byStatus = status[index];
+                                  });
+                                }
                               },
                               children: <Widget>[
                                 for (var each in status)
@@ -2249,9 +2257,11 @@ class _VDataNoHandlerState extends State<VDataNoHandler> {
                               scrollController: FixedExtentScrollController(
                                   initialItem: position),
                               onSelectedItemChanged: (int index) {
-                                setState(() {
-                                  _byExecutive = executiveList[index];
-                                });
+                                if (this.mounted) {
+                                  setState(() {
+                                    _byExecutive = executiveList[index];
+                                  });
+                                }
                               },
                               children: <Widget>[
                                 for (var each in executiveList)
@@ -2354,9 +2364,11 @@ class _VDataNoHandlerState extends State<VDataNoHandler> {
                               scrollController: FixedExtentScrollController(
                                   initialItem: position),
                               onSelectedItemChanged: (int index) {
-                                setState(() {
-                                  apps = appsAll[index];
-                                });
+                                if (this.mounted) {
+                                  setState(() {
+                                    apps = appsAll[index];
+                                  });
+                                }
                               },
                               children: <Widget>[
                                 for (var each in appsAll)
@@ -2472,12 +2484,14 @@ class _VDataNoHandlerState extends State<VDataNoHandler> {
       // print("VData status:" + (res.statusCode).toString());
       // print("VData body: " + res.body.toString());
       if (res.body == "nodata") {
-        setState(() {
-          vData = true;
-          connection = true;
-          nodata = true;
-          total = 0;
-        });
+        if (this.mounted) {
+          setState(() {
+            vData = true;
+            connection = true;
+            nodata = true;
+            total = 0;
+          });
+        }
       } else {
         var jsonData = json.decode(res.body);
         total = jsonData[0]['total'];
@@ -2499,10 +2513,12 @@ class _VDataNoHandlerState extends State<VDataNoHandler> {
           vDataDetails.add(vdata);
           vDataDetails1.add(vdata);
         }
-        setState(() {
-          vData = true;
-          connection = true;
-        });
+        if (this.mounted) {
+          setState(() {
+            vData = true;
+            connection = true;
+          });
+        }
       }
     }).catchError((err) {
       print("Get data error: " + (err).toString());
@@ -2529,14 +2545,18 @@ class _VDataNoHandlerState extends State<VDataNoHandler> {
       // print("VData status:" + (res.statusCode).toString());
       // print("VData body: " + res.body.toString());
       if (res.body == "nodata") {
-        setState(() {
-          connection = true;
-        });
+        if (this.mounted) {
+          setState(() {
+            connection = true;
+          });
+        }
       } else {
         var jsonData = json.decode(res.body);
-        setState(() {
-          total = jsonData[0]['total'];
-        });
+        if (this.mounted) {
+          setState(() {
+            total = jsonData[0]['total'];
+          });
+        }
         for (var data in jsonData) {
           VDataDetails vdata = VDataDetails(
             date: data['date'],
@@ -2553,9 +2573,11 @@ class _VDataNoHandlerState extends State<VDataNoHandler> {
           vDataDetails.add(vdata);
           vDataDetails1.add(vdata);
         }
-        setState(() {
-          connection = true;
-        });
+        if (this.mounted) {
+          setState(() {
+            connection = true;
+          });
+        }
       }
     }).catchError((err) {
       print("Get more data error: " + (err).toString());
@@ -2593,9 +2615,11 @@ class _VDataNoHandlerState extends State<VDataNoHandler> {
           links.add(link);
         }
       }
-      setState(() {
-        link = true;
-      });
+      if (this.mounted) {
+        setState(() {
+          link = true;
+        });
+      }
     }).catchError((err) {
       print("Get link error: " + (err).toString());
     });
@@ -2624,9 +2648,11 @@ class _VDataNoHandlerState extends State<VDataNoHandler> {
           }
         }
       }
-      setState(() {
-        executive = true;
-      });
+      if (this.mounted) {
+        setState(() {
+          executive = true;
+        });
+      }
     }).catchError((err) {
       Toast.show(err.toString(), context,
           duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
@@ -2658,9 +2684,11 @@ class _VDataNoHandlerState extends State<VDataNoHandler> {
           duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
       print("Set status error: " + (err).toString());
     });
-    setState(() {
-      connection = true;
-    });
+    if (this.mounted) {
+      setState(() {
+        connection = true;
+      });
+    }
   }
 
   void _onLoading() {
@@ -2689,37 +2717,27 @@ class _VDataNoHandlerState extends State<VDataNoHandler> {
     if (connectivityResult == ConnectivityResult.wifi ||
         connectivityResult == ConnectivityResult.mobile) {
       Navigator.pop(context);
-      setState(() {
-        startDate = _startDate.toString().substring(0, 10);
-        endDate = _endDate.toString().substring(0, 10);
-      });
-
+      if (this.mounted) {
+        setState(() {
+          startDate = _startDate.toString().substring(0, 10);
+          endDate = _endDate.toString().substring(0, 10);
+        });
+      }
       for (int i = 0; i < linksID.length; i++) {
         if (_byLink == linksID[i].link_type + linksID[i].link) {
           linkID = linksID[i].link_type + linksID[i].link_id;
         }
       }
-      setState(() {
-        nodata = false;
-        type = type;
-        channel = channel;
-        linkID = linkID;
-        search = search;
-        total = null;
-      });
-      // print(startDate +
-      //     ", " +
-      //     endDate +
-      //     ", " +
-      //     type +
-      //     ", " +
-      //     channel +
-      //     ", " +
-      //     linkID +
-      //     ", " +
-      //     search +
-      //     ", " +
-      //     vDataDetails.length.toString());
+      if (this.mounted) {
+        setState(() {
+          nodata = false;
+          type = type;
+          channel = channel;
+          linkID = linkID;
+          search = search;
+          total = null;
+        });
+      }
       http.post(urlVData, body: {
         "companyID": companyID,
         "level": level,
@@ -2739,18 +2757,22 @@ class _VDataNoHandlerState extends State<VDataNoHandler> {
         // print("Filter status:" + (res.statusCode).toString());
         // print("Filter body: " + res.body.toString());
         if (res.body == "nodata") {
-          setState(() {
-            vDataDetails.clear();
-            vDataDetails1.clear();
-            connection = true;
-            nodata = true;
-            total = 0;
-          });
+          if (this.mounted) {
+            setState(() {
+              vDataDetails.clear();
+              vDataDetails1.clear();
+              connection = true;
+              nodata = true;
+              total = 0;
+            });
+          }
         } else {
           var jsonData = json.decode(res.body);
-          setState(() {
-            total = jsonData[0]['total'];
-          });
+          if (this.mounted) {
+            setState(() {
+              total = jsonData[0]['total'];
+            });
+          }
           vDataDetails.clear();
           vDataDetails1.clear();
           for (var data in jsonData) {
@@ -2769,9 +2791,11 @@ class _VDataNoHandlerState extends State<VDataNoHandler> {
             vDataDetails.add(vdata);
             vDataDetails1.add(vdata);
           }
-          setState(() {
-            connection = true;
-          });
+          if (this.mounted) {
+            setState(() {
+              connection = true;
+            });
+          }
         }
       }).catchError((err) {
         print("Filter error: " + (err).toString());
@@ -2783,31 +2807,16 @@ class _VDataNoHandlerState extends State<VDataNoHandler> {
   }
 
   Future<void> _search(String value) async {
-    setState(() {
-      search = value.toLowerCase();
-      nodata = false;
-    });
+    if (this.mounted) {
+      setState(() {
+        search = value.toLowerCase();
+        nodata = false;
+      });
+    }
     if (connection == true) {
       var connectivityResult = await (Connectivity().checkConnectivity());
       if (connectivityResult == ConnectivityResult.wifi ||
           connectivityResult == ConnectivityResult.mobile) {
-        // print(_startDate.toString() +
-        // ", " +
-        // _endDate.toString() +
-        // ", " +
-        // type.toString() +
-        // ", " +
-        // channel.toString() +
-        // ", " +
-        // apps.toString() +
-        // ", " +
-        // link_id.toString() +
-        // ", " +
-        // _byStatus +
-        // ", " +
-        // _byExecutive.toString() +
-        // ", " +
-        // search.toString());
         http.post(urlVData, body: {
           "companyID": companyID,
           "level": level,
@@ -2827,18 +2836,22 @@ class _VDataNoHandlerState extends State<VDataNoHandler> {
           // print("Filter status:" + (res.statusCode).toString());
           print("Search body: " + res.body.toString());
           if (res.body == "nodata") {
-            setState(() {
-              vDataDetails.clear();
-              vDataDetails1.clear();
-              connection = true;
-              nodata = true;
-              total = 0;
-            });
+            if (this.mounted) {
+              setState(() {
+                vDataDetails.clear();
+                vDataDetails1.clear();
+                connection = true;
+                nodata = true;
+                total = 0;
+              });
+            }
           } else {
             var jsonData = json.decode(res.body);
-            setState(() {
-              total = jsonData[0]['total'];
-            });
+            if (this.mounted) {
+              setState(() {
+                total = jsonData[0]['total'];
+              });
+            }
             vDataDetails.clear();
             vDataDetails1.clear();
             for (var data in jsonData) {
@@ -2857,9 +2870,11 @@ class _VDataNoHandlerState extends State<VDataNoHandler> {
               vDataDetails.add(vdata);
               vDataDetails1.add(vdata);
             }
-            setState(() {
-              connection = true;
-            });
+            if (this.mounted) {
+              setState(() {
+                connection = true;
+              });
+            }
           }
         }).catchError((err) {
           print("Search error: " + (err).toString());
@@ -2879,9 +2894,11 @@ class _VDataNoHandlerState extends State<VDataNoHandler> {
               "%' OR status LIKE '%" +
               value +
               "%'");
-      setState(() {
-        connection = false;
-      });
+      if (this.mounted) {
+        setState(() {
+          connection = false;
+        });
+      }
     }
   }
 
@@ -2898,13 +2915,14 @@ class _VDataNoHandlerState extends State<VDataNoHandler> {
     var connectivityResult = await (Connectivity().checkConnectivity());
     if (connectivityResult == ConnectivityResult.wifi ||
         connectivityResult == ConnectivityResult.mobile) {
-      setState(() {
-        connection = false;
-        vData = false;
-        link = false;
-        total = null;
-      });
-      // _onLoading();
+      if (this.mounted) {
+        setState(() {
+          connection = false;
+          vData = false;
+          link = false;
+          total = null;
+        });
+      }
       getData();
       getLinks();
     } else {

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:connectivity/connectivity.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -12,10 +13,14 @@ import 'package:toast/toast.dart';
 import 'package:vvin/NotiDetail.dart';
 import 'package:vvin/data.dart';
 import 'package:vvin/loader.dart';
+import 'package:vvin/more.dart';
+import 'package:vvin/myworks.dart';
 import 'package:vvin/notiDB.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:draggable_scrollbar/draggable_scrollbar.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:vvin/vanalytics.dart';
+import 'package:vvin/vdata.dart';
 
 final ScrollController controller = ScrollController();
 
@@ -27,25 +32,38 @@ class Notifications extends StatefulWidget {
 }
 
 class _NotificationsState extends State<Notifications> {
+  FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
   double font12 = ScreenUtil().setSp(27.6, allowFontScalingSelf: false);
   double font14 = ScreenUtil().setSp(32.2, allowFontScalingSelf: false);
   double font18 = ScreenUtil().setSp(41.4, allowFontScalingSelf: false);
+  String urlNoti = "https://vvinoa.vvin.com/api/notiTotalNumber.php";
   String urlNotification = "https://vvinoa.vvin.com/api/notification.php";
   String urlNotiChangeStatus =
       "https://vvinoa.vvin.com/api/notificationAction.php";
-  String userID, companyID, level, userType, title, subtitle1, subtitle2;
+  String userID,
+      companyID,
+      level,
+      userType,
+      title,
+      subtitle1,
+      subtitle2,
+      totalNotification;
   List<Noti> notifications = [];
   bool status, connection, nodata;
   List<Map> offlineNoti;
-  int total, startTime, endTime;
+  int total, startTime, endTime, currentTabIndex;
   ScrollController _scrollController = ScrollController();
   GlobalKey<RefreshIndicatorState> refreshKey;
+  SharedPreferences prefs;
   final _itemExtent = ScreenUtil().setHeight(245);
 
   @override
   void initState() {
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
     refreshKey = GlobalKey<RefreshIndicatorState>();
+    setTime();
+    totalNotification = "0";
+    currentTabIndex = 3;
     status = false;
     connection = false;
     nodata = false;
@@ -56,7 +74,58 @@ class _NotificationsState extends State<Notifications> {
         _getMoreNoti();
       }
     });
+    _firebaseMessaging.configure(
+      onMessage: (Map<String, dynamic> message) async {
+        _handleRefresh();
+      },
+      onResume: (Map<String, dynamic> message) async {
+        _handleRefresh();
+      },
+    );
     super.initState();
+  }
+
+  void setTime() async {
+    prefs = await SharedPreferences.getInstance();
+    prefs.setString(
+        'newNoti', (DateTime.now().millisecondsSinceEpoch).toString());
+    print(DateTime.now().millisecondsSinceEpoch);
+  }
+
+  void onTapped(int index) {
+    if (index != 3) {
+      switch (index) {
+        case 0:
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (context) => VAnalytics(),
+            ),
+          );
+          break;
+        case 1:
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (context) => VData(),
+            ),
+          );
+          break;
+        case 2:
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (context) => MyWorks(),
+            ),
+          );
+          break;
+
+        case 4:
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (context) => More(),
+            ),
+          );
+          break;
+      }
+    }
   }
 
   @override
@@ -71,6 +140,102 @@ class _NotificationsState extends State<Notifications> {
       onWillPop: _onBackPressAppBar,
       child: Scaffold(
         backgroundColor: Color.fromRGBO(235, 235, 255, 1),
+        bottomNavigationBar: BottomNavigationBar(
+          backgroundColor: Colors.white,
+          onTap: onTapped,
+          currentIndex: currentTabIndex,
+          type: BottomNavigationBarType.fixed,
+          items: [
+            BottomNavigationBarItem(
+              icon: Icon(
+                Icons.trending_up,
+                size: ScreenUtil().setHeight(40),
+              ),
+              title: Text(
+                "VAnalytics",
+                style: TextStyle(
+                  fontSize: ScreenUtil().setSp(24, allowFontScalingSelf: false),
+                ),
+              ),
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(
+                Icons.insert_chart,
+                size: ScreenUtil().setHeight(40),
+              ),
+              title: Text(
+                "VData",
+                style: TextStyle(
+                  fontSize: ScreenUtil().setSp(24, allowFontScalingSelf: false),
+                ),
+              ),
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(
+                Icons.assignment,
+                size: ScreenUtil().setHeight(40),
+              ),
+              title: Text(
+                "My Works",
+                style: TextStyle(
+                  fontSize: ScreenUtil().setSp(24, allowFontScalingSelf: false),
+                ),
+              ),
+            ),
+            BottomNavigationBarItem(
+              icon: Stack(
+                children: <Widget>[
+                  Icon(
+                    Icons.notifications,
+                    size: ScreenUtil().setHeight(40),
+                  ),
+                  Positioned(
+                      right: 0,
+                      child: (totalNotification != "0")
+                          ? Container(
+                              padding: EdgeInsets.all(1),
+                              decoration: BoxDecoration(
+                                color: Colors.red,
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              constraints: BoxConstraints(
+                                minWidth: 12,
+                                minHeight: 12,
+                              ),
+                              child: Text(
+                                '$totalNotification',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: ScreenUtil()
+                                      .setSp(20, allowFontScalingSelf: false),
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            )
+                          : Container())
+                ],
+              ),
+              title: Text(
+                "Notifications",
+                style: TextStyle(
+                  fontSize: ScreenUtil().setSp(24, allowFontScalingSelf: false),
+                ),
+              ),
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(
+                Icons.menu,
+                size: ScreenUtil().setHeight(40),
+              ),
+              title: Text(
+                "More",
+                style: TextStyle(
+                  fontSize: ScreenUtil().setSp(24, allowFontScalingSelf: false),
+                ),
+              ),
+            )
+          ],
+        ),
         // backgroundColor: Color.fromARGB(50, 220, 220, 220),
         appBar: PreferredSize(
           preferredSize: Size.fromHeight(
@@ -88,6 +253,7 @@ class _NotificationsState extends State<Notifications> {
                   fontSize: font18,
                   fontWeight: FontWeight.bold),
             ),
+            // actions: <Widget>[popupMenuButton()],
           ),
         ),
         body: RefreshIndicator(
@@ -152,82 +318,8 @@ class _NotificationsState extends State<Notifications> {
                                       }
                                     }
                                     return InkWell(
-                                      onTap: () async {
-                                        var connectivityResult =
-                                            await (Connectivity()
-                                                .checkConnectivity());
-                                        if (connectivityResult ==
-                                                ConnectivityResult.wifi ||
-                                            connectivityResult ==
-                                                ConnectivityResult.mobile) {
-                                          String subtitle1, subtitle2;
-                                          List subtitleDetail;
-                                          if (connection == true) {
-                                            subtitleDetail =
-                                                notifications[index]
-                                                    .subtitle
-                                                    .toString()
-                                                    .split(",");
-                                          } else {
-                                            subtitleDetail = offlineNoti[index]
-                                                    ['subtitle']
-                                                .toString()
-                                                .split(",");
-                                          }
-
-                                          if (subtitleDetail.length == 1) {
-                                            subtitle1 = subtitleDetail[0];
-                                            subtitle2 = "";
-                                          } else {
-                                            subtitle1 = subtitleDetail[0];
-                                            subtitle2 = subtitleDetail[1];
-                                          }
-
-                                          String titleNoti;
-                                          if (connection == true) {
-                                            titleNoti =
-                                                notifications[index].title;
-                                          } else {
-                                            titleNoti =
-                                                offlineNoti[index]['title'];
-                                          }
-
-                                          NotificationDetail notification =
-                                              new NotificationDetail(
-                                            title: titleNoti,
-                                            subtitle1: subtitle1,
-                                            subtitle2: subtitle2,
-                                          );
-                                          Navigator.of(context)
-                                              .push(_createRoute(notification));
-
-                                          if (notifications[index].status ==
-                                                  "0" &&
-                                              connection == true) {
-                                            http.post(urlNotiChangeStatus,
-                                                body: {
-                                                  "userID": userID,
-                                                  "companyID": companyID,
-                                                  "level": level,
-                                                  "user_type": userType,
-                                                  "id": notifications[index]
-                                                      .notiID,
-                                                  "actionType": "read",
-                                                }).then((res) {
-                                              print(res.body);
-                                            }).catchError((err) {
-                                              print(
-                                                  "Notification change status error: " +
-                                                      (err).toString());
-                                            });
-                                          }
-                                        } else {
-                                          Toast.show(
-                                              "Please check your Internet Connection",
-                                              context,
-                                              duration: Toast.LENGTH_LONG,
-                                              gravity: Toast.BOTTOM);
-                                        }
+                                      onTap: () {
+                                        changeStatus(index);
                                       },
                                       child: Container(
                                         padding: EdgeInsets.fromLTRB(
@@ -261,14 +353,16 @@ class _NotificationsState extends State<Notifications> {
                                                 Expanded(
                                                   child: Text(
                                                     (connection == false)
-                                                        ? offlineNoti[index]
-                                                                ['title']
-                                                            .toString()
-                                                            .substring(7)
-                                                        : notifications[index]
-                                                            .title
-                                                            .toString()
-                                                            .substring(7),
+                                                        ? checkTitle(
+                                                            offlineNoti[index]
+                                                                    ['title']
+                                                                .toString()
+                                                                .substring(7))
+                                                        : checkTitle(
+                                                            notifications[index]
+                                                                .title
+                                                                .toString()
+                                                                .substring(7)),
                                                     style: TextStyle(
                                                       fontWeight:
                                                           FontWeight.bold,
@@ -309,10 +403,12 @@ class _NotificationsState extends State<Notifications> {
                                                 Flexible(
                                                   child: Text(
                                                     (connection == false)
-                                                        ? offlineNoti[index]
-                                                            ['subtitle']
-                                                        : notifications[index]
-                                                            .subtitle,
+                                                        ? checkSubtitle(
+                                                            offlineNoti[index]
+                                                                ['subtitle'])
+                                                        : checkSubtitle(
+                                                            notifications[index]
+                                                                .subtitle),
                                                     style: TextStyle(
                                                       color:
                                                           Colors.grey.shade600,
@@ -352,17 +448,171 @@ class _NotificationsState extends State<Notifications> {
     );
   }
 
+  Widget popupMenuButton() {
+    if (connection == true) {
+      return PopupMenuButton<String>(
+        icon: Icon(
+          Icons.more_vert,
+          size: ScreenUtil().setWidth(40),
+          color: Colors.grey,
+        ),
+        itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+          PopupMenuItem<String>(
+            value: "markall",
+            child: Text(
+              "Mark all as read",
+              style: TextStyle(
+                fontSize: font14,
+              ),
+            ),
+          ),
+        ],
+        onSelected: (selectedItem) {
+          switch (selectedItem) {
+            case "markall":
+              {
+                markAllAsRead();
+              }
+              break;
+          }
+        },
+      );
+    } else {
+      return Container();
+    }
+  }
+
+  void markAllAsRead() {
+    // http
+    //     .post(urlNotiChangeStatus, body: {
+    //       "userID": userID,
+    //       "companyID": companyID,
+    //       "level": level,
+    //       "user_type": userType,
+    //       "id": notifications[index].notiID,
+    //       "actionType": "read",
+    //     })
+    //     .then((res) {})
+    //     .catchError((err) {
+    //       print("Notification change status error: " + (err).toString());
+    //     });
+    for (int i = 0; i < notifications.length; i++) {
+      if (this.mounted) {
+        setState(() {
+          notifications[i].status = "1";
+        });
+      }
+    }
+    if (this.mounted) {
+      setState(() {
+        totalNotification = "0";
+      });
+    }
+  }
+
+  void changeStatus(int index) async {
+    var connectivityResult = await (Connectivity().checkConnectivity());
+    if (connectivityResult == ConnectivityResult.wifi ||
+        connectivityResult == ConnectivityResult.mobile) {
+      String subtitle1, subtitle2;
+      List subtitleDetail;
+      if (connection == true) {
+        subtitleDetail = notifications[index].subtitle.toString().split(",");
+      } else {
+        subtitleDetail = offlineNoti[index]['subtitle'].toString().split(",");
+      }
+
+      if (subtitleDetail.length == 1) {
+        subtitle1 = subtitleDetail[0];
+        subtitle2 = "";
+      } else {
+        subtitle1 = subtitleDetail[0];
+        subtitle2 = subtitleDetail[1];
+      }
+
+      String titleNoti;
+      if (connection == true) {
+        titleNoti = notifications[index].title;
+      } else {
+        titleNoti = offlineNoti[index]['title'];
+      }
+
+      NotificationDetail notification = new NotificationDetail(
+        title: titleNoti,
+        subtitle1: subtitle1,
+        subtitle2: subtitle2,
+      );
+      Navigator.of(context).push(_createRoute(notification));
+
+      if (notifications[index].status == "0" && connection == true) {
+        http
+            .post(urlNotiChangeStatus, body: {
+              "userID": userID,
+              "companyID": companyID,
+              "level": level,
+              "user_type": userType,
+              "id": notifications[index].notiID,
+              "actionType": "read",
+            })
+            .then((res) {})
+            .catchError((err) {
+              print("Notification change status error: " + (err).toString());
+            });
+      }
+      if (this.mounted) {
+        setState(() {
+          notifications[index].status = "1";
+          totalNotification = (int.parse(totalNotification) - 1).toString();
+        });
+      }
+      prefs.setString('noti', totalNotification);
+    } else {
+      Toast.show("Please check your Internet Connection", context,
+          duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
+    }
+  }
+
+  String checkTitle(String title) {
+    String confirmedTitle;
+    if (title.substring(0, 1) == "r") {
+      confirmedTitle = "You've " + title;
+    } else {
+      confirmedTitle = title;
+    }
+    return confirmedTitle;
+  }
+
+  String checkSubtitle(String subtitle) {
+    String confirmedSubtitle;
+    if (subtitle.substring(0, 7) == "Details") {
+      confirmedSubtitle = subtitle.substring(8, subtitle.length - 9);
+    } else {
+      confirmedSubtitle = subtitle;
+    }
+    return confirmedSubtitle;
+  }
+
   Future<bool> _onBackPressAppBar() async {
+    if (!mounted) {
+      return null;
+    }
     SystemNavigator.pop();
     return Future.value(false);
   }
 
   void checkConnection() async {
     startTime = (DateTime.now()).millisecondsSinceEpoch;
+    prefs = await SharedPreferences.getInstance();
+    if (prefs.getString("noti") != null) {
+      if (this.mounted) {
+        setState(() {
+          totalNotification = prefs.getString("noti");
+        });
+      }
+    }
     var connectivityResult = await (Connectivity().checkConnectivity());
     if (connectivityResult == ConnectivityResult.wifi ||
         connectivityResult == ConnectivityResult.mobile) {
-      // _onLoading();
       getNotifications();
     } else {
       initialize();
@@ -371,12 +621,12 @@ class _NotificationsState extends State<Notifications> {
     }
   }
 
-  getNotifications() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
+  void getNotifications() async {
     userID = prefs.getString('userID');
     companyID = prefs.getString('companyID');
     level = prefs.getString('level');
     userType = prefs.getString('user_type');
+    notification();
     http.post(urlNotification, body: {
       "userID": userID,
       "companyID": companyID,
@@ -385,11 +635,13 @@ class _NotificationsState extends State<Notifications> {
       "count": "0",
     }).then((res) async {
       if (res.body == "nodata") {
-        setState(() {
-          nodata = true;
-          status = true;
-          connection = true;
-        });
+        if (this.mounted) {
+          setState(() {
+            nodata = true;
+            status = true;
+            connection = true;
+          });
+        }
         Toast.show("No Data", context,
             duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
       } else {
@@ -483,11 +735,12 @@ class _NotificationsState extends State<Notifications> {
               status: jsonData[i]['status']);
           notifications.add(notification);
         }
-        // Navigator.pop(context);
-        setState(() {
-          status = true;
-          connection = true;
-        });
+        if (this.mounted) {
+          setState(() {
+            status = true;
+            connection = true;
+          });
+        }
         setNoti();
       }
       endTime = DateTime.now().millisecondsSinceEpoch;
@@ -497,6 +750,23 @@ class _NotificationsState extends State<Notifications> {
       Toast.show(err.toString(), context,
           duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
       print("Get Notifications error: " + (err).toString());
+    });
+  }
+
+  void notification() {
+    http.post(urlNoti, body: {
+      "userID": userID,
+      "companyID": companyID,
+      "level": level,
+      "user_type": userType,
+    }).then((res) async {
+      if (this.mounted) {
+        setState(() {
+          totalNotification = res.body;
+        });
+      }
+    }).catchError((err) {
+      print("Notification error: " + err.toString());
     });
   }
 
@@ -576,11 +846,12 @@ class _NotificationsState extends State<Notifications> {
               status: jsonData[i]['status']);
           notifications.add(notification);
         }
-
-        setState(() {
-          status = true;
-          connection = true;
-        });
+        if (this.mounted) {
+          setState(() {
+            status = true;
+            connection = true;
+          });
+        }
       }).catchError((err) {
         Toast.show(err, context,
             duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
@@ -615,12 +886,17 @@ class _NotificationsState extends State<Notifications> {
     if (offlineNoti.length == 0) {
       nodata = true;
     }
-    setState(() {
-      status = true;
-    });
+    if (this.mounted) {
+      setState(() {
+        status = true;
+      });
+    }
   }
 
   Future<void> setNoti() async {
+    if (!mounted) {
+      return null;
+    }
     Database db = await NotiDB.instance.database;
     await db.rawInsert('DELETE FROM noti WHERE id > 0');
     for (int index = 0; index < notifications.length; index++) {
@@ -658,6 +934,9 @@ class _NotificationsState extends State<Notifications> {
   }
 
   Future<Null> _handleRefresh() async {
+    if (!mounted) {
+      return null;
+    }
     Completer<Null> completer = Completer<Null>();
     notifications.clear();
     http.post(urlNotification, body: {
@@ -736,11 +1015,12 @@ class _NotificationsState extends State<Notifications> {
               status: jsonData[i]['status']);
           notifications.add(notification);
         }
-
-        setState(() {
-          status = true;
-          connection = true;
-        });
+        if (this.mounted) {
+          setState(() {
+            status = true;
+            connection = true;
+          });
+        }
         setNoti();
       }
     }).catchError((err) {

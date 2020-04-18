@@ -11,13 +11,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:progress_indicators/progress_indicators.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:toast/toast.dart';
 import 'package:vvin/data.dart';
 import 'package:vvin/loader.dart';
 import 'package:vvin/editVProfile.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_open_whatsapp/flutter_open_whatsapp.dart';
-import 'package:vvin/mainscreen.dart';
 // import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'dart:async';
@@ -25,6 +25,9 @@ import 'dart:async';
 // import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:network_to_file_image/network_to_file_image.dart';
+import 'package:vvin/notifications.dart';
+import 'package:vvin/vanalytics.dart';
+import 'package:vvin/vdata.dart';
 
 class VProfile extends StatefulWidget {
   final VDataDetails vdata;
@@ -133,9 +136,11 @@ class _VProfileState extends State<VProfile>
                         onPressed: () {
                           Navigator.of(context).pop();
                           Navigator.of(context).pop();
-                          setState(() {
-                            noti = false;
-                          });
+                          if (this.mounted) {
+                            setState(() {
+                              noti = false;
+                            });
+                          }
                         },
                       ),
                       FlatButton(
@@ -143,12 +148,10 @@ class _VProfileState extends State<VProfile>
                         onPressed: () {
                           Navigator.of(context).pop();
                           Navigator.of(context).pop();
-                          CurrentIndex index = new CurrentIndex(index: 3);
+                          // CurrentIndex index = new CurrentIndex(index: 3);
                           Navigator.of(context).pushReplacement(
                             MaterialPageRoute(
-                              builder: (context) => MainScreen(
-                                index: index,
-                              ),
+                              builder: (context) => Notifications(),
                             ),
                           );
                         },
@@ -156,6 +159,18 @@ class _VProfileState extends State<VProfile>
                     ],
                   ));
           noti = true;
+        }
+      },
+      onResume: (Map<String, dynamic> message) async {
+        List time = message.toString().split('google.sent_time: ');
+        String noti = time[1].toString().substring(0, 13);
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        if (prefs.getString('newNoti') != noti) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (context) => Notifications(),
+            ),
+          );
         }
       },
     );
@@ -759,9 +774,11 @@ class _VProfileState extends State<VProfile>
         var jsonData = json.decode(res.body);
         vTag = jsonData;
       }
-      setState(() {
-        vTagData = true;
-      });
+      if (this.mounted) {
+        setState(() {
+          vTagData = true;
+        });
+      }
     }).catchError((err) {
       Toast.show(err, context,
           duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
@@ -778,7 +795,7 @@ class _VProfileState extends State<VProfile>
       "phone_number": phoneNo,
     }).then((res) {
       // print("VProfile status:" + (res.statusCode).toString());
-      print("VProfile body: " + res.body);
+      // print("VProfile body: " + res.body);
       if (res.body == "nodata") {
         VProfileData vprofile = VProfileData(
           name: name,
@@ -826,9 +843,11 @@ class _VProfileState extends State<VProfile>
           vProfileDetails.add(vprofile);
         }
       }
-      setState(() {
-        vProfileData = true;
-      });
+      if (this.mounted) {
+        setState(() {
+          vProfileData = true;
+        });
+      }
     }).catchError((err) {
       // Navigator.pop(context);
       Toast.show(err, context,
@@ -852,9 +871,11 @@ class _VProfileState extends State<VProfile>
         var jsonData = json.decode(res.body);
         handler = jsonData;
       }
-      setState(() {
-        handlerData = true;
-      });
+      if (this.mounted) {
+        setState(() {
+          handlerData = true;
+        });
+      }
     }).catchError((err) {
       Toast.show(err, context,
           duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
@@ -888,9 +909,11 @@ class _VProfileState extends State<VProfile>
           vProfileViews.add(views);
         }
       }
-      setState(() {
-        viewsData = true;
-      });
+      if (this.mounted) {
+        setState(() {
+          viewsData = true;
+        });
+      }
     }).catchError((err) {
       Toast.show(err, context,
           duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
@@ -926,9 +949,11 @@ class _VProfileState extends State<VProfile>
           vProfileRemarks.add(remark);
         }
       }
-      setState(() {
-        remarksData = true;
-      });
+      if (this.mounted) {
+        setState(() {
+          remarksData = true;
+        });
+      }
     }).catchError((err) {
       Toast.show(err, context,
           duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
@@ -954,21 +979,17 @@ class _VProfileState extends State<VProfile>
 
   Future<bool> _onBackPressAppBar() async {
     if (fromVAnalytics == "yes") {
-      CurrentIndex index = new CurrentIndex(index: 0);
+      // CurrentIndex index = new CurrentIndex(index: 0);
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
-          builder: (context) => MainScreen(
-            index: index,
-          ),
+          builder: (context) => VAnalytics(),
         ),
       );
     } else {
-      CurrentIndex index = new CurrentIndex(index: 1);
+      // CurrentIndex index = new CurrentIndex(index: 1);
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
-          builder: (context) => MainScreen(
-            index: index,
-          ),
+          builder: (context) => VData(),
         ),
       );
     }
@@ -986,23 +1007,29 @@ class _VProfileState extends State<VProfile>
       "status": newVal,
     }).then((res) {
       if (res.body == "success") {
-        setState(() {
-          status = newVal;
-        });
+        if (this.mounted) {
+          setState(() {
+            status = newVal;
+          });
+        }
         Toast.show("Status changed", context,
             duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
       } else {
-        setState(() {
-          status = status;
-        });
+        if (this.mounted) {
+          setState(() {
+            status = status;
+          });
+        }
         Toast.show(
             "Status can't change, please contact VVIN help desk", context,
             duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
       }
     }).catchError((err) {
-      setState(() {
-        status = status;
-      });
+      if (this.mounted) {
+        setState(() {
+          status = status;
+        });
+      }
       Toast.show(
           "Status can't change, please check your Internet connection", context,
           duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
@@ -1046,10 +1073,12 @@ class _DetailsState extends State<Details> {
   void setup() async {
     Directory dir = await getApplicationDocumentsDirectory();
     String pathName = dir.path.toString() + "/attachment.png";
-    setState(() {
-      file = File(pathName);
-      ready = true;
-    });
+    if (this.mounted) {
+      setState(() {
+        file = File(pathName);
+        ready = true;
+      });
+    }
   }
 
   @override
@@ -2121,8 +2150,12 @@ class _DetailsState extends State<Details> {
                                                 borderRadius: BorderRadius.all(
                                                     Radius.circular(10.0)),
                                                 image: DecorationImage(
-                                                  image: CachedNetworkImageProvider(widget
-                                                      .vProfileDetails[0].img),
+                                                  image:
+                                                      CachedNetworkImageProvider(
+                                                          widget
+                                                              .vProfileDetails[
+                                                                  0]
+                                                              .img),
                                                 ),
                                               ),
                                             ),
