@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:bouncing_widget/bouncing_widget.dart';
 import 'package:connectivity/connectivity.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
@@ -22,7 +23,6 @@ import 'package:vvin/notifications.dart';
 import 'package:vvin/topViewDB.dart';
 import 'package:vvin/vDataDB.dart';
 import 'package:vvin/vanalyticsDB.dart';
-import 'package:logger/logger.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
@@ -34,6 +34,7 @@ class Profile extends StatefulWidget {
 }
 
 class _ProfileState extends State<Profile> {
+  double _scaleFactor = 1.0;
   double font14 = ScreenUtil().setSp(32.2, allowFontScalingSelf: false);
   FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
   bool start, connection, ready;
@@ -721,26 +722,53 @@ class _ProfileState extends State<Profile> {
                           ],
                         ),
                       ),
-                      Container(
-                        width: btnWidth,
-                        height: ScreenUtil().setHeight(80),
-                        color: Colors.white,
-                        child: OutlineButton(
-                          color: Colors.white,
-                          child: Text(
-                            'Logout',
-                            style: TextStyle(
-                              fontSize: font14,
+                      BouncingWidget(
+                        scaleFactor: _scaleFactor,
+                        onPressed: _logout,
+                        child: Container(
+                          width: btnWidth,
+                          height: ScreenUtil().setHeight(80),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(10.0),
+                            color: Colors.white,
+                            border: Border(
+                              bottom: BorderSide(width: 1, color: Colors.blue),
+                              top: BorderSide(width: 1, color: Colors.blue),
+                              left: BorderSide(width: 1, color: Colors.blue),
+                              right: BorderSide(width: 1, color: Colors.blue),
                             ),
                           ),
-                          onPressed: _logout,
-                          borderSide: BorderSide(
-                            style: BorderStyle.solid,
-                            color: Colors.blue,
+                          child: Center(
+                            child: Text(
+                              'Logout',
+                              style: TextStyle(
+                                fontSize: font14,
+                                color: Colors.blue
+                              ),
+                            ),
                           ),
-                          textColor: Colors.blue,
                         ),
                       ),
+                      // Container(
+                      //   width: btnWidth,
+                      //   height: ScreenUtil().setHeight(80),
+                      //   color: Colors.white,
+                      //   child: OutlineButton(
+                      //     color: Colors.white,
+                      //     child: Text(
+                      //       'Logout',
+                      //       style: TextStyle(
+                      //         fontSize: font14,
+                      //       ),
+                      //     ),
+                      //     onPressed: _logout,
+                      //     borderSide: BorderSide(
+                      //       style: BorderStyle.solid,
+                      //       color: Colors.blue,
+                      //     ),
+                      //     textColor: Colors.blue,
+                      //   ),
+                      // ),
                     ],
                   ),
                 ),
@@ -1014,7 +1042,7 @@ class _ProfileState extends State<Profile> {
       await _file.writeAsBytes(_response.bodyBytes);
       // Logger().i("File write complete. File Path ${_saveFile.path}");
     } else {
-      Logger().e(_response.statusCode);
+      // Logger().e(_response.statusCode);
     }
   }
 

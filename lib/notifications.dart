@@ -1,7 +1,8 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:connectivity/connectivity.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:empty_widget/empty_widget.dart';
+// import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -32,7 +33,7 @@ class Notifications extends StatefulWidget {
 }
 
 class _NotificationsState extends State<Notifications> {
-  FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
+  // FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
   double font12 = ScreenUtil().setSp(27.6, allowFontScalingSelf: false);
   double font14 = ScreenUtil().setSp(32.2, allowFontScalingSelf: false);
   double font18 = ScreenUtil().setSp(41.4, allowFontScalingSelf: false);
@@ -74,14 +75,6 @@ class _NotificationsState extends State<Notifications> {
         _getMoreNoti();
       }
     });
-    _firebaseMessaging.configure(
-      onMessage: (Map<String, dynamic> message) async {
-        _handleRefresh();
-      },
-      onResume: (Map<String, dynamic> message) async {
-        _handleRefresh();
-      },
-    );
     super.initState();
   }
 
@@ -425,21 +418,41 @@ class _NotificationsState extends State<Notifications> {
                                   },
                                 ),
                               )
-                            : Container(
-                                height: ScreenUtil().setHeight(200),
-                                child: Center(
-                                  child: Text(
-                                    "No Data",
-                                    style: TextStyle(
-                                      fontStyle: FontStyle.italic,
-                                      color: Colors.grey,
-                                      fontSize: ScreenUtil().setSp(50,
-                                          allowFontScalingSelf: false),
-                                    ),
-                                  ),
+                            : Center(
+                                child: Container(
+                                  height:
+                                      MediaQuery.of(context).size.height * 0.6,
+                                  child: EmptyListWidget(
+                                      packageImage: PackageImage.Image_2,
+                                      // title: 'No Data',
+                                      subTitle: 'No Data',
+                                      titleTextStyle: Theme.of(context)
+                                          .typography
+                                          .dense
+                                          .display1
+                                          .copyWith(color: Color(0xff9da9c7)),
+                                      subtitleTextStyle: Theme.of(context)
+                                          .typography
+                                          .dense
+                                          .body2
+                                          .copyWith(color: Color(0xffabb8d6))),
                                 ),
-                              ),
-                      ),
+                              )
+                        // Container(
+                        //     height: ScreenUtil().setHeight(200),
+                        //     child: Center(
+                        //       child: Text(
+                        //         "No Data",
+                        //         style: TextStyle(
+                        //           fontStyle: FontStyle.italic,
+                        //           color: Colors.grey,
+                        //           fontSize: ScreenUtil().setSp(50,
+                        //               allowFontScalingSelf: false),
+                        //         ),
+                        //       ),
+                        //     ),
+                        //   ),
+                        ),
               ],
             ),
           ),
@@ -558,14 +571,14 @@ class _NotificationsState extends State<Notifications> {
             .catchError((err) {
               print("Notification change status error: " + (err).toString());
             });
+        if (this.mounted) {
+          setState(() {
+            notifications[index].status = "1";
+            totalNotification = (int.parse(totalNotification) - 1).toString();
+          });
+        }
+        prefs.setString('noti', totalNotification);
       }
-      if (this.mounted) {
-        setState(() {
-          notifications[index].status = "1";
-          totalNotification = (int.parse(totalNotification) - 1).toString();
-        });
-      }
-      prefs.setString('noti', totalNotification);
     } else {
       Toast.show("Please check your Internet Connection", context,
           duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);

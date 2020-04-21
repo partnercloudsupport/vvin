@@ -1,11 +1,11 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:bouncing_widget/bouncing_widget.dart';
 import 'package:connectivity/connectivity.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:logger/logger.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
@@ -35,6 +35,7 @@ class EditCompany extends StatefulWidget {
 }
 
 class _EditCompanyState extends State<EditCompany> {
+  double _scaleFactor = 1.0;
   double font13 = ScreenUtil().setSp(29.9, allowFontScalingSelf: false);
   double font14 = ScreenUtil().setSp(32.2, allowFontScalingSelf: false);
   double font15 = ScreenUtil().setSp(34.5, allowFontScalingSelf: false);
@@ -455,22 +456,27 @@ class _EditCompanyState extends State<EditCompany> {
                     SizedBox(
                       height: ScreenUtil().setHeight(20),
                     ),
-                    MaterialButton(
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10.0)),
-                      minWidth: MediaQuery.of(context).size.width * 0.5,
-                      height: ScreenUtil().setHeight(70),
-                      child: Text(
-                        'Save',
-                        style: TextStyle(
-                          fontFamily: 'Roboto',
-                          fontSize: font15,
+                    BouncingWidget(
+                      scaleFactor: _scaleFactor,
+                      onPressed: _saveEditCompany,
+                      child: Container(
+                        width: MediaQuery.of(context).size.width * 0.5,
+                        height: ScreenUtil().setHeight(70),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(10.0),
+                          color: Color.fromRGBO(34, 175, 240, 1),
+                        ),
+                        child: Center(
+                          child: Text(
+                            'Save',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontFamily: 'Roboto',
+                              fontSize: font15,
+                            ),
+                          ),
                         ),
                       ),
-                      color: Color.fromRGBO(34, 175, 240, 1),
-                      textColor: Colors.white,
-                      // elevation: 9,
-                      onPressed: _saveEditCompany,
                     ),
                   ],
                 ),
@@ -687,9 +693,9 @@ class _EditCompanyState extends State<EditCompany> {
     if (_response.statusCode == 200) {
       final _file = await _localImage(path: path, name: name);
       final _saveFile = await _file.writeAsBytes(_response.bodyBytes);
-      Logger().i("File write complete. File Path ${_saveFile.path}");
+      // Logger().i("File write complete. File Path ${_saveFile.path}");
     } else {
-      Logger().e(_response.statusCode);
+      // Logger().e(_response.statusCode);
     }
   }
 

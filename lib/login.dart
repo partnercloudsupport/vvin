@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:bouncing_widget/bouncing_widget.dart';
 import 'package:connectivity/connectivity.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
@@ -39,6 +40,7 @@ class Login extends StatefulWidget {
 }
 
 class _LoginPageState extends State<Login> {
+  double _scaleFactor = 1.0;
   double font14 = ScreenUtil().setSp(32.2, allowFontScalingSelf: false);
   double font15 = ScreenUtil().setSp(34.5, allowFontScalingSelf: false);
   double font25 = ScreenUtil().setSp(57.5, allowFontScalingSelf: false);
@@ -54,11 +56,10 @@ class _LoginPageState extends State<Login> {
     _firebaseMessaging.requestNotificationPermissions(
         const IosNotificationSettings(sound: true, badge: true, alert: true));
     _firebaseMessaging.onIosSettingsRegistered
-        .listen((IosNotificationSettings settings) {
-    });
+        .listen((IosNotificationSettings settings) {});
     _firebaseMessaging.getToken().then((fbtoken) {
       token = fbtoken;
-      print(fbtoken);
+      // print(fbtoken);
     });
     _email = "";
     _password = "";
@@ -200,22 +201,43 @@ class _LoginPageState extends State<Login> {
                           SizedBox(
                             height: ScreenUtil().setHeight(50),
                           ),
-                          MaterialButton(
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(20.0)),
-                            minWidth: double.infinity,
-                            height: ScreenUtil().setHeight(80),
-                            child: Text(
-                              'Sign in',
-                              style: TextStyle(
-                                fontSize: font15,
+                          BouncingWidget(
+                            scaleFactor: _scaleFactor,
+                            onPressed: _onLogin,
+                            child: Container(
+                              width: MediaQuery.of(context).size.width * 0.5,
+                              height: ScreenUtil().setHeight(80),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(10.0),
+                                color: Color.fromRGBO(34, 175, 240, 1),
+                              ),
+                              child: Center(
+                                child: Text(
+                                  'Sign in',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: font15,
+                                  ),
+                                ),
                               ),
                             ),
-                            color: Color.fromRGBO(34, 175, 240, 1),
-                            textColor: Colors.white,
-                            elevation: 9,
-                            onPressed: _onLogin,
                           ),
+                          // MaterialButton(
+                          //   shape: RoundedRectangleBorder(
+                          //       borderRadius: BorderRadius.circular(20.0)),
+                          //   minWidth: double.infinity,
+                          //   height: ScreenUtil().setHeight(80),
+                          //   child: Text(
+                          //     'Sign in',
+                          //     style: TextStyle(
+                          //       fontSize: font15,
+                          //     ),
+                          //   ),
+                          //   color: Color.fromRGBO(34, 175, 240, 1),
+                          //   textColor: Colors.white,
+                          //   elevation: 9,
+                          //   onPressed: _onLogin,
+                          // ),
                         ],
                       )
               ],
@@ -346,7 +368,7 @@ class _LoginPageState extends State<Login> {
         backgroundColor: Colors.transparent,
         child: Container(
           width: 50.0,
-          height: 50.0,
+          height: 60.0,
           child: Loader(),
         ),
       ),
@@ -361,7 +383,7 @@ class _LoginPageState extends State<Login> {
         elevation: 0.0,
         backgroundColor: Colors.transparent,
         child: Container(
-          height: MediaQuery.of(context).size.height * 0.1,
+          height: MediaQuery.of(context).size.height * 0.15,
           width: MediaQuery.of(context).size.width * 0.1,
           decoration: BoxDecoration(
             color: Colors.white,
@@ -394,14 +416,6 @@ class _LoginPageState extends State<Login> {
       version = "version " + androidInfo.version.sdkInt.toString();
       manufacture = androidInfo.manufacturer.toString();
       model = androidInfo.model.toString();
-      // print("System: " +
-      //     system +
-      //     ", version: " +
-      //     version +
-      //     ", manufacture: " +
-      //     manufacture +
-      //     ", model: " +
-      //     model);
     }
 
     if (Platform.isIOS) {
@@ -410,14 +424,6 @@ class _LoginPageState extends State<Login> {
       version = iosInfo.systemVersion.toString();
       manufacture = iosInfo.name.toString();
       model = iosInfo.model.toString();
-      // print("System: " +
-      //     system +
-      //     ", version: " +
-      //     version +
-      //     ", manufacture: " +
-      //     manufacture +
-      //     ", model: " +
-      //     model);
     }
   }
 }
@@ -428,6 +434,7 @@ class Default extends StatefulWidget {
 }
 
 class _Default extends State<Default> {
+  double _scaleFactor = 1.0;
   double font14 = ScreenUtil().setSp(32.2, allowFontScalingSelf: false);
   double font15 = ScreenUtil().setSp(34.5, allowFontScalingSelf: false);
 
@@ -490,21 +497,26 @@ class _Default extends State<Default> {
           margin: EdgeInsets.symmetric(
             horizontal: ScreenUtil().setHeight(80),
           ),
-          child: MaterialButton(
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20.0)),
-            minWidth: double.infinity,
-            height: ScreenUtil().setHeight(80),
-            child: Text(
-              'Proceed',
-              style: TextStyle(
-                fontSize: font14,
+          child: BouncingWidget(
+            scaleFactor: _scaleFactor,
+            onPressed: _onProceed,
+            child: Container(
+              width: MediaQuery.of(context).size.width * 0.5,
+              height: ScreenUtil().setHeight(80),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20.0),
+                color: Color.fromRGBO(34, 175, 240, 1),
+              ),
+              child: Center(
+                child: Text(
+                  'Proceed',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: font14,
+                  ),
+                ),
               ),
             ),
-            color: Color.fromRGBO(34, 175, 240, 1),
-            textColor: Colors.white,
-            elevation: 9,
-            onPressed: _onProceed,
           ),
         ),
       ],
@@ -566,7 +578,7 @@ class _Default extends State<Default> {
         elevation: 0.0,
         backgroundColor: Colors.transparent,
         child: Container(
-          height: MediaQuery.of(context).size.height * 0.1,
+          height: MediaQuery.of(context).size.height * 0.15,
           width: MediaQuery.of(context).size.width * 0.1,
           decoration: BoxDecoration(
             color: Colors.white,

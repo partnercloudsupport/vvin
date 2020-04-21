@@ -1,5 +1,7 @@
 import 'dart:convert';
+import 'package:bouncing_widget/bouncing_widget.dart';
 import 'package:connectivity/connectivity.dart';
+import 'package:empty_widget/empty_widget.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -33,6 +35,7 @@ class VDataNoHandler extends StatefulWidget {
 }
 
 class _VDataNoHandlerState extends State<VDataNoHandler> {
+  double _scaleFactor = 1.0;
   double font12 = ScreenUtil().setSp(27.6, allowFontScalingSelf: false);
   double font14 = ScreenUtil().setSp(32.2, allowFontScalingSelf: false);
   double font18 = ScreenUtil().setSp(41.4, allowFontScalingSelf: false);
@@ -466,18 +469,23 @@ class _VDataNoHandlerState extends State<VDataNoHandler> {
                 ),
                 (link == true && vData == true)
                     ? (nodata == true)
-                        ? Container(
-                            height: ScreenUtil().setHeight(200),
-                            child: Center(
-                              child: Text(
-                                "No Data",
-                                style: TextStyle(
-                                  fontStyle: FontStyle.italic,
-                                  color: Colors.grey,
-                                  fontSize: ScreenUtil()
-                                      .setSp(50, allowFontScalingSelf: false),
-                                ),
-                              ),
+                        ? Center(
+                            child: Container(
+                              height: MediaQuery.of(context).size.height * 0.6,
+                              child: EmptyListWidget(
+                                  packageImage: PackageImage.Image_2,
+                                  // title: 'No Data',
+                                  subTitle: 'No Data',
+                                  titleTextStyle: Theme.of(context)
+                                      .typography
+                                      .dense
+                                      .display1
+                                      .copyWith(color: Color(0xff9da9c7)),
+                                  subtitleTextStyle: Theme.of(context)
+                                      .typography
+                                      .dense
+                                      .body2
+                                      .copyWith(color: Color(0xffabb8d6))),
                             ),
                           )
                         : Flexible(
@@ -797,8 +805,9 @@ class _VDataNoHandlerState extends State<VDataNoHandler> {
                                                   mainAxisAlignment:
                                                       MainAxisAlignment.start,
                                                   children: <Widget>[
-                                                    InkWell(
-                                                      onTap: () {
+                                                    BouncingWidget(
+                                                      scaleFactor: _scaleFactor,
+                                                      onPressed: () {
                                                         (connection == true)
                                                             ? launch("tel:+" +
                                                                 vDataDetails[
@@ -833,32 +842,11 @@ class _VDataNoHandlerState extends State<VDataNoHandler> {
                                                       width: ScreenUtil()
                                                           .setHeight(20),
                                                     ),
-                                                    InkWell(
-                                                      onTap: () async {
-                                                        var connectivityResult =
-                                                            await (Connectivity()
-                                                                .checkConnectivity());
-                                                        if (connectivityResult ==
-                                                                ConnectivityResult
-                                                                    .wifi ||
-                                                            connectivityResult ==
-                                                                ConnectivityResult
-                                                                    .mobile) {
-                                                          FlutterOpenWhatsapp
-                                                              .sendSingleMessage(
-                                                                  vDataDetails[
-                                                                          index]
-                                                                      .phoneNo,
-                                                                  "");
-                                                        } else {
-                                                          Toast.show(
-                                                              "This feature need Internet connection",
-                                                              context,
-                                                              duration: Toast
-                                                                  .LENGTH_LONG,
-                                                              gravity:
-                                                                  Toast.BOTTOM);
-                                                        }
+                                                    BouncingWidget(
+                                                      scaleFactor: _scaleFactor,
+                                                      onPressed: () {
+                                                        _redirectWhatsApp(
+                                                            index);
                                                       },
                                                       child: Container(
                                                         height: ScreenUtil()
@@ -2391,6 +2379,21 @@ class _VDataNoHandlerState extends State<VDataNoHandler> {
           );
         }
         break;
+    }
+  }
+
+  void _redirectWhatsApp(int index) async {
+    var connectivityResult = await (Connectivity().checkConnectivity());
+    if (connectivityResult == ConnectivityResult.wifi ||
+        connectivityResult == ConnectivityResult.mobile) {
+      if (connection == true) {
+        FlutterOpenWhatsapp.sendSingleMessage(vDataDetails[index].phoneNo, "");
+      } else {
+        FlutterOpenWhatsapp.sendSingleMessage(offlineVData[index]['phone'], "");
+      }
+    } else {
+      Toast.show("This feature need Internet connection", context,
+          duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
     }
   }
 

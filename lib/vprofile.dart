@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:bouncing_widget/bouncing_widget.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:connectivity/connectivity.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -40,6 +41,7 @@ class VProfile extends StatefulWidget {
 class _VProfileState extends State<VProfile>
     with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   // final SpeechToText speech = SpeechToText();
+  double _scaleFactor = 1.0;
   FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
   final TextEditingController _addRemark = TextEditingController();
   TabController controller;
@@ -148,7 +150,6 @@ class _VProfileState extends State<VProfile>
                         onPressed: () {
                           Navigator.of(context).pop();
                           Navigator.of(context).pop();
-                          // CurrentIndex index = new CurrentIndex(index: 3);
                           Navigator.of(context).pushReplacement(
                             MaterialPageRoute(
                               builder: (context) => Notifications(),
@@ -288,39 +289,54 @@ class _VProfileState extends State<VProfile>
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
-                  Container(
-                    width: ScreenUtil().setWidth(260),
-                    height: ScreenUtil().setHeight(60),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: FlatButton.icon(
-                      icon: Image.asset(
-                        "assets/images/whatsapp.png",
-                        height: ScreenUtil().setHeight(35),
-                        width: ScreenUtil().setWidth(35),
+                  BouncingWidget(
+                    scaleFactor: _scaleFactor,
+                    onPressed: () async {
+                      var connectivityResult =
+                          await (Connectivity().checkConnectivity());
+                      if (connectivityResult == ConnectivityResult.wifi ||
+                          connectivityResult == ConnectivityResult.mobile) {
+                        FlutterOpenWhatsapp.sendSingleMessage(phoneNo, "");
+                      } else {
+                        Toast.show(
+                            "This feature need Internet connection", context,
+                            duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
+                      }
+                    },
+                    child: Container(
+                      width: ScreenUtil().setWidth(260),
+                      height: ScreenUtil().setHeight(60),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10.0),
                       ),
-                      color: Color.fromRGBO(37, 211, 102, 1),
-                      label: Text(
-                        "WhatsApp",
-                        style: TextStyle(
-                          fontSize: font12,
+                      child: FlatButton.icon(
+                        icon: Image.asset(
+                          "assets/images/whatsapp.png",
+                          height: ScreenUtil().setHeight(35),
+                          width: ScreenUtil().setWidth(35),
                         ),
+                        color: Color.fromRGBO(37, 211, 102, 1),
+                        label: Text(
+                          "WhatsApp",
+                          style: TextStyle(
+                            fontSize: font12,
+                          ),
+                        ),
+                        textColor: Colors.white,
+                        onPressed: () async {
+                          var connectivityResult =
+                              await (Connectivity().checkConnectivity());
+                          if (connectivityResult == ConnectivityResult.wifi ||
+                              connectivityResult == ConnectivityResult.mobile) {
+                            FlutterOpenWhatsapp.sendSingleMessage(phoneNo, "");
+                          } else {
+                            Toast.show("This feature need Internet connection",
+                                context,
+                                duration: Toast.LENGTH_LONG,
+                                gravity: Toast.BOTTOM);
+                          }
+                        },
                       ),
-                      textColor: Colors.white,
-                      onPressed: () async {
-                        var connectivityResult =
-                            await (Connectivity().checkConnectivity());
-                        if (connectivityResult == ConnectivityResult.wifi ||
-                            connectivityResult == ConnectivityResult.mobile) {
-                          FlutterOpenWhatsapp.sendSingleMessage(phoneNo, "");
-                        } else {
-                          Toast.show(
-                              "This feature need Internet connection", context,
-                              duration: Toast.LENGTH_LONG,
-                              gravity: Toast.BOTTOM);
-                        }
-                      },
                     ),
                   ),
                 ],

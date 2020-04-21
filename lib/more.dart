@@ -9,7 +9,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:logger/logger.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
@@ -864,7 +863,7 @@ class _MoreState extends State<More> {
       await _file.writeAsBytes(_response.bodyBytes);
       // Logger().i("File write complete. File Path ${_saveFile.path}");
     } else {
-      Logger().e(_response.statusCode);
+      // Logger().e(_response.statusCode);
     }
   }
 

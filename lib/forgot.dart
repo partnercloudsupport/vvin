@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:bouncing_widget/bouncing_widget.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:connectivity/connectivity.dart';
 import 'package:flutter/material.dart';
@@ -17,6 +18,7 @@ class Forgot extends StatefulWidget {
 }
 
 class _Forgot extends State<Forgot> {
+  double _scaleFactor = 1.0;
   double font14 = ScreenUtil().setSp(32.2, allowFontScalingSelf: false);
   double font15 = ScreenUtil().setSp(34.5, allowFontScalingSelf: false);
   double font18 = ScreenUtil().setSp(41.4, allowFontScalingSelf: false);
@@ -25,7 +27,7 @@ class _Forgot extends State<Forgot> {
   @override
   void initState() {
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.dark.copyWith(
-      statusBarColor: Colors.black, 
+      statusBarColor: Colors.black,
     ));
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
     _emcontroller.text = "";
@@ -144,23 +146,44 @@ class _Forgot extends State<Forgot> {
                   SizedBox(
                     height: ScreenUtil().setHeight(50),
                   ),
-                  MaterialButton(
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20.0)),
-                    minWidth: double.infinity,
-                    height: ScreenUtil().setHeight(80),
-                    child: Text(
-                      'Send',
-                      style: TextStyle(
-                        fontSize:
-                            font15,
+                  BouncingWidget(
+                    scaleFactor: _scaleFactor,
+                    onPressed: _onForgot,
+                    child: Container(
+                      width: MediaQuery.of(context).size.width * 0.5,
+                      height: ScreenUtil().setHeight(80),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10.0),
+                        color: Color.fromRGBO(34, 175, 240, 1),
+                      ),
+                      child: Center(
+                        child: Text(
+                          'Send',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: font15,
+                          ),
+                        ),
                       ),
                     ),
-                    color: Color.fromRGBO(34, 175, 240, 1),
-                    textColor: Colors.white,
-                    elevation: 9,
-                    onPressed: _onForgot,
                   ),
+                  // MaterialButton(
+                  //   shape: RoundedRectangleBorder(
+                  //       borderRadius: BorderRadius.circular(20.0)),
+                  //   minWidth: double.infinity,
+                  //   height: ScreenUtil().setHeight(80),
+                  //   child: Text(
+                  //     'Send',
+                  //     style: TextStyle(
+                  //       fontSize:
+                  //           font15,
+                  //     ),
+                  //   ),
+                  //   color: Color.fromRGBO(34, 175, 240, 1),
+                  //   textColor: Colors.white,
+                  //   elevation: 9,
+                  //   onPressed: _onForgot,
+                  // ),
                 ],
               ),
             ),

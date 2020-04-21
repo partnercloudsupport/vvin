@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:bouncing_widget/bouncing_widget.dart';
 import 'package:connectivity/connectivity.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
@@ -39,6 +40,7 @@ class EditVProfile extends StatefulWidget {
 }
 
 class _EditVProfileState extends State<EditVProfile> {
+  double _scaleFactor = 1.0;
   double font12 = ScreenUtil().setSp(27.6, allowFontScalingSelf: false);
   double font14 = ScreenUtil().setSp(32.2, allowFontScalingSelf: false);
   double font18 = ScreenUtil().setSp(41.4, allowFontScalingSelf: false);
@@ -1407,20 +1409,26 @@ class _EditVProfileState extends State<EditVProfile> {
                       SizedBox(
                         height: ScreenUtil().setHeight(40),
                       ),
-                      MaterialButton(
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10.0)),
-                        minWidth: MediaQuery.of(context).size.width * 0.5,
-                        height: ScreenUtil().setHeight(80),
-                        child: Text(
-                          'Save',
-                          style: TextStyle(
-                            fontSize: font14,
+                      BouncingWidget(
+                        scaleFactor: _scaleFactor,
+                        onPressed: _save,
+                        child: Container(
+                          width: MediaQuery.of(context).size.width * 0.5,
+                          height: ScreenUtil().setHeight(80),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(10.0),
+                            color: Color.fromRGBO(34, 175, 240, 1),
+                          ),
+                          child: Center(
+                            child: Text(
+                              'Save',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: font14,
+                              ),
+                            ),
                           ),
                         ),
-                        color: Color.fromRGBO(34, 175, 240, 1),
-                        textColor: Colors.white,
-                        onPressed: _save,
                       ),
                     ],
                   ),
@@ -2298,7 +2306,7 @@ class _EditVProfileState extends State<EditVProfile> {
         backgroundColor: Colors.transparent,
         child: Container(
           width: 50.0,
-          height: 50.0,
+          height: 60.0,
           child: Loader(),
         ),
       ),
@@ -2313,7 +2321,7 @@ class _EditVProfileState extends State<EditVProfile> {
         elevation: 0.0,
         backgroundColor: Colors.transparent,
         child: Container(
-          height: MediaQuery.of(context).size.height * 0.1,
+          height: MediaQuery.of(context).size.height * 0.15,
           width: MediaQuery.of(context).size.width * 0.1,
           decoration: BoxDecoration(
             color: Colors.white,

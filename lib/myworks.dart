@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:bouncing_widget/bouncing_widget.dart';
 import 'package:connectivity/connectivity.dart';
+import 'package:empty_widget/empty_widget.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -38,6 +40,7 @@ class MyWorks extends StatefulWidget {
 }
 
 class _MyWorksState extends State<MyWorks> {
+  double _scaleFactor = 1.0;
   double font10 = ScreenUtil().setSp(23, allowFontScalingSelf: false);
   double font12 = ScreenUtil().setSp(27.6, allowFontScalingSelf: false);
   double font13 = ScreenUtil().setSp(30, allowFontScalingSelf: false);
@@ -455,20 +458,39 @@ class _MyWorksState extends State<MyWorks> {
                 ),
                 (status == true && vtagStatus == true)
                     ? (nodata == true)
-                        ? Container(
-                            height: ScreenUtil().setHeight(200),
-                            child: Center(
-                              child: Text(
-                                "No Data",
-                                style: TextStyle(
-                                  fontStyle: FontStyle.italic,
-                                  color: Colors.grey,
-                                  fontSize: ScreenUtil()
-                                      .setSp(50, allowFontScalingSelf: false),
-                                ),
-                              ),
+                        ? Center(
+                            child: Container(
+                              height: MediaQuery.of(context).size.height * 0.6,
+                              child: EmptyListWidget(
+                                  packageImage: PackageImage.Image_2,
+                                  // title: 'No Data',
+                                  subTitle: 'No Data',
+                                  titleTextStyle: Theme.of(context)
+                                      .typography
+                                      .dense
+                                      .display1
+                                      .copyWith(color: Color(0xff9da9c7)),
+                                  subtitleTextStyle: Theme.of(context)
+                                      .typography
+                                      .dense
+                                      .body2
+                                      .copyWith(color: Color(0xffabb8d6))),
                             ),
                           )
+                        // Container(
+                        //     height: ScreenUtil().setHeight(200),
+                        //     child: Center(
+                        //       child: Text(
+                        //         "No Data",
+                        //         style: TextStyle(
+                        //           fontStyle: FontStyle.italic,
+                        //           color: Colors.grey,
+                        //           fontSize: ScreenUtil()
+                        //               .setSp(50, allowFontScalingSelf: false),
+                        //         ),
+                        //       ),
+                        //     ),
+                        //   )
                         : Flexible(
                             child: DraggableScrollbar.arrows(
                               alwaysVisibleScrollThumb: false,
@@ -518,8 +540,11 @@ class _MyWorksState extends State<MyWorks> {
                                                     (level != "0")
                                                         ? Container()
                                                         : (myWorks[index]
-                                                                    .category !=
-                                                                "VForm")
+                                                                        .category !=
+                                                                    "VForm" &&
+                                                                myWorks[index]
+                                                                        .category !=
+                                                                    "VBrochure")
                                                             ? popupMenuButton(
                                                                 index)
                                                             : Container(),
@@ -662,54 +687,66 @@ class _MyWorksState extends State<MyWorks> {
                                                       ],
                                                     ),
                                                   ),
-                                                  SizedBox(
-                                                    height: ScreenUtil()
-                                                        .setHeight(70),
-                                                    width:
-                                                        MediaQuery.of(context)
-                                                                .size
-                                                                .width *
-                                                            0.25,
-                                                    child: OutlineButton(
-                                                      borderSide: BorderSide(
-                                                        style:
-                                                            BorderStyle.solid,
-                                                        color: Colors.blue,
+                                                  BouncingWidget(
+                                                    scaleFactor: _scaleFactor,
+                                                    onPressed: () {
+                                                      if (connection == true) {
+                                                        _whatsappForward(
+                                                            myWorks[index]
+                                                                .link);
+                                                      } else {
+                                                        Toast.show(
+                                                            "Offline mode can not WhatsApp Forward",
+                                                            context,
+                                                            duration: Toast
+                                                                .LENGTH_LONG,
+                                                            gravity:
+                                                                Toast.BOTTOM);
+                                                      }
+                                                    },
+                                                    child: Container(
+                                                      height: ScreenUtil()
+                                                          .setHeight(70),
+                                                      width:
+                                                          MediaQuery.of(context)
+                                                                  .size
+                                                                  .width *
+                                                              0.25,
+                                                      decoration: BoxDecoration(
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(5.0),
+                                                        color: Colors.white,
+                                                        border: Border(
+                                                          bottom: BorderSide(
+                                                              width: 1,
+                                                              color:
+                                                                  Colors.blue),
+                                                          top: BorderSide(
+                                                              width: 1,
+                                                              color:
+                                                                  Colors.blue),
+                                                          left: BorderSide(
+                                                              width: 1,
+                                                              color:
+                                                                  Colors.blue),
+                                                          right: BorderSide(
+                                                              width: 1,
+                                                              color:
+                                                                  Colors.blue),
+                                                        ),
                                                       ),
-                                                      textColor: Colors.blue,
-                                                      onPressed: () {
-                                                        if (connection ==
-                                                            true) {
-                                                          _whatsappForward(
-                                                              myWorks[index]
-                                                                  .link);
-                                                        } else {
-                                                          Toast.show(
-                                                              "Offline mode can not WhatsApp Forward",
-                                                              context,
-                                                              duration: Toast
-                                                                  .LENGTH_LONG,
-                                                              gravity:
-                                                                  Toast.BOTTOM);
-                                                        }
-                                                        // _whatsappForward(
-                                                        //     "new",
-                                                        //     myWorks[index]
-                                                        //         .link);
-                                                      },
-                                                      padding: EdgeInsets.all(
-                                                        ScreenUtil()
-                                                            .setHeight(1),
-                                                      ),
-                                                      color: Colors.white,
-                                                      child: Text(
-                                                        'Forward',
-                                                        style: TextStyle(
-                                                            fontSize: font12,
-                                                            color: Colors.blue,
-                                                            fontWeight:
-                                                                FontWeight
-                                                                    .bold),
+                                                      child: Center(
+                                                        child: Text(
+                                                          'Forward',
+                                                          style: TextStyle(
+                                                              fontSize: font12,
+                                                              color:
+                                                                  Colors.blue,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .bold),
+                                                        ),
                                                       ),
                                                     ),
                                                   ),
@@ -717,105 +754,55 @@ class _MyWorksState extends State<MyWorks> {
                                                     width: ScreenUtil()
                                                         .setWidth(20),
                                                   ),
-                                                  SizedBox(
-                                                    height: ScreenUtil()
-                                                        .setHeight(70),
-                                                    width:
-                                                        MediaQuery.of(context)
-                                                                .size
-                                                                .width *
-                                                            0.25,
-                                                    child: OutlineButton(
-                                                      padding: EdgeInsets.all(
-                                                        ScreenUtil()
-                                                            .setHeight(1),
+                                                  BouncingWidget(
+                                                    scaleFactor: _scaleFactor,
+                                                    onPressed: () {
+                                                      _viewQR(index);
+                                                    },
+                                                    child: Container(
+                                                      height: ScreenUtil()
+                                                          .setHeight(70),
+                                                      width:
+                                                          MediaQuery.of(context)
+                                                                  .size
+                                                                  .width *
+                                                              0.25,
+                                                      decoration: BoxDecoration(
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(5.0),
+                                                        color: Colors.white,
+                                                        border: Border(
+                                                          bottom: BorderSide(
+                                                              width: 1,
+                                                              color:
+                                                                  Colors.blue),
+                                                          top: BorderSide(
+                                                              width: 1,
+                                                              color:
+                                                                  Colors.blue),
+                                                          left: BorderSide(
+                                                              width: 1,
+                                                              color:
+                                                                  Colors.blue),
+                                                          right: BorderSide(
+                                                              width: 1,
+                                                              color:
+                                                                  Colors.blue),
+                                                        ),
                                                       ),
-                                                      color: Colors.white,
-                                                      child: Text(
-                                                        'QR Code',
-                                                        style: TextStyle(
-                                                            fontSize: font12,
-                                                            fontWeight:
-                                                                FontWeight
-                                                                    .bold),
+                                                      child: Center(
+                                                        child: Text(
+                                                          'QR Code',
+                                                          style: TextStyle(
+                                                              color:
+                                                                  Colors.blue,
+                                                              fontSize: font12,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .bold),
+                                                        ),
                                                       ),
-                                                      onPressed: () async {
-                                                        if (connection ==
-                                                            true) {
-                                                          if (myWorks[index]
-                                                                  .offLine ==
-                                                              false) {
-                                                            if (myWorks[index]
-                                                                    .qr ==
-                                                                "") {
-                                                              Toast.show(
-                                                                  "No QR generated for this link",
-                                                                  context,
-                                                                  duration: Toast
-                                                                      .LENGTH_LONG,
-                                                                  gravity: Toast
-                                                                      .BOTTOM);
-                                                            } else {
-                                                              FlutterWebBrowser
-                                                                  .openWebPage(
-                                                                url: myWorks[
-                                                                        index]
-                                                                    .qr,
-                                                              );
-                                                            }
-                                                          } else {
-                                                            var path = location +
-                                                                "/" +
-                                                                myWorks[index]
-                                                                    .category +
-                                                                myWorks[index]
-                                                                    .id +
-                                                                "/VVIN.jpg";
-                                                            if (File(path)
-                                                                    .existsSync() ==
-                                                                true) {
-                                                              await OpenFile
-                                                                  .open(path);
-                                                            } else {
-                                                              Toast.show(
-                                                                  "This offline QR still in downloading or not available",
-                                                                  context,
-                                                                  duration: Toast
-                                                                      .LENGTH_LONG,
-                                                                  gravity: Toast
-                                                                      .BOTTOM);
-                                                            }
-                                                          }
-                                                        } else {
-                                                          var path = location +
-                                                              "/" +
-                                                              offlineLink[index]
-                                                                  ['type'] +
-                                                              offlineLink[index]
-                                                                  ['linkid'] +
-                                                              "/VVIN.jpg";
-                                                          if (File(path)
-                                                                  .existsSync() ==
-                                                              true) {
-                                                            await OpenFile.open(
-                                                                path);
-                                                          } else {
-                                                            Toast.show(
-                                                                "This offline QR is not available.",
-                                                                context,
-                                                                duration: Toast
-                                                                    .LENGTH_LONG,
-                                                                gravity: Toast
-                                                                    .BOTTOM);
-                                                          }
-                                                        }
-                                                      },
-                                                      borderSide: BorderSide(
-                                                        style:
-                                                            BorderStyle.solid,
-                                                        color: Colors.blue,
-                                                      ),
-                                                      textColor: Colors.blue,
                                                     ),
                                                   ),
                                                 ],
@@ -891,6 +878,46 @@ class _MyWorksState extends State<MyWorks> {
               break;
           }
         });
+  }
+
+  void _viewQR(int index) async {
+    if (connection == true) {
+      if (myWorks[index].offLine == false) {
+        if (myWorks[index].qr == "") {
+          Toast.show("No QR generated for this link", context,
+              duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
+        } else {
+          FlutterWebBrowser.openWebPage(
+            url: myWorks[index].qr,
+          );
+        }
+      } else {
+        var path = location +
+            "/" +
+            myWorks[index].category +
+            myWorks[index].id +
+            "/VVIN.jpg";
+        if (File(path).existsSync() == true) {
+          await OpenFile.open(path);
+        } else {
+          Toast.show(
+              "This offline QR still in downloading or not available", context,
+              duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
+        }
+      }
+    } else {
+      var path = location +
+          "/" +
+          offlineLink[index]['type'] +
+          offlineLink[index]['linkid'] +
+          "/VVIN.jpg";
+      if (File(path).existsSync() == true) {
+        await OpenFile.open(path);
+      } else {
+        Toast.show("This offline QR is not available.", context,
+            duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
+      }
+    }
   }
 
   void _whatsappForward(String url) async {
@@ -1591,6 +1618,11 @@ class _MyWorksState extends State<MyWorks> {
   }
 
   Future<void> _done() async {
+    if (this.mounted) {
+      setState(() {
+        nodata = false;
+      });
+    }
     switch (category) {
       case "all":
         {
@@ -1632,10 +1664,19 @@ class _MyWorksState extends State<MyWorks> {
                 }
               }
             }
-            if (this.mounted) {
-              setState(() {
-                connection = true;
-              });
+            if (myWorks.length == 0) {
+              if (this.mounted) {
+                setState(() {
+                  connection = true;
+                  nodata = true;
+                });
+              }
+            } else {
+              if (this.mounted) {
+                setState(() {
+                  connection = true;
+                });
+              }
             }
           } else {
             if (search == "") {
@@ -1644,10 +1685,19 @@ class _MyWorksState extends State<MyWorks> {
               offlineLink = await db.rawQuery(
                   "SELECT * FROM myworks WHERE title LIKE '%" + search + "%'");
             }
-            if (this.mounted) {
-              setState(() {
-                connection = false;
-              });
+            if (offlineLink.length == 0) {
+              if (this.mounted) {
+                setState(() {
+                  connection = false;
+                  nodata = true;
+                });
+              }
+            } else {
+              if (this.mounted) {
+                setState(() {
+                  connection = false;
+                });
+              }
             }
           }
         }
@@ -1693,10 +1743,19 @@ class _MyWorksState extends State<MyWorks> {
                 }
               }
             }
-            if (this.mounted) {
-              setState(() {
-                connection = true;
-              });
+            if (myWorks.length == 0) {
+              if (this.mounted) {
+                setState(() {
+                  connection = true;
+                  nodata = true;
+                });
+              }
+            } else {
+              if (this.mounted) {
+                setState(() {
+                  connection = true;
+                });
+              }
             }
           } else {
             if (search == "") {
@@ -1708,10 +1767,19 @@ class _MyWorksState extends State<MyWorks> {
                       search +
                       "%'");
             }
-            if (this.mounted) {
-              setState(() {
-                connection = false;
-              });
+            if (offlineLink.length == 0) {
+              if (this.mounted) {
+                setState(() {
+                  connection = false;
+                  nodata = true;
+                });
+              }
+            } else {
+              if (this.mounted) {
+                setState(() {
+                  connection = false;
+                });
+              }
             }
           }
         }
@@ -1757,10 +1825,19 @@ class _MyWorksState extends State<MyWorks> {
                 }
               }
             }
-            if (this.mounted) {
-              setState(() {
-                connection = true;
-              });
+            if (myWorks.length == 0) {
+              if (this.mounted) {
+                setState(() {
+                  connection = true;
+                  nodata = true;
+                });
+              }
+            } else {
+              if (this.mounted) {
+                setState(() {
+                  connection = true;
+                });
+              }
             }
           } else {
             if (search == "") {
@@ -1772,10 +1849,19 @@ class _MyWorksState extends State<MyWorks> {
                       search +
                       "%'");
             }
-            if (this.mounted) {
-              setState(() {
-                connection = false;
-              });
+            if (offlineLink.length == 0) {
+              if (this.mounted) {
+                setState(() {
+                  connection = false;
+                  nodata = true;
+                });
+              }
+            } else {
+              if (this.mounted) {
+                setState(() {
+                  connection = false;
+                });
+              }
             }
           }
         }
@@ -1821,10 +1907,19 @@ class _MyWorksState extends State<MyWorks> {
                 }
               }
             }
-            if (this.mounted) {
-              setState(() {
-                connection = true;
-              });
+            if (myWorks.length == 0) {
+              if (this.mounted) {
+                setState(() {
+                  connection = true;
+                  nodata = true;
+                });
+              }
+            } else {
+              if (this.mounted) {
+                setState(() {
+                  connection = true;
+                });
+              }
             }
           } else {
             if (search == "") {
@@ -1836,10 +1931,19 @@ class _MyWorksState extends State<MyWorks> {
                       search +
                       "%'");
             }
-            if (this.mounted) {
-              setState(() {
-                connection = false;
-              });
+            if (offlineLink.length == 0) {
+              if (this.mounted) {
+                setState(() {
+                  connection = false;
+                  nodata = true;
+                });
+              }
+            } else {
+              if (this.mounted) {
+                setState(() {
+                  connection = false;
+                });
+              }
             }
           }
         }
@@ -1885,10 +1989,19 @@ class _MyWorksState extends State<MyWorks> {
                 }
               }
             }
-            if (this.mounted) {
-              setState(() {
-                connection = true;
-              });
+            if (myWorks.length == 0) {
+              if (this.mounted) {
+                setState(() {
+                  connection = true;
+                  nodata = true;
+                });
+              }
+            } else {
+              if (this.mounted) {
+                setState(() {
+                  connection = true;
+                });
+              }
             }
           } else {
             if (search == "") {
@@ -1900,10 +2013,19 @@ class _MyWorksState extends State<MyWorks> {
                       search +
                       "%'");
             }
-            if (this.mounted) {
-              setState(() {
-                connection = false;
-              });
+            if (offlineLink.length == 0) {
+              if (this.mounted) {
+                setState(() {
+                  connection = false;
+                  nodata = true;
+                });
+              }
+            } else {
+              if (this.mounted) {
+                setState(() {
+                  connection = false;
+                });
+              }
             }
           }
         }
@@ -1949,10 +2071,19 @@ class _MyWorksState extends State<MyWorks> {
                 }
               }
             }
-            if (this.mounted) {
-              setState(() {
-                connection = true;
-              });
+            if (myWorks.length == 0) {
+              if (this.mounted) {
+                setState(() {
+                  connection = true;
+                  nodata = true;
+                });
+              }
+            } else {
+              if (this.mounted) {
+                setState(() {
+                  connection = true;
+                });
+              }
             }
           } else {
             if (search == "") {
@@ -1964,10 +2095,19 @@ class _MyWorksState extends State<MyWorks> {
                       search +
                       "%'");
             }
-            if (this.mounted) {
-              setState(() {
-                connection = false;
-              });
+            if (offlineLink.length == 0) {
+              if (this.mounted) {
+                setState(() {
+                  connection = false;
+                  nodata = true;
+                });
+              }
+            } else {
+              if (this.mounted) {
+                setState(() {
+                  connection = false;
+                });
+              }
             }
           }
         }
@@ -2046,8 +2186,8 @@ class _MyWorksState extends State<MyWorks> {
               '")');
     }
     endTime = DateTime.now().millisecondsSinceEpoch;
-    int result = endTime - startTime;
-    print("MyWork Loading Time: " + result.toString());
+    // int result = endTime - startTime;
+    // print("MyWork Loading Time: " + result.toString());
   }
 
   Future<void> checkConnection() async {
@@ -2598,7 +2738,7 @@ class _MyWorksState extends State<MyWorks> {
         }
         await prefs.setString('totalLink', totalLink.toString());
       }
-    } 
+    }
   }
 
   Future<File> _localFile1({String path, String name}) async {

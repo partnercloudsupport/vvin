@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:bouncing_widget/bouncing_widget.dart';
 import 'package:connectivity/connectivity.dart';
+import 'package:empty_widget/empty_widget.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -34,6 +36,7 @@ class VData extends StatefulWidget {
 }
 
 class _VDataState extends State<VData> {
+  double _scaleFactor = 1.0;
   double font11 = ScreenUtil().setSp(25.3, allowFontScalingSelf: false);
   double font12 = ScreenUtil().setSp(27.6, allowFontScalingSelf: false);
   double font14 = ScreenUtil().setSp(32.2, allowFontScalingSelf: false);
@@ -468,24 +471,25 @@ class _VDataState extends State<VData> {
                 ),
                 (link == true && vData == true)
                     ? (nodata == true)
-                        ? Container(
-                            height: MediaQuery.of(context).size.height * 0.7,
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: <Widget>[
-                                Center(
-                                  child: Text(
-                                    "No Data",
-                                    style: TextStyle(
-                                      fontStyle: FontStyle.italic,
-                                      color: Colors.grey,
-                                      fontSize: ScreenUtil().setSp(35,
-                                          allowFontScalingSelf: false),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ))
+                        ? Center(
+                            child: Container(
+                              height: MediaQuery.of(context).size.height * 0.6,
+                              child: EmptyListWidget(
+                                  packageImage: PackageImage.Image_2,
+                                  // title: 'No Data',
+                                  subTitle: 'No Data',
+                                  titleTextStyle: Theme.of(context)
+                                      .typography
+                                      .dense
+                                      .display1
+                                      .copyWith(color: Color(0xff9da9c7)),
+                                  subtitleTextStyle: Theme.of(context)
+                                      .typography
+                                      .dense
+                                      .body2
+                                      .copyWith(color: Color(0xffabb8d6))),
+                            ),
+                          )
                         : Flexible(
                             child: DraggableScrollbar.arrows(
                               alwaysVisibleScrollThumb: false,
@@ -777,8 +781,9 @@ class _VDataState extends State<VData> {
                                                   mainAxisAlignment:
                                                       MainAxisAlignment.start,
                                                   children: <Widget>[
-                                                    InkWell(
-                                                      onTap: () {
+                                                    BouncingWidget(
+                                                      scaleFactor: _scaleFactor,
+                                                      onPressed: () {
                                                         (connection == true)
                                                             ? launch("tel:+" +
                                                                 vDataDetails[
@@ -813,8 +818,9 @@ class _VDataState extends State<VData> {
                                                       width: ScreenUtil()
                                                           .setHeight(20),
                                                     ),
-                                                    InkWell(
-                                                      onTap: () {
+                                                    BouncingWidget(
+                                                      scaleFactor: _scaleFactor,
+                                                      onPressed: () {
                                                         _redirectWhatsApp(
                                                             index);
                                                       },
