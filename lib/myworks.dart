@@ -9,9 +9,12 @@ import 'package:flutter/services.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:progress_indicators/progress_indicators.dart';
+import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:toast/toast.dart';
+import 'package:uni_links/uni_links.dart';
+import 'package:vvin/animator.dart';
 import 'package:vvin/data.dart';
 import 'package:vvin/loader.dart';
 import 'package:http/http.dart' as http;
@@ -39,7 +42,12 @@ class MyWorks extends StatefulWidget {
   _MyWorksState createState() => _MyWorksState();
 }
 
+enum UniLinksType { string, uri }
+
 class _MyWorksState extends State<MyWorks> {
+  bool more = true;
+  StreamSubscription _sub;
+  UniLinksType _type = UniLinksType.string;
   double _scaleFactor = 1.0;
   double font10 = ScreenUtil().setSp(23, allowFontScalingSelf: false);
   double font12 = ScreenUtil().setSp(27.6, allowFontScalingSelf: false);
@@ -52,7 +60,8 @@ class _MyWorksState extends State<MyWorks> {
   final TextEditingController _companycontroller = TextEditingController();
   final TextEditingController _remarkcontroller = TextEditingController();
   FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
-  GlobalKey<RefreshIndicatorState> refreshKey;
+  RefreshController _refreshController =
+      RefreshController(initialRefresh: false);
   String filePath = "";
   List<Map> offlineLink;
   List vtagList = [];
@@ -98,13 +107,12 @@ class _MyWorksState extends State<MyWorks> {
   List<String> otherList = [];
   String tempText = "";
   ScrollController _scrollController = ScrollController();
-  final _itemExtent = ScreenUtil().setHeight(280);
+  final _itemExtent = ScreenUtil().setHeight(316);
 
   @override
   void initState() {
     imageCache.clear();
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-    refreshKey = GlobalKey<RefreshIndicatorState>();
     _firebaseMessaging.configure(
       onMessage: (Map<String, dynamic> message) async {
         bool noti = false;
@@ -137,7 +145,6 @@ class _MyWorksState extends State<MyWorks> {
                         onPressed: () {
                           Navigator.of(context).pop();
                           Navigator.of(context).pop();
-                          // CurrentIndex index = new CurrentIndex(index: 3);
                           Navigator.of(context).pushReplacement(
                             MaterialPageRoute(
                               builder: (context) => Notifications(),
@@ -195,7 +202,30 @@ class _MyWorksState extends State<MyWorks> {
     imageIndex = 0;
     linkIndex = 0;
     checkConnection();
+    check();
     super.initState();
+  }
+
+  void check() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    if (_type == UniLinksType.string) {
+      _sub = getLinksStream().listen((String link) {
+        // FlutterWebBrowser.openWebPage(
+        //   url: "https://" + link.substring(12),
+        // );
+      }, onError: (err) {});
+
+      String initialLink;
+      if (prefs.getString('url') == '1') {
+        try {
+          initialLink = await getInitialLink();
+          // FlutterWebBrowser.openWebPage(
+          //   url: "https://" + initialLink.substring(12),
+          // );
+          prefs.setString('url', null);
+        } catch (e) {}
+      }
+    }
   }
 
   void onTapped(int index) {
@@ -234,9 +264,33 @@ class _MyWorksState extends State<MyWorks> {
   }
 
   @override
-  void dispose() {
+  dispose() {
+    if (_sub != null) _sub.cancel();
     super.dispose();
   }
+
+  void _onRefresh() async {
+    var connectivityResult = await (Connectivity().checkConnectivity());
+    if (connectivityResult == ConnectivityResult.wifi ||
+        connectivityResult == ConnectivityResult.mobile) {
+      if (this.mounted) {
+        setState(() {
+          status = false;
+          total = 0;
+          category = "all";
+        });
+      }
+      myWorks.clear();
+      myWorks1.clear();
+      getLink();
+    } else {
+      Toast.show("No Internet connection, data can't load", context,
+          duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
+    }
+    _refreshController.refreshCompleted();
+  }
+
+  void _onLoading() {}
 
   @override
   Widget build(BuildContext context) {
@@ -359,156 +413,171 @@ class _MyWorksState extends State<MyWorks> {
             ),
           ),
         ),
-        body: RefreshIndicator(
-          key: refreshKey,
-          onRefresh: _handleRefresh,
-          child: Container(
-            padding: EdgeInsets.fromLTRB(0, ScreenUtil().setHeight(20), 0, 0),
-            child: Column(
-              children: <Widget>[
-                Row(
-                  children: <Widget>[
-                    Expanded(
-                      child: Container(
-                        child: Card(
-                          child: Container(
-                            margin: EdgeInsets.fromLTRB(
-                                ScreenUtil().setHeight(20),
-                                0,
-                                ScreenUtil().setHeight(20),
-                                0),
-                            height: ScreenUtil().setHeight(80),
-                            child: TextField(
-                              onChanged: _search,
-                              style: TextStyle(
-                                fontSize: font14,
-                              ),
-                              decoration: InputDecoration(
-                                contentPadding: EdgeInsets.symmetric(
-                                  vertical: ScreenUtil().setHeight(6),
-                                ),
-                                hintText: "Search",
-                                suffix: IconButton(
-                                  iconSize: ScreenUtil().setHeight(35),
-                                  icon: Icon(Icons.keyboard_hide),
-                                  onPressed: () {
-                                    FocusScope.of(context)
-                                        .requestFocus(new FocusNode());
-                                  },
-                                ),
-                                suffixIcon: Icon(
-                                  Icons.search,
-                                  size: ScreenUtil().setHeight(45),
-                                ),
-                                border: InputBorder.none,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    Container(
-                      padding: EdgeInsets.fromLTRB(ScreenUtil().setWidth(10), 0,
-                          ScreenUtil().setHeight(0), 0),
+        body: Container(
+          padding: EdgeInsets.fromLTRB(0, ScreenUtil().setHeight(20), 0, 0),
+          child: Column(
+            children: <Widget>[
+              Row(
+                children: <Widget>[
+                  Expanded(
+                    child: Container(
                       child: Card(
-                        child: InkWell(
-                          onTap: _myWorkfilter,
-                          child: Container(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(10),
+                        child: Container(
+                          margin: EdgeInsets.fromLTRB(
+                              ScreenUtil().setHeight(20),
+                              0,
+                              ScreenUtil().setHeight(20),
+                              0),
+                          height: ScreenUtil().setHeight(80),
+                          child: TextField(
+                            onChanged: _search,
+                            style: TextStyle(
+                              fontSize: font14,
                             ),
-                            padding: EdgeInsets.all(
-                              ScreenUtil().setHeight(15),
-                            ),
-                            child: Icon(
-                              Icons.tune,
-                              size: ScreenUtil().setHeight(45),
+                            decoration: InputDecoration(
+                              contentPadding: EdgeInsets.symmetric(
+                                vertical: ScreenUtil().setHeight(6),
+                              ),
+                              hintText: "Search",
+                              suffix: IconButton(
+                                iconSize: ScreenUtil().setHeight(35),
+                                icon: Icon(Icons.keyboard_hide),
+                                onPressed: () {
+                                  FocusScope.of(context)
+                                      .requestFocus(new FocusNode());
+                                },
+                              ),
+                              suffixIcon: Icon(
+                                Icons.search,
+                                size: ScreenUtil().setHeight(45),
+                              ),
+                              border: InputBorder.none,
                             ),
                           ),
                         ),
                       ),
                     ),
-                  ],
-                ),
-                SizedBox(
-                  height: ScreenUtil().setHeight(10),
-                ),
-                (status == true && vtagStatus == true)
-                    ? Container(
-                        padding: EdgeInsets.all(
-                          ScreenUtil().setHeight(10),
+                  ),
+                  Container(
+                    padding: EdgeInsets.fromLTRB(ScreenUtil().setWidth(10), 0,
+                        ScreenUtil().setHeight(0), 0),
+                    child: Card(
+                      child: InkWell(
+                        onTap: _myWorkfilter,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          padding: EdgeInsets.all(
+                            ScreenUtil().setHeight(15),
+                          ),
+                          child: Icon(
+                            Icons.tune,
+                            size: ScreenUtil().setHeight(45),
+                          ),
                         ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: <Widget>[
-                            Text(
-                              "QR downloaded: " + totalQR.toString(),
-                              style: TextStyle(fontSize: font12),
-                            ),
-                            Text(
-                              "Link downloaded: " + totalLink.toString(),
-                              style: TextStyle(fontSize: font12),
-                            )
-                          ],
-                        ),
-                      )
-                    : Container(),
-                SizedBox(
-                  height: ScreenUtil().setHeight(10),
-                ),
-                (status == true && vtagStatus == true)
-                    ? (nodata == true)
-                        ? Center(
-                            child: Container(
-                              height: MediaQuery.of(context).size.height * 0.6,
-                              child: EmptyListWidget(
-                                  packageImage: PackageImage.Image_2,
-                                  // title: 'No Data',
-                                  subTitle: 'No Data',
-                                  titleTextStyle: Theme.of(context)
-                                      .typography
-                                      .dense
-                                      .display1
-                                      .copyWith(color: Color(0xff9da9c7)),
-                                  subtitleTextStyle: Theme.of(context)
-                                      .typography
-                                      .dense
-                                      .body2
-                                      .copyWith(color: Color(0xffabb8d6))),
-                            ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(
+                height: ScreenUtil().setHeight(10),
+              ),
+              (status == true && vtagStatus == true)
+                  ? Container(
+                      padding: EdgeInsets.all(
+                        ScreenUtil().setHeight(10),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: <Widget>[
+                          Text(
+                            "QR downloaded: " + totalQR.toString(),
+                            style: TextStyle(fontSize: font12),
+                          ),
+                          Text(
+                            "Link downloaded: " + totalLink.toString(),
+                            style: TextStyle(fontSize: font12),
                           )
-                        // Container(
-                        //     height: ScreenUtil().setHeight(200),
-                        //     child: Center(
-                        //       child: Text(
-                        //         "No Data",
-                        //         style: TextStyle(
-                        //           fontStyle: FontStyle.italic,
-                        //           color: Colors.grey,
-                        //           fontSize: ScreenUtil()
-                        //               .setSp(50, allowFontScalingSelf: false),
-                        //         ),
-                        //       ),
-                        //     ),
-                        //   )
-                        : Flexible(
-                            child: DraggableScrollbar.arrows(
-                              alwaysVisibleScrollThumb: false,
-                              backgroundColor: Colors.blue,
-                              padding: EdgeInsets.only(right: 1.0),
-                              labelTextBuilder: (double offset) => Text(
-                                  "${(offset ~/ _itemExtent) + 1}",
-                                  style: TextStyle(color: Colors.white)),
-                              controller: _scrollController,
-                              child: ListView.builder(
-                                controller: _scrollController,
-                                itemExtent: _itemExtent,
-                                itemCount: (connection == false)
-                                    ? offlineLink.length
-                                    : myWorks.length,
-                                scrollDirection: Axis.vertical,
-                                itemBuilder: (context, int index) {
-                                  return Card(
+                        ],
+                      ),
+                    )
+                  : Container(),
+              SizedBox(
+                height: ScreenUtil().setHeight(10),
+              ),
+              (status == true && vtagStatus == true)
+                  ? (nodata == true)
+                      ? Center(
+                          child: Container(
+                            height: MediaQuery.of(context).size.height * 0.6,
+                            child: EmptyListWidget(
+                                packageImage: PackageImage.Image_2,
+                                // title: 'No Data',
+                                subTitle: 'No Data',
+                                titleTextStyle: Theme.of(context)
+                                    .typography
+                                    .dense
+                                    .display1
+                                    .copyWith(color: Color(0xff9da9c7)),
+                                subtitleTextStyle: Theme.of(context)
+                                    .typography
+                                    .dense
+                                    .body2
+                                    .copyWith(color: Color(0xffabb8d6))),
+                          ),
+                        )
+                      : Flexible(
+                          child: SmartRefresher(
+                            enablePullDown: true,
+                            enablePullUp: true,
+                            header: MaterialClassicHeader(),
+                            footer: CustomFooter(
+                              builder: (BuildContext context, LoadStatus mode) {
+                                Widget body;
+                                if (mode == LoadStatus.idle) {
+                                  if (more == true) {
+                                    body = SpinKitRing(
+                                      lineWidth: 2,
+                                      color: Colors.blue,
+                                      size: 20.0,
+                                      duration: Duration(milliseconds: 600),
+                                    );
+                                  }
+                                } else if (mode == LoadStatus.loading) {
+                                  if (more == true) {
+                                    body = SpinKitRing(
+                                      lineWidth: 2,
+                                      color: Colors.blue,
+                                      size: 20.0,
+                                      duration: Duration(milliseconds: 600),
+                                    );
+                                  }
+                                } else if (mode == LoadStatus.failed) {
+                                  body = Text("Load Failed!Click retry!");
+                                } else if (mode == LoadStatus.canLoading) {
+                                  body = Text("release to load more");
+                                } else {
+                                  body = Text("No more Data");
+                                }
+                                return Container(
+                                  height: 55.0,
+                                  child: Center(child: body),
+                                );
+                              },
+                            ),
+                            controller: _refreshController,
+                            onRefresh: _onRefresh,
+                            onLoading: _onLoading,
+                            child: ListView.builder(
+                              itemExtent: _itemExtent,
+                              itemCount: (connection == false)
+                                  ? offlineLink.length
+                                  : myWorks.length,
+                              itemBuilder: (context, int index) {
+                                return WidgetANimator(
+                                  Card(
                                     child: Column(
                                       children: <Widget>[
                                         Container(
@@ -562,7 +631,6 @@ class _MyWorksState extends State<MyWorks> {
                                                         : myWorks[index]
                                                             .category,
                                                     style: TextStyle(
-                                                      // color: Colors.blue,
                                                       fontSize: font12,
                                                     ),
                                                   ),
@@ -812,33 +880,33 @@ class _MyWorksState extends State<MyWorks> {
                                         ),
                                       ],
                                     ),
-                                  );
-                                },
-                              ),
+                                  ),
+                                );
+                              },
                             ),
-                          )
-                    : Container(
-                        height: MediaQuery.of(context).size.height * 0.5,
-                        child: Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: <Widget>[
-                              JumpingText('Loading...'),
-                              SizedBox(
-                                  height: MediaQuery.of(context).size.height *
-                                      0.02),
-                              SpinKitRing(
-                                lineWidth: 3,
-                                color: Colors.blue,
-                                size: 30.0,
-                                duration: Duration(milliseconds: 600),
-                              ),
-                            ],
                           ),
+                        )
+                  : Container(
+                      height: MediaQuery.of(context).size.height * 0.5,
+                      child: Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: <Widget>[
+                            JumpingText('Loading...'),
+                            SizedBox(
+                                height:
+                                    MediaQuery.of(context).size.height * 0.02),
+                            SpinKitRing(
+                              lineWidth: 3,
+                              color: Colors.blue,
+                              size: 30.0,
+                              duration: Duration(milliseconds: 600),
+                            ),
+                          ],
                         ),
                       ),
-              ],
-            ),
+                    ),
+            ],
           ),
         ),
       ),
@@ -1194,7 +1262,6 @@ class _MyWorksState extends State<MyWorks> {
         "id": id,
         "handler": handlers
       }).then((res) async {
-        // print(res.body);
         if (res.body == "success") {
           Toast.show("Handler updated", context,
               duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
@@ -2185,7 +2252,7 @@ class _MyWorksState extends State<MyWorks> {
               myWorks[index].id +
               '")');
     }
-    endTime = DateTime.now().millisecondsSinceEpoch;
+    // endTime = DateTime.now().millisecondsSinceEpoch;
     // int result = endTime - startTime;
     // print("MyWork Loading Time: " + result.toString());
   }
@@ -2209,7 +2276,6 @@ class _MyWorksState extends State<MyWorks> {
     var connectivityResult = await (Connectivity().checkConnectivity());
     if (connectivityResult == ConnectivityResult.wifi ||
         connectivityResult == ConnectivityResult.mobile) {
-      // _onLoading();
       companyID = prefs.getString('companyID');
       userID = prefs.getString('userID');
       level = prefs.getString('level');
@@ -2332,7 +2398,6 @@ class _MyWorksState extends State<MyWorks> {
       if (res.body == "nodata") {
         nodata = true;
         status = true;
-        // Navigator.pop(context);
         Toast.show("No Data", context,
             duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
       } else {
@@ -2854,23 +2919,5 @@ class _MyWorksState extends State<MyWorks> {
     return File("${_newPath.path}/$name.jpg");
   }
 
-  Future<Null> _handleRefresh() async {
-    var connectivityResult = await (Connectivity().checkConnectivity());
-    if (connectivityResult == ConnectivityResult.wifi ||
-        connectivityResult == ConnectivityResult.mobile) {
-      if (this.mounted) {
-        setState(() {
-          status = false;
-          total = 0;
-          category = "all";
-        });
-      }
-      myWorks.clear();
-      myWorks1.clear();
-      getLink();
-    } else {
-      Toast.show("No Internet connection, data can't load", context,
-          duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
-    }
-  }
+  Future<Null> _handleRefresh() async {}
 }

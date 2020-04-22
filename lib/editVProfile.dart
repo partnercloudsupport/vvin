@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:bouncing_widget/bouncing_widget.dart';
 import 'package:connectivity/connectivity.dart';
@@ -5,11 +6,13 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_web_browser/flutter_web_browser.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'package:progress_indicators/progress_indicators.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:toast/toast.dart';
+import 'package:uni_links/uni_links.dart';
 import 'package:vvin/VProfile.dart';
 import 'package:vvin/data.dart';
 import 'package:vvin/loader.dart';
@@ -39,8 +42,12 @@ class EditVProfile extends StatefulWidget {
   _EditVProfileState createState() => _EditVProfileState();
 }
 
+enum UniLinksType { string, uri }
+
 class _EditVProfileState extends State<EditVProfile> {
   double _scaleFactor = 1.0;
+  StreamSubscription _sub;
+  UniLinksType _type = UniLinksType.string;
   double font12 = ScreenUtil().setSp(27.6, allowFontScalingSelf: false);
   double font14 = ScreenUtil().setSp(32.2, allowFontScalingSelf: false);
   double font18 = ScreenUtil().setSp(41.4, allowFontScalingSelf: false);
@@ -357,8 +364,9 @@ class _EditVProfileState extends State<EditVProfile> {
   void initState() {
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.dark.copyWith(
-      statusBarColor: Colors.white, // Color for Android
+      statusBarColor: Colors.white,
     ));
+    check();
     _nameController.text = widget.vprofileData.name;
     _emailController.text = widget.vprofileData.email;
     _companyController.text = widget.vprofileData.company;
@@ -404,7 +412,6 @@ class _EditVProfileState extends State<EditVProfile> {
                         onPressed: () {
                           Navigator.of(context).pop();
                           Navigator.of(context).pop();
-                          // CurrentIndex index = new CurrentIndex(index: 3);
                           Navigator.of(context).pushReplacement(
                             MaterialPageRoute(
                               builder: (context) => Notifications(),
@@ -433,8 +440,19 @@ class _EditVProfileState extends State<EditVProfile> {
     super.initState();
   }
 
+  void check() async {
+    if (_type == UniLinksType.string) {
+      _sub = getLinksStream().listen((String link) {
+        // FlutterWebBrowser.openWebPage(
+        //   url: "https://" + link.substring(12),
+        // );
+      }, onError: (err) {});
+    }
+  }
+
   @override
   void dispose() {
+    if (_sub != null) _sub.cancel();
     super.dispose();
   }
 
@@ -444,8 +462,6 @@ class _EditVProfileState extends State<EditVProfile> {
     return WillPopScope(
       onWillPop: _onBackPressAppBar,
       child: Scaffold(
-        // backgroundColor: Color.fromRGBO(220, 220, 220, 1),
-        // backgroundColor: Color.fromRGBO(227,231,233, 1),
         backgroundColor: Color.fromRGBO(235, 235, 255, 1),
         appBar: PreferredSize(
           preferredSize: Size.fromHeight(

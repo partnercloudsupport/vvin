@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:bouncing_widget/bouncing_widget.dart';
@@ -6,9 +7,11 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_web_browser/flutter_web_browser.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:toast/toast.dart';
+import 'package:uni_links/uni_links.dart';
 import 'package:vvin/companyDB.dart';
 import 'package:vvin/leadsDB.dart';
 import 'package:vvin/login.dart';
@@ -33,8 +36,12 @@ class Profile extends StatefulWidget {
   _ProfileState createState() => _ProfileState();
 }
 
+enum UniLinksType { string, uri }
+
 class _ProfileState extends State<Profile> {
   double _scaleFactor = 1.0;
+  StreamSubscription _sub;
+  UniLinksType _type = UniLinksType.string;
   double font14 = ScreenUtil().setSp(32.2, allowFontScalingSelf: false);
   FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
   bool start, connection, ready;
@@ -61,6 +68,7 @@ class _ProfileState extends State<Profile> {
   @override
   void initState() {
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+    check();
     imageCache.clear();
     start = false;
     connection = false;
@@ -131,8 +139,19 @@ class _ProfileState extends State<Profile> {
     super.initState();
   }
 
+  void check() async {
+    if (_type == UniLinksType.string) {
+      _sub = getLinksStream().listen((String link) {
+        // FlutterWebBrowser.openWebPage(
+        //   url: "https://" + link.substring(12),
+        // );
+      }, onError: (err) {});
+    }
+  }
+
   @override
   void dispose() {
+    if (_sub != null) _sub.cancel();
     super.dispose();
   }
 

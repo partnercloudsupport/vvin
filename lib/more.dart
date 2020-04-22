@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:connectivity/connectivity.dart';
@@ -13,6 +14,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:toast/toast.dart';
+import 'package:uni_links/uni_links.dart';
 import 'package:vvin/companyDB.dart';
 import 'package:vvin/data.dart';
 import 'package:vvin/leadsDB.dart';
@@ -37,7 +39,11 @@ class More extends StatefulWidget {
   _MoreState createState() => _MoreState();
 }
 
+enum UniLinksType { string, uri }
+
 class _MoreState extends State<More> {
+  StreamSubscription _sub;
+  UniLinksType _type = UniLinksType.string;
   final ScrollController controller = ScrollController();
   double font14 = ScreenUtil().setSp(32.2, allowFontScalingSelf: false);
   double font18 = ScreenUtil().setSp(41.4, allowFontScalingSelf: false);
@@ -67,6 +73,7 @@ class _MoreState extends State<More> {
   @override
   void initState() {
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+    check();
     totalNotification = "0";
     currentTabIndex = 4;
     connection = false;
@@ -133,6 +140,16 @@ class _MoreState extends State<More> {
     super.initState();
   }
 
+  void check() async {
+    if (_type == UniLinksType.string) {
+      _sub = getLinksStream().listen((String link) {
+        // FlutterWebBrowser.openWebPage(
+        //   url: "https://" + link.substring(12),
+        // );
+      }, onError: (err) {});
+    }
+  }
+
   void onTapped(int index) {
     if (index != 4) {
       switch (index) {
@@ -167,6 +184,12 @@ class _MoreState extends State<More> {
           break;
       }
     }
+  }
+
+  @override
+  void dispose() {
+    if (_sub != null) _sub.cancel();
+    super.dispose();
   }
 
   @override

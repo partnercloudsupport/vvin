@@ -1,11 +1,15 @@
+import 'dart:async';
+
 import 'package:connectivity/connectivity.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_web_browser/flutter_web_browser.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:toast/toast.dart';
+import 'package:uni_links/uni_links.dart';
 import 'package:vvin/data.dart';
 import 'package:http/http.dart' as http;
 import 'package:vvin/more.dart';
@@ -19,7 +23,11 @@ class Settings extends StatefulWidget {
   _SettingsState createState() => _SettingsState();
 }
 
+enum UniLinksType { string, uri }
+
 class _SettingsState extends State<Settings> {
+  StreamSubscription _sub;
+  UniLinksType _type = UniLinksType.string;
   final ScrollController controller = ScrollController();
   FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
   double font12 = ScreenUtil().setSp(27.6, allowFontScalingSelf: false);
@@ -32,6 +40,7 @@ class _SettingsState extends State<Settings> {
   @override
   void initState() {
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+    check();
     assign = widget.setting.assign;
     unassign = widget.setting.unassign;
     _firebaseMessaging.configure(
@@ -93,6 +102,22 @@ class _SettingsState extends State<Settings> {
       },
     );
     super.initState();
+  }
+
+  void check() async {
+    if (_type == UniLinksType.string) {
+      _sub = getLinksStream().listen((String link) {
+        // FlutterWebBrowser.openWebPage(
+        //   url: "https://" + link.substring(12),
+        // );
+      }, onError: (err) {});
+    }
+  }
+
+  @override
+  void dispose() {
+    if (_sub != null) _sub.cancel();
+    super.dispose();
   }
 
   @override

@@ -1,6 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_web_browser/flutter_web_browser.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
+import 'package:uni_links/uni_links.dart';
 import 'package:vvin/data.dart';
 import 'package:vvin/vanalytics.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -13,15 +17,30 @@ class LineChart extends StatefulWidget {
   _LineChartState createState() => _LineChartState();
 }
 
+enum UniLinksType { string, uri }
+
 class _LineChartState extends State<LineChart> {
   double font14 = ScreenUtil().setSp(32.2, allowFontScalingSelf: false);
+  StreamSubscription _sub;
+  UniLinksType _type = UniLinksType.string;
 
   @override
   void initState() {
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.landscapeLeft,
     ]);
+    check();
     super.initState();
+  }
+
+  void check() async {
+    if (_type == UniLinksType.string) {
+      _sub = getLinksStream().listen((String link) {
+        // FlutterWebBrowser.openWebPage(
+        //   url: "https://" + link.substring(12),
+        // );
+      }, onError: (err) {});
+    }
   }
 
   @override
@@ -29,6 +48,7 @@ class _LineChartState extends State<LineChart> {
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
     ]);
+    if (_sub != null) _sub.cancel();
     super.dispose();
   }
 

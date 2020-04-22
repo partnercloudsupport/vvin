@@ -1,16 +1,19 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
+import 'package:bouncing_widget/bouncing_widget.dart';
 import 'package:connectivity/connectivity.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_open_whatsapp/flutter_open_whatsapp.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_web_browser/flutter_web_browser.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:progress_indicators/progress_indicators.dart';
 import 'package:toast/toast.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:uni_links/uni_links.dart';
 import 'package:vvin/data.dart';
 import 'package:firebase_ml_vision/firebase_ml_vision.dart';
 import 'package:http/http.dart' as http;
@@ -27,7 +30,12 @@ class WhatsAppForward extends StatefulWidget {
   _WhatsAppForwardState createState() => _WhatsAppForwardState();
 }
 
+enum UniLinksType { string, uri }
+
 class _WhatsAppForwardState extends State<WhatsAppForward> {
+  double _scaleFactor = 1.0;
+  StreamSubscription _sub;
+  UniLinksType _type = UniLinksType.string;
   final ScrollController controller = ScrollController();
   final TextEditingController _phonecontroller = TextEditingController();
   final TextEditingController _namecontroller = TextEditingController();
@@ -47,6 +55,7 @@ class _WhatsAppForwardState extends State<WhatsAppForward> {
 
   @override
   void initState() {
+    check();
     isSend = false;
     isImageLoaded = false;
     tempText = "";
@@ -58,6 +67,22 @@ class _WhatsAppForwardState extends State<WhatsAppForward> {
       platform = "ios";
     }
     super.initState();
+  }
+
+  void check() async {
+    if (_type == UniLinksType.string) {
+      _sub = getLinksStream().listen((String link) {
+        // FlutterWebBrowser.openWebPage(
+        //   url: "https://" + link.substring(12),
+        // );
+      }, onError: (err) {});
+    }
+  }
+
+  @override
+  void dispose() {
+    if (_sub != null) _sub.cancel();
+    super.dispose();
   }
 
   @override
@@ -141,11 +166,23 @@ class _WhatsAppForwardState extends State<WhatsAppForward> {
                                               MainAxisAlignment.start,
                                           children: <Widget>[
                                             Flexible(
-                                              child: Text(
-                                                "Snap a photo of the recipient’s name card to fill form faster.",
-                                                style: TextStyle(
-                                                    color: Colors.grey,
-                                                    fontSize: font14),
+                                              child: RichText(
+                                                text: TextSpan(children: [
+                                                  TextSpan(
+                                                    text:
+                                                        "Snap a photo of the recipient’s name card to fill form faster.",
+                                                    style: TextStyle(
+                                                        color: Colors.grey,
+                                                        fontSize: font14),
+                                                  ),
+                                                  TextSpan(
+                                                    text:
+                                                        " *Please make sure the photo is horizontally.",
+                                                    style: TextStyle(
+                                                        color: Colors.red,
+                                                        fontSize: font14),
+                                                  ),
+                                                ]),
                                               ),
                                             ),
                                           ],
@@ -713,105 +750,42 @@ class _WhatsAppForwardState extends State<WhatsAppForward> {
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: <Widget>[
-                                  Container(
-                                    width: ScreenUtil().setWidth(500),
-                                    height: ScreenUtil().setHeight(80),
-                                    margin: EdgeInsets.fromLTRB(
-                                        0,
-                                        ScreenUtil().setHeight(10),
-                                        ScreenUtil().setHeight(10),
-                                        ScreenUtil().setHeight(10)),
-                                    decoration: BoxDecoration(
-                                      color: Colors.blue,
-                                      borderRadius: BorderRadius.circular(5),
-                                      border: Border(
-                                        top: BorderSide(
-                                            width: 1, color: Colors.grey),
-                                        right: BorderSide(
-                                            width: 1, color: Colors.grey),
-                                        bottom: BorderSide(
-                                            width: 1, color: Colors.grey),
-                                        left: BorderSide(
-                                            width: 1, color: Colors.grey),
+                                  BouncingWidget(
+                                    scaleFactor: _scaleFactor,
+                                    onPressed: _checking,
+                                    child: Container(
+                                      width: MediaQuery.of(context).size.width *
+                                          0.5,
+                                      height: ScreenUtil().setHeight(80),
+                                      margin: EdgeInsets.fromLTRB(
+                                          0,
+                                          ScreenUtil().setHeight(10),
+                                          ScreenUtil().setHeight(10),
+                                          ScreenUtil().setHeight(10)),
+                                      decoration: BoxDecoration(
+                                        borderRadius:
+                                            BorderRadius.circular(10.0),
+                                        color: (isSend == false)
+                                            ? Colors.blue
+                                            : Colors.grey,
+                                        border: Border(
+                                          top: BorderSide(
+                                              width: 1, color: Colors.grey),
+                                          right: BorderSide(
+                                              width: 1, color: Colors.grey),
+                                          bottom: BorderSide(
+                                              width: 1, color: Colors.grey),
+                                          left: BorderSide(
+                                              width: 1, color: Colors.grey),
+                                        ),
                                       ),
-                                    ),
-                                    child: FlatButton(
-                                      color: (isSend == false)
-                                          ? Colors.blue
-                                          : Colors.grey,
-                                      onPressed: () {
-                                        bool send = true;
-                                        if (this.mounted) {
-                                          setState(() {
-                                            if (_phonecontroller.text.isEmpty) {
-                                              _phoneEmpty = true;
-                                              send = false;
-                                            } else {
-                                              _phoneEmpty = false;
-                                            }
-                                          });
-                                        }
-                                        if (this.mounted) {
-                                          setState(() {
-                                            if (_namecontroller.text.isEmpty) {
-                                              _nameEmpty = true;
-                                              send = false;
-                                            } else {
-                                              _nameEmpty = false;
-                                            }
-                                          });
-                                        }
-                                        if (_phoneEmpty == false) {
-                                          bool _isNumeric(String phoneNo) {
-                                            if (phoneNo.length < 10) {
-                                              return false;
-                                            }
-                                            return num.tryParse(phoneNo) !=
-                                                null;
-                                          }
-
-                                          bool valid =
-                                              _isNumeric(_phonecontroller.text);
-                                          if (valid == false) {
-                                            if (this.mounted) {
-                                              setState(() {
-                                                _phoneInvalid = true;
-                                              });
-                                            }
-                                          } else {
-                                            if (this.mounted) {
-                                              setState(() {
-                                                _phoneInvalid = false;
-                                              });
-                                            }
-                                          }
-
-                                          if (valid == true && send == true) {
-                                            String vtag;
-                                            if (seletedVTag.length == 0) {
-                                              vtag = "";
-                                            } else {
-                                              for (int i = 0;
-                                                  i < seletedVTag.length;
-                                                  i++) {
-                                                if (i == 0) {
-                                                  vtag = seletedVTag[i];
-                                                } else {
-                                                  vtag = vtag +
-                                                      "," +
-                                                      seletedVTag[i];
-                                                }
-                                              }
-                                            }
-                                            _send(vtag);
-                                          }
-                                        }
-                                      },
-                                      child: Text(
-                                        'Send',
-                                        style: TextStyle(
-                                          fontSize: font14,
-                                          color: Colors.white,
+                                      child: Center(
+                                        child: Text(
+                                          'Send',
+                                          style: TextStyle(
+                                            fontSize: font14,
+                                            color: Colors.white,
+                                          ),
                                         ),
                                       ),
                                     ),
@@ -831,6 +805,69 @@ class _WhatsAppForwardState extends State<WhatsAppForward> {
         ),
       ),
     );
+  }
+
+  void _checking() {
+    bool send = true;
+    if (this.mounted) {
+      setState(() {
+        if (_phonecontroller.text.isEmpty) {
+          _phoneEmpty = true;
+          send = false;
+        } else {
+          _phoneEmpty = false;
+        }
+      });
+    }
+    if (this.mounted) {
+      setState(() {
+        if (_namecontroller.text.isEmpty) {
+          _nameEmpty = true;
+          send = false;
+        } else {
+          _nameEmpty = false;
+        }
+      });
+    }
+    if (_phoneEmpty == false) {
+      bool _isNumeric(String phoneNo) {
+        if (phoneNo.length < 10) {
+          return false;
+        }
+        return num.tryParse(phoneNo) != null;
+      }
+
+      bool valid = _isNumeric(_phonecontroller.text);
+      if (valid == false) {
+        if (this.mounted) {
+          setState(() {
+            _phoneInvalid = true;
+          });
+        }
+      } else {
+        if (this.mounted) {
+          setState(() {
+            _phoneInvalid = false;
+          });
+        }
+      }
+
+      if (valid == true && send == true) {
+        String vtag;
+        if (seletedVTag.length == 0) {
+          vtag = "";
+        } else {
+          for (int i = 0; i < seletedVTag.length; i++) {
+            if (i == 0) {
+              vtag = seletedVTag[i];
+            } else {
+              vtag = vtag + "," + seletedVTag[i];
+            }
+          }
+        }
+        _send(vtag);
+      }
+    }
   }
 
   void _onLoading1() {

@@ -167,23 +167,6 @@ class _Forgot extends State<Forgot> {
                       ),
                     ),
                   ),
-                  // MaterialButton(
-                  //   shape: RoundedRectangleBorder(
-                  //       borderRadius: BorderRadius.circular(20.0)),
-                  //   minWidth: double.infinity,
-                  //   height: ScreenUtil().setHeight(80),
-                  //   child: Text(
-                  //     'Send',
-                  //     style: TextStyle(
-                  //       fontSize:
-                  //           font15,
-                  //     ),
-                  //   ),
-                  //   color: Color.fromRGBO(34, 175, 240, 1),
-                  //   textColor: Colors.white,
-                  //   elevation: 9,
-                  //   onPressed: _onForgot,
-                  // ),
                 ],
               ),
             ),

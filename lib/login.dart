@@ -504,7 +504,7 @@ class _Default extends State<Default> {
               width: MediaQuery.of(context).size.width * 0.5,
               height: ScreenUtil().setHeight(80),
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(20.0),
+                borderRadius: BorderRadius.circular(10.0),
                 color: Color.fromRGBO(34, 175, 240, 1),
               ),
               child: Center(

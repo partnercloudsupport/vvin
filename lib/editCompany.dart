@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:bouncing_widget/bouncing_widget.dart';
@@ -6,10 +7,12 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_web_browser/flutter_web_browser.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:toast/toast.dart';
+import 'package:uni_links/uni_links.dart';
 import 'package:vvin/companyDB.dart';
 import 'package:vvin/more.dart';
 import 'package:vvin/notifications.dart';
@@ -34,8 +37,12 @@ class EditCompany extends StatefulWidget {
   _EditCompanyState createState() => _EditCompanyState();
 }
 
+enum UniLinksType { string, uri }
+
 class _EditCompanyState extends State<EditCompany> {
   double _scaleFactor = 1.0;
+  StreamSubscription _sub;
+  UniLinksType _type = UniLinksType.string;
   double font13 = ScreenUtil().setSp(29.9, allowFontScalingSelf: false);
   double font14 = ScreenUtil().setSp(32.2, allowFontScalingSelf: false);
   double font15 = ScreenUtil().setSp(34.5, allowFontScalingSelf: false);
@@ -60,6 +67,7 @@ class _EditCompanyState extends State<EditCompany> {
 
   @override
   void initState() {
+    check();
     companyID = widget.company.companyID;
     userID = widget.company.userID;
     level = widget.company.level;
@@ -72,7 +80,7 @@ class _EditCompanyState extends State<EditCompany> {
     _addressController.text = widget.company.address;
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.dark.copyWith(
-      statusBarColor: Colors.white, // Color for Android
+      statusBarColor: Colors.white,
     ));
     _firebaseMessaging.configure(
       onMessage: (Map<String, dynamic> message) async {
@@ -107,7 +115,6 @@ class _EditCompanyState extends State<EditCompany> {
                         onPressed: () {
                           Navigator.of(context).pop();
                           Navigator.of(context).pop();
-                          // CurrentIndex index = new CurrentIndex(index: 3);
                           Navigator.of(context).pushReplacement(
                             MaterialPageRoute(
                               builder: (context) => Notifications(),
@@ -136,8 +143,19 @@ class _EditCompanyState extends State<EditCompany> {
     super.initState();
   }
 
+  void check() async {
+    if (_type == UniLinksType.string) {
+      _sub = getLinksStream().listen((String link) {
+        // FlutterWebBrowser.openWebPage(
+        //   url: "https://" + link.substring(12),
+        // );
+      }, onError: (err) {});
+    }
+  }
+
   @override
   void dispose() {
+    if (_sub != null) _sub.cancel();
     super.dispose();
   }
 
@@ -147,8 +165,6 @@ class _EditCompanyState extends State<EditCompany> {
     return WillPopScope(
       onWillPop: _onBackPressAppBar,
       child: Scaffold(
-        // backgroundColor: Color.fromRGBO(220, 220, 220, 1),
-        // backgroundColor: Color.fromRGBO(227,231,233, 1),
         backgroundColor: Color.fromRGBO(235, 235, 255, 1),
         appBar: PreferredSize(
           preferredSize: Size.fromHeight(
@@ -282,7 +298,6 @@ class _EditCompanyState extends State<EditCompany> {
                       child: TextField(
                         style: TextStyle(
                           fontFamily: 'Roboto',
-                          // height: ScreenUtil().setHeight(2),
                           height: 1,
                           fontSize: font15,
                         ),
@@ -317,7 +332,6 @@ class _EditCompanyState extends State<EditCompany> {
                     ),
                     Container(
                       height: ScreenUtil().setHeight(55),
-                      // color: Color.fromARGB(50, 220, 220, 220),
                       color: Color.fromRGBO(235, 235, 255, 1),
                       child: TextField(
                         style: TextStyle(
@@ -356,7 +370,6 @@ class _EditCompanyState extends State<EditCompany> {
                     ),
                     Container(
                       height: ScreenUtil().setHeight(55),
-                      // color: Color.fromARGB(50, 220, 220, 220),
                       color: Color.fromRGBO(235, 235, 255, 1),
                       child: TextField(
                         style: TextStyle(
@@ -436,7 +449,6 @@ class _EditCompanyState extends State<EditCompany> {
                         ScreenUtil().setHeight(0),
                       ),
                       height: ScreenUtil().setHeight(240),
-                      // color: Color.fromARGB(50, 220, 220, 220),
                       color: Color.fromRGBO(235, 235, 255, 1),
                       child: TextField(
                         maxLines: 5,
@@ -629,7 +641,6 @@ class _EditCompanyState extends State<EditCompany> {
             // print("Update company profile: " + (res.statusCode).toString());
             // print("Return from internet:" + res.body);
             if (res.body == "success") {
-              // CurrentIndex index = new CurrentIndex(index: 4);
               Navigator.of(context).pushReplacement(
                 MaterialPageRoute(
                   builder: (context) => More(),
@@ -692,7 +703,7 @@ class _EditCompanyState extends State<EditCompany> {
     final _response = await http.get(url);
     if (_response.statusCode == 200) {
       final _file = await _localImage(path: path, name: name);
-      final _saveFile = await _file.writeAsBytes(_response.bodyBytes);
+      await _file.writeAsBytes(_response.bodyBytes);
       // Logger().i("File write complete. File Path ${_saveFile.path}");
     } else {
       // Logger().e(_response.statusCode);

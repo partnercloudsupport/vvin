@@ -5,7 +5,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:connectivity/connectivity.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_ml_vision/firebase_ml_vision.dart';
-import 'package:flutter_native_image/flutter_native_image.dart';
+import 'package:flutter_web_browser/flutter_web_browser.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -14,6 +14,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:progress_indicators/progress_indicators.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:toast/toast.dart';
+import 'package:uni_links/uni_links.dart';
 import 'package:vvin/data.dart';
 import 'package:vvin/loader.dart';
 import 'package:vvin/editVProfile.dart';
@@ -38,10 +39,14 @@ class VProfile extends StatefulWidget {
   _VProfileState createState() => _VProfileState();
 }
 
+enum UniLinksType { string, uri }
+
 class _VProfileState extends State<VProfile>
     with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   // final SpeechToText speech = SpeechToText();
   double _scaleFactor = 1.0;
+  StreamSubscription _sub;
+  UniLinksType _type = UniLinksType.string;
   FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
   final TextEditingController _addRemark = TextEditingController();
   TabController controller;
@@ -95,6 +100,7 @@ class _VProfileState extends State<VProfile>
     super.initState();
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
     controller = TabController(vsync: this, length: 3, initialIndex: 0);
+    check();
     name = widget.vdata.name;
     phoneNo = widget.vdata.phoneNo;
     status = widget.vdata.status;
@@ -177,9 +183,20 @@ class _VProfileState extends State<VProfile>
     );
   }
 
+  void check() async {
+    if (_type == UniLinksType.string) {
+      _sub = getLinksStream().listen((String link) {
+        // FlutterWebBrowser.openWebPage(
+        //   url: "https://" + link.substring(12),
+        // );
+      }, onError: (err) {});
+    }
+  }
+
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    if (_sub != null) _sub.cancel();
     super.dispose();
   }
 

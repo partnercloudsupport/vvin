@@ -9,8 +9,6 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 void main() => runApp(SplashScreen());
 
-enum UniLinksType { string, uri }
-
 class SplashScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -21,6 +19,8 @@ class SplashScreen extends StatelessWidget {
     );
   }
 }
+
+enum UniLinksType { string, uri }
 
 class Checking extends StatefulWidget {
   @override
@@ -33,7 +33,7 @@ class _CheckingState extends State<Checking> {
   @override
   void initState() {
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.dark.copyWith(
-      statusBarColor: Colors.white, // Color for Android
+      statusBarColor: Colors.white,
     ));
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
     mainScreen();
@@ -83,10 +83,8 @@ class _CheckingState extends State<Checking> {
         try {
           initialLink = await getInitialLink();
           if (initialLink != null) {
-            print('initial link: $initialLink');
             prefs.setString('url', '1');
             Future.delayed(const Duration(seconds: 1), () {
-              // CurrentIndex index = new CurrentIndex(index: 0);
               Navigator.of(context).pushReplacement(
                 MaterialPageRoute(
                   builder: (context) => VAnalytics(),
@@ -95,7 +93,6 @@ class _CheckingState extends State<Checking> {
             });
           } else {
             Future.delayed(const Duration(seconds: 1), () {
-              // CurrentIndex index = new CurrentIndex(index: 2);
               Navigator.of(context).pushReplacement(
                 MaterialPageRoute(
                   builder: (context) => MyWorks(),
@@ -106,8 +103,20 @@ class _CheckingState extends State<Checking> {
         } catch (e) {}
       }
     } else {
-      Navigator.push(context, MaterialPageRoute(builder: (context) => Login()));
+      if (_type == UniLinksType.string) {
+        String initialLink;
+        try {
+          initialLink = await getInitialLink();
+          if (initialLink != null) {
+            prefs.setString('url', '1');
+            Navigator.push(
+                context, MaterialPageRoute(builder: (context) => Login()));
+          } else {
+            Navigator.push(
+                context, MaterialPageRoute(builder: (context) => Login()));
+          }
+        } catch (e) {}
+      }
     }
-    // Navigator.push(context, MaterialPageRoute(builder: (context) => Test()));
   }
 }

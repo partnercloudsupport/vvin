@@ -7,14 +7,17 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_web_browser/flutter_web_browser.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:progress_indicators/progress_indicators.dart';
+import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:toast/toast.dart';
+import 'package:uni_links/uni_links.dart';
+import 'package:vvin/animator.dart';
 import 'package:vvin/data.dart';
-import 'package:vvin/loader.dart';
 import 'package:vvin/more.dart';
 import 'package:vvin/myworks.dart';
 import 'package:vvin/notifications.dart';
@@ -26,7 +29,6 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_open_whatsapp/flutter_open_whatsapp.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:draggable_scrollbar/draggable_scrollbar.dart';
 
 class VData extends StatefulWidget {
   const VData({Key key}) : super(key: key);
@@ -35,6 +37,8 @@ class VData extends StatefulWidget {
   _VDataState createState() => _VDataState();
 }
 
+enum UniLinksType { string, uri }
+
 class _VDataState extends State<VData> {
   double _scaleFactor = 1.0;
   double font11 = ScreenUtil().setSp(25.3, allowFontScalingSelf: false);
@@ -42,8 +46,11 @@ class _VDataState extends State<VData> {
   double font14 = ScreenUtil().setSp(32.2, allowFontScalingSelf: false);
   double font18 = ScreenUtil().setSp(41.4, allowFontScalingSelf: false);
   FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
-  GlobalKey<RefreshIndicatorState> refreshKey;
-  bool connection, nodata, link, vData, executive;
+  RefreshController _refreshController =
+      RefreshController(initialRefresh: false);
+  StreamSubscription _sub;
+  UniLinksType _type = UniLinksType.string;
+  bool connection, nodata, link, vData, executive, more;
   List<Links> linksID = [];
   List<VDataDetails> vDataDetails = [];
   List<VDataDetails> vDataDetails1 = [];
@@ -123,9 +130,10 @@ class _VDataState extends State<VData> {
   @override
   void initState() {
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-    refreshKey = GlobalKey<RefreshIndicatorState>();
+    check();
     totalNotification = "0";
     currentTabIndex = 1;
+    more = true;
     connection = false;
     nodata = false;
     vData = false;
@@ -141,14 +149,6 @@ class _VDataState extends State<VData> {
     apps = "All";
     search = "";
     minimumDate = "2017-12-01";
-    _scrollController.addListener(() {
-      if (_scrollController.position.pixels ==
-          _scrollController.position.maxScrollExtent) {
-        if (vDataDetails.length != total) {
-          _getMoreVData();
-        }
-      }
-    });
     _firebaseMessaging.configure(
       onMessage: (Map<String, dynamic> message) async {
         bool noti = false;
@@ -181,7 +181,6 @@ class _VDataState extends State<VData> {
                         onPressed: () {
                           Navigator.of(context).pop();
                           Navigator.of(context).pop();
-                          // CurrentIndex index = new CurrentIndex(index: 3);
                           Navigator.of(context).pushReplacement(
                             MaterialPageRoute(
                               builder: (context) => Notifications(),
@@ -208,6 +207,16 @@ class _VDataState extends State<VData> {
       },
     );
     super.initState();
+  }
+
+  void check() async {
+    if (_type == UniLinksType.string) {
+      _sub = getLinksStream().listen((String link) {
+        // FlutterWebBrowser.openWebPage(
+        //   url: "https://" + link.substring(12),
+        // );
+      }, onError: (err) {});
+    }
   }
 
   void onTapped(int index) {
@@ -247,6 +256,7 @@ class _VDataState extends State<VData> {
 
   @override
   void dispose() {
+    if (_sub != null) _sub.cancel();
     super.dispose();
   }
 
@@ -373,155 +383,179 @@ class _VDataState extends State<VData> {
                     fontWeight: FontWeight.bold),
               )),
         ),
-        body: RefreshIndicator(
-          key: refreshKey,
-          onRefresh: _handleRefresh,
-          child: Container(
-            padding: EdgeInsets.fromLTRB(0, ScreenUtil().setHeight(20), 0, 0),
-            child: Column(
-              children: <Widget>[
-                Row(
-                  children: <Widget>[
-                    Expanded(
-                      child: Container(
-                        child: Card(
-                          child: Container(
-                            margin: EdgeInsets.only(
-                              right: ScreenUtil().setHeight(20),
-                              left: ScreenUtil().setHeight(20),
-                            ),
-                            height: ScreenUtil().setHeight(75),
-                            child: TextField(
-                              onChanged: _search,
-                              style: TextStyle(
-                                fontSize: font14,
-                              ),
-                              decoration: InputDecoration(
-                                contentPadding:
-                                    EdgeInsets.symmetric(vertical: 3),
-                                hintText: "Search",
-                                suffix: IconButton(
-                                  iconSize: ScreenUtil().setHeight(40),
-                                  icon: Icon(Icons.keyboard_hide),
-                                  onPressed: () {
-                                    FocusScope.of(context)
-                                        .requestFocus(new FocusNode());
-                                  },
-                                ),
-                                suffixIcon: Icon(
-                                  Icons.search,
-                                  size: ScreenUtil().setHeight(50),
-                                ),
-                                border: InputBorder.none,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    Container(
-                      padding: EdgeInsets.fromLTRB(ScreenUtil().setHeight(10),
-                          0, ScreenUtil().setHeight(0), 0),
+        body: Container(
+          padding: EdgeInsets.fromLTRB(0, ScreenUtil().setHeight(20), 0, 0),
+          child: Column(
+            children: <Widget>[
+              Row(
+                children: <Widget>[
+                  Expanded(
+                    child: Container(
                       child: Card(
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(100),
-                          onTap: (connection == true) ? _filter : _noInternet,
-                          child: Container(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(10),
+                        child: Container(
+                          margin: EdgeInsets.only(
+                            right: ScreenUtil().setHeight(20),
+                            left: ScreenUtil().setHeight(20),
+                          ),
+                          height: ScreenUtil().setHeight(75),
+                          child: TextField(
+                            onChanged: _search,
+                            style: TextStyle(
+                              fontSize: font14,
                             ),
-                            padding: EdgeInsets.all(
-                              ScreenUtil().setHeight(18),
-                            ),
-                            child: Icon(
-                              Icons.tune,
-                              size: ScreenUtil().setHeight(40),
+                            decoration: InputDecoration(
+                              contentPadding: EdgeInsets.symmetric(vertical: 3),
+                              hintText: "Search",
+                              suffix: IconButton(
+                                iconSize: ScreenUtil().setHeight(40),
+                                icon: Icon(Icons.keyboard_hide),
+                                onPressed: () {
+                                  FocusScope.of(context)
+                                      .requestFocus(new FocusNode());
+                                },
+                              ),
+                              suffixIcon: Icon(
+                                Icons.search,
+                                size: ScreenUtil().setHeight(50),
+                              ),
+                              border: InputBorder.none,
                             ),
                           ),
                         ),
                       ),
                     ),
-                  ],
-                ),
-                SizedBox(
-                  height: ScreenUtil().setHeight(5),
-                ),
-                Container(
-                  padding:
-                      EdgeInsets.fromLTRB(ScreenUtil().setHeight(10), 0, 0, 0),
-                  child: Row(
-                    children: <Widget>[
-                      Text("Total Entries: ",
-                          style:
-                              TextStyle(color: Colors.grey, fontSize: font12)),
-                      Text(
-                          (connection == true)
-                              ? (total == null) ? "" : total.toString()
-                              : (link == true && vData == true)
-                                  ? (offlineVData.length != 0)
-                                      ? offlineVData[0]['total']
-                                      : "0"
-                                  : "data loading...",
-                          style: TextStyle(fontSize: font12)),
-                    ],
                   ),
-                ),
-                SizedBox(
-                  height: ScreenUtil().setHeight(5),
-                ),
-                (link == true && vData == true)
-                    ? (nodata == true)
-                        ? Center(
-                            child: Container(
-                              height: MediaQuery.of(context).size.height * 0.6,
-                              child: EmptyListWidget(
-                                  packageImage: PackageImage.Image_2,
-                                  // title: 'No Data',
-                                  subTitle: 'No Data',
-                                  titleTextStyle: Theme.of(context)
-                                      .typography
-                                      .dense
-                                      .display1
-                                      .copyWith(color: Color(0xff9da9c7)),
-                                  subtitleTextStyle: Theme.of(context)
-                                      .typography
-                                      .dense
-                                      .body2
-                                      .copyWith(color: Color(0xffabb8d6))),
-                            ),
-                          )
-                        : Flexible(
-                            child: DraggableScrollbar.arrows(
-                              alwaysVisibleScrollThumb: false,
-                              backgroundColor: Colors.blue,
-                              padding: EdgeInsets.only(right: 1.0),
-                              labelTextBuilder: (double offset) => Text(
-                                  "${(offset ~/ _itemExtent) + 1}",
-                                  style: TextStyle(color: Colors.white)),
-                              controller: _scrollController,
-                              child: ListView.builder(
-                                controller: _scrollController,
-                                itemExtent: _itemExtent,
-                                itemCount: (connection == false)
-                                    ? offlineVData.length
-                                    : vDataDetails.length + 1,
-                                scrollDirection: Axis.vertical,
-                                itemBuilder: (context, int index) {
-                                  if (connection == true &&
-                                      index == vDataDetails.length) {
-                                    if (index != total) {
-                                      // return CupertinoActivityIndicator();
-                                      return SpinKitRing(
-                                          lineWidth: 3,
-                                          color: Colors.blue,
-                                          size: 30.0,
-                                          duration:
-                                              Duration(milliseconds: 600));
-                                    } else {
-                                      return null;
-                                    }
+                  Container(
+                    padding: EdgeInsets.fromLTRB(ScreenUtil().setHeight(10), 0,
+                        ScreenUtil().setHeight(0), 0),
+                    child: Card(
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(100),
+                        onTap: (connection == true) ? _filter : _noInternet,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          padding: EdgeInsets.all(
+                            ScreenUtil().setHeight(18),
+                          ),
+                          child: Icon(
+                            Icons.tune,
+                            size: ScreenUtil().setHeight(40),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(
+                height: ScreenUtil().setHeight(5),
+              ),
+              Container(
+                padding:
+                    EdgeInsets.fromLTRB(ScreenUtil().setHeight(10), 0, 0, 0),
+                child: (total == null)
+                    ? Row(
+                        children: <Widget>[
+                          Text("Total Entries: ",
+                              style: TextStyle(
+                                  color: Colors.grey, fontSize: font12)),
+                          JumpingText('Loading...',
+                              style: TextStyle(fontSize: font12)),
+                        ],
+                      )
+                    : Row(
+                        children: <Widget>[
+                          Text("Total Entries: ",
+                              style: TextStyle(
+                                  color: Colors.grey, fontSize: font12)),
+                          Text(
+                              (connection == true)
+                                  ? (total == null) ? "" : total.toString()
+                                  : (link == true && vData == true)
+                                      ? (offlineVData.length != 0)
+                                          ? offlineVData[0]['total']
+                                          : "0"
+                                      : "data loading...",
+                              style: TextStyle(fontSize: font12)),
+                        ],
+                      ),
+              ),
+              SizedBox(
+                height: ScreenUtil().setHeight(5),
+              ),
+              (link == true && vData == true)
+                  ? (nodata == true)
+                      ? Center(
+                          child: Container(
+                            height: MediaQuery.of(context).size.height * 0.6,
+                            child: EmptyListWidget(
+                                packageImage: PackageImage.Image_2,
+                                // title: 'No Data',
+                                subTitle: 'No Data',
+                                titleTextStyle: Theme.of(context)
+                                    .typography
+                                    .dense
+                                    .display1
+                                    .copyWith(color: Color(0xff9da9c7)),
+                                subtitleTextStyle: Theme.of(context)
+                                    .typography
+                                    .dense
+                                    .body2
+                                    .copyWith(color: Color(0xffabb8d6))),
+                          ),
+                        )
+                      : Flexible(
+                          child: SmartRefresher(
+                            enablePullDown: true,
+                            enablePullUp: true,
+                            header: MaterialClassicHeader(),
+                            footer: CustomFooter(
+                              builder: (BuildContext context, LoadStatus mode) {
+                                Widget body;
+                                if (mode == LoadStatus.idle) {
+                                  if (more == true) {
+                                    body = SpinKitRing(
+                                      lineWidth: 2,
+                                      color: Colors.blue,
+                                      size: 20.0,
+                                      duration: Duration(milliseconds: 600),
+                                    );
                                   }
-                                  return Card(
+                                } else if (mode == LoadStatus.loading) {
+                                  if (more == true) {
+                                    body = SpinKitRing(
+                                      lineWidth: 2,
+                                      color: Colors.blue,
+                                      size: 20.0,
+                                      duration: Duration(milliseconds: 600),
+                                    );
+                                  }
+                                } else if (mode == LoadStatus.failed) {
+                                  body = Text("Load Failed!Click retry!");
+                                } else if (mode == LoadStatus.canLoading) {
+                                  body = Text("release to load more");
+                                } else {
+                                  body = Text("No more Data");
+                                }
+                                return Container(
+                                  height: 55.0,
+                                  child: Center(child: body),
+                                );
+                              },
+                            ),
+                            controller: _refreshController,
+                            onRefresh: _onRefresh,
+                            onLoading: _onLoading,
+                            child: ListView.builder(
+                              itemExtent: _itemExtent,
+                              itemCount: (connection == false)
+                                  ? offlineVData.length
+                                  : vDataDetails.length,
+                              itemBuilder: (context, int index) {
+                                return WidgetANimator(
+                                  Card(
                                     child: Container(
                                       child: Column(
                                         children: <Widget>[
@@ -909,37 +943,223 @@ class _VDataState extends State<VData> {
                                         ],
                                       ),
                                     ),
-                                  );
-                                },
-                              ),
+                                  ),
+                                );
+                              },
                             ),
-                          )
-                    : Container(
-                        height: MediaQuery.of(context).size.height * 0.6,
-                        child: Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: <Widget>[
-                              JumpingText('Loading...'),
-                              SizedBox(
-                                  height: MediaQuery.of(context).size.height *
-                                      0.02),
-                              SpinKitRing(
-                                lineWidth: 3,
-                                color: Colors.blue,
-                                size: 30.0,
-                                duration: Duration(milliseconds: 600),
-                              ),
-                            ],
                           ),
+                        )
+                  : Container(
+                      height: MediaQuery.of(context).size.height * 0.6,
+                      child: Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: <Widget>[
+                            JumpingText('Loading...'),
+                            SizedBox(
+                                height:
+                                    MediaQuery.of(context).size.height * 0.02),
+                            SpinKitRing(
+                              lineWidth: 3,
+                              color: Colors.blue,
+                              size: 30.0,
+                              duration: Duration(milliseconds: 600),
+                            ),
+                          ],
                         ),
                       ),
-              ],
-            ),
+                    ),
+            ],
           ),
         ),
       ),
     );
+  }
+
+  void _onRefresh() async {
+    var connectivityResult = await (Connectivity().checkConnectivity());
+    if (connectivityResult == ConnectivityResult.wifi ||
+        connectivityResult == ConnectivityResult.mobile) {
+      if (this.mounted) {
+        setState(() {
+          connection = false;
+          vData = false;
+          link = false;
+          total = null;
+        });
+      }
+
+      http.post(urlVData, body: {
+        "companyID": companyID,
+        "level": level,
+        "userID": userID,
+        "user_type": userType,
+        "type": type,
+        "channel": channel,
+        "apps": apps,
+        "link_id": link_id,
+        "status": _byStatus,
+        "executive": _byExecutive,
+        "search": search,
+        "start_date": minimumDate,
+        "end_date": DateTime.now().toString().substring(0, 10),
+        "count": "0",
+        "offline": "no"
+      }).then((res) {
+        // print("VData status:" + (res.statusCode).toString());
+        // print("VData body: " + res.body.toString());
+        if (res.body == "nodata") {
+          if (this.mounted) {
+            setState(() {
+              vData = true;
+              connection = true;
+              nodata = true;
+              total = 0;
+            });
+          }
+        } else {
+          var jsonData = json.decode(res.body);
+          if (this.mounted) {
+            setState(() {
+              total = jsonData[0]['total'];
+            });
+          }
+          vDataDetails.clear();
+          vDataDetails1.clear();
+          for (var data in jsonData) {
+            VDataDetails vdata = VDataDetails(
+              date: data['date'],
+              name: data['name'] ?? "",
+              phoneNo: data['phone_number'],
+              remark: data['remark'] ?? "-",
+              status: checkStatus(data['status']),
+              type: data['type'],
+              app: data['app'],
+              channel: data['channel'],
+              link: data['link_type'] ?? "" + data['link'],
+              handler: data['link'],
+            );
+            vDataDetails.add(vdata);
+            vDataDetails1.add(vdata);
+          }
+          if (this.mounted) {
+            setState(() {
+              vData = true;
+              connection = true;
+            });
+          }
+        }
+      }).catchError((err) {
+        print("Get data error: " + (err).toString());
+      });
+
+      http.post(urlLinks, body: {
+        "companyID": companyID,
+        "level": level,
+        "userID": userID,
+        "user_type": userType,
+      }).then((res) {
+        links.clear();
+        links.add("All Links");
+        if (res.body != "nodata") {
+          var jsonData = json.decode(res.body);
+          Links allLinks = Links(
+            link_type: "",
+            link: "All Links",
+            link_id: "All Links",
+            position: 0,
+          );
+          linksID.add(allLinks);
+          for (int i = 0; i < jsonData.length; i++) {
+            Links linkID = Links(
+              link_type: jsonData[i]['link_type'],
+              link: jsonData[i]['link'] ?? "",
+              link_id: jsonData[i]['link_id'],
+              position: i + 1,
+            );
+            linksID.add(linkID);
+            String link = jsonData[i]['link_type'].toString() +
+                jsonData[i]['link'].toString();
+            links.add(link);
+          }
+        }
+        _startDate = DateFormat("yyyy-MM-dd").parse(minimumDate);
+        _endDate = DateTime.now();
+        if (this.mounted) {
+          setState(() {
+            link = true;
+          });
+        }
+      }).catchError((err) {
+        print("Get link error: " + (err).toString());
+      });
+      _refreshController.refreshCompleted();
+    } else {
+      Toast.show("No Internet connection, data can't load", context,
+          duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
+      _refreshController.refreshCompleted();
+    }
+  }
+
+  void _onLoading() {
+    http.post(urlVData, body: {
+      "companyID": companyID,
+      "level": level,
+      "userID": userID,
+      "user_type": userType,
+      "type": type,
+      "channel": channel,
+      "apps": apps,
+      "link_id": link_id,
+      "status": _byStatus,
+      "executive": _byExecutive,
+      "search": search,
+      "start_date": _startDate.toString().substring(0, 10),
+      "end_date": _endDate.toString().substring(0, 10),
+      "count": vDataDetails.length.toString(),
+      "offline": "no"
+    }).then((res) {
+      // print("VData status:" + (res.statusCode).toString());
+      // print("Get More VData body: " + res.body.toString());
+      if (res.body == "nodata") {
+        if (this.mounted) {
+          setState(() {
+            connection = true;
+          });
+        }
+      } else {
+        var jsonData = json.decode(res.body);
+        if (this.mounted) {
+          setState(() {
+            total = jsonData[0]['total'];
+          });
+        }
+        for (var data in jsonData) {
+          VDataDetails vdata = VDataDetails(
+            date: data['date'],
+            name: data['name'] ?? "",
+            phoneNo: data['phone_number'],
+            remark: data['remark'] ?? "-",
+            status: checkStatus(data['status']),
+            type: data['type'],
+            app: data['app'],
+            channel: data['channel'],
+            link: data['link_type'] ?? "" + data['link'],
+            handler: data['link'],
+          );
+          vDataDetails.add(vdata);
+          vDataDetails1.add(vdata);
+        }
+        if (this.mounted) {
+          setState(() {
+            connection = true;
+          });
+        }
+      }
+    }).catchError((err) {
+      print("Get more data error: " + (err).toString());
+    });
+    _refreshController.loadComplete();
   }
 
   void _redirectVProfile(int index) async {
@@ -2455,7 +2675,6 @@ class _VDataState extends State<VData> {
     var connectivityResult = await (Connectivity().checkConnectivity());
     if (connectivityResult == ConnectivityResult.wifi ||
         connectivityResult == ConnectivityResult.mobile) {
-      // _onLoading();
       getPreference();
     } else {
       offline();
@@ -2650,66 +2869,6 @@ class _VDataState extends State<VData> {
     });
   }
 
-  void _getMoreVData() {
-    http.post(urlVData, body: {
-      "companyID": companyID,
-      "level": level,
-      "userID": userID,
-      "user_type": userType,
-      "type": type,
-      "channel": channel,
-      "apps": apps,
-      "link_id": link_id,
-      "status": _byStatus,
-      "executive": _byExecutive,
-      "search": search,
-      "start_date": _startDate.toString().substring(0, 10),
-      "end_date": _endDate.toString().substring(0, 10),
-      "count": vDataDetails.length.toString(),
-      "offline": "no"
-    }).then((res) {
-      // print("VData status:" + (res.statusCode).toString());
-      // print("Get More VData body: " + res.body.toString());
-      if (res.body == "nodata") {
-        if (this.mounted) {
-          setState(() {
-            connection = true;
-          });
-        }
-      } else {
-        var jsonData = json.decode(res.body);
-        if (this.mounted) {
-          setState(() {
-            total = jsonData[0]['total'];
-          });
-        }
-        for (var data in jsonData) {
-          VDataDetails vdata = VDataDetails(
-            date: data['date'],
-            name: data['name'] ?? "",
-            phoneNo: data['phone_number'],
-            remark: data['remark'] ?? "-",
-            status: checkStatus(data['status']),
-            type: data['type'],
-            app: data['app'],
-            channel: data['channel'],
-            link: data['link_type'] ?? "" + data['link'],
-            handler: data['link'],
-          );
-          vDataDetails.add(vdata);
-          vDataDetails1.add(vdata);
-        }
-        if (this.mounted) {
-          setState(() {
-            connection = true;
-          });
-        }
-      }
-    }).catchError((err) {
-      print("Get more data error: " + (err).toString());
-    });
-  }
-
   void getLinks() {
     http.post(urlLinks, body: {
       "companyID": companyID,
@@ -2749,7 +2908,6 @@ class _VDataState extends State<VData> {
         });
       }
       if (link == true && vData == true && executive == true) {
-        // Navigator.pop(context);
         getOfflineData();
         endTime = DateTime.now().millisecondsSinceEpoch;
         int result = endTime - startTime;
@@ -2789,7 +2947,6 @@ class _VDataState extends State<VData> {
         });
       }
       if (link == true && vData == true && executive == true) {
-        // Navigator.pop(context);
         getOfflineData();
         endTime = DateTime.now().millisecondsSinceEpoch;
         int result = endTime - startTime;
@@ -2874,21 +3031,21 @@ class _VDataState extends State<VData> {
     }
   }
 
-  void _onLoading() {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => Dialog(
-        elevation: 0.0,
-        backgroundColor: Colors.transparent,
-        child: Container(
-          width: 50.0,
-          height: 50.0,
-          child: Loader(),
-        ),
-      ),
-    );
-  }
+  // void _onLoading() {
+  //   showDialog(
+  //     context: context,
+  //     barrierDismissible: false,
+  //     builder: (_) => Dialog(
+  //       elevation: 0.0,
+  //       backgroundColor: Colors.transparent,
+  //       child: Container(
+  //         width: 50.0,
+  //         height: 50.0,
+  //         child: Loader(),
+  //       ),
+  //     ),
+  //   );
+  // }
 
   void _noInternet() {
     Toast.show("You are in offline mode, filter feature is not allow", context,
@@ -2900,7 +3057,6 @@ class _VDataState extends State<VData> {
     if (connectivityResult == ConnectivityResult.wifi ||
         connectivityResult == ConnectivityResult.mobile) {
       Navigator.pop(context);
-
       startDate = _startDate.toString().substring(0, 10);
       endDate = _endDate.toString().substring(0, 10);
       for (int i = 0; i < linksID.length; i++) {
@@ -3112,25 +3268,25 @@ class _VDataState extends State<VData> {
   //   return result;
   // }
 
-  Future<Null> _handleRefresh() async {
-    var connectivityResult = await (Connectivity().checkConnectivity());
-    if (connectivityResult == ConnectivityResult.wifi ||
-        connectivityResult == ConnectivityResult.mobile) {
-      if (this.mounted) {
-        setState(() {
-          connection = false;
-          vData = false;
-          link = false;
-          total = null;
-        });
-      }
-      getData();
-      getLinks();
-    } else {
-      Toast.show("No Internet connection, data can't load", context,
-          duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
-    }
-  }
+  // Future<Null> _handleRefresh() async {
+  //   var connectivityResult = await (Connectivity().checkConnectivity());
+  //   if (connectivityResult == ConnectivityResult.wifi ||
+  //       connectivityResult == ConnectivityResult.mobile) {
+  //     if (this.mounted) {
+  //       setState(() {
+  //         connection = false;
+  //         vData = false;
+  //         link = false;
+  //         total = null;
+  //       });
+  //     }
+  //     getData();
+  //     getLinks();
+  //   } else {
+  //     Toast.show("No Internet connection, data can't load", context,
+  //         duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
+  //   }
+  // }
 }
 
 Route _createRoute(VDataDetails vdata) {

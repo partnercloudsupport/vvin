@@ -1,5 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_web_browser/flutter_web_browser.dart';
+import 'package:uni_links/uni_links.dart';
 import 'package:vvin/data.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
@@ -11,7 +15,11 @@ class NotiDetail extends StatefulWidget {
   _NotiDetailState createState() => _NotiDetailState();
 }
 
+enum UniLinksType { string, uri }
+
 class _NotiDetailState extends State<NotiDetail> {
+  StreamSubscription _sub;
+  UniLinksType _type = UniLinksType.string;
   double font12 = ScreenUtil().setSp(27.6, allowFontScalingSelf: false);
   double font14 = ScreenUtil().setSp(32.2, allowFontScalingSelf: false);
   double font18 = ScreenUtil().setSp(41.4, allowFontScalingSelf: false);
@@ -21,6 +29,7 @@ class _NotiDetailState extends State<NotiDetail> {
   @override
   void initState() {
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+    check();
     try {
       name = widget.notification.subtitle1.toString().split("Number");
       number = name[1].toString().split("Make");
@@ -28,8 +37,19 @@ class _NotiDetailState extends State<NotiDetail> {
     super.initState();
   }
 
+  void check() async {
+    if (_type == UniLinksType.string) {
+      _sub = getLinksStream().listen((String link) {
+        // FlutterWebBrowser.openWebPage(
+        //   url: "https://" + link.substring(12),
+        // );
+      }, onError: (err) {});
+    }
+  }
+
   @override
   void dispose() {
+    if (_sub != null) _sub.cancel();
     super.dispose();
   }
 
