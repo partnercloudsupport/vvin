@@ -164,7 +164,6 @@ class _ProfileState extends State<Profile> {
     return WillPopScope(
       onWillPop: _onBackPressAppBar,
       child: Scaffold(
-        // backgroundColor: Color.fromARGB(50, 220, 220, 220),
         backgroundColor: Color.fromRGBO(235, 235, 255, 1),
         appBar: PreferredSize(
           preferredSize: Size.fromHeight(
@@ -797,7 +796,6 @@ class _ProfileState extends State<Profile> {
   }
 
   Future<bool> _onBackPressAppBar() async {
-    // CurrentIndex index = new CurrentIndex(index: 4);
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(
         builder: (context) => More(),

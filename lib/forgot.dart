@@ -216,11 +216,7 @@ class _Forgot extends State<Forgot> {
   }
 
   Future<bool> _onBackPressAppBar() async {
-    Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => Login(),
-        ));
+    Navigator.of(context).pop();
     return Future.value(false);
   }
 }

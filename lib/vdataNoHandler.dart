@@ -1015,37 +1015,21 @@ class _VDataNoHandlerState extends State<VDataNoHandler> {
     showDialog(
         context: context,
         barrierDismissible: false,
-        builder: (_) => Platform.isIOS
-            ? CupertinoAlertDialog(
-                content: Text("Are you sure you want to close application?"),
-                actions: <Widget>[
-                  FlatButton(
-                      child: Text("NO"),
-                      onPressed: () {
-                        Navigator.pop(context);
-                      }),
-                  FlatButton(
-                      child: Text("YES"),
-                      onPressed: () {
-                        SystemNavigator.pop();
-                      }),
-                ],
-              )
-            : AlertDialog(
-                content: Text("Are you sure you want to close application?"),
-                actions: <Widget>[
-                  FlatButton(
-                      child: Text("NO"),
-                      onPressed: () {
-                        Navigator.pop(context);
-                      }),
-                  FlatButton(
-                      child: Text("YES"),
-                      onPressed: () {
-                        SystemNavigator.pop();
-                      }),
-                ],
-              ));
+        builder: (_) => AlertDialog(
+              content: Text("Are you sure you want to close application?"),
+              actions: <Widget>[
+                FlatButton(
+                    child: Text("NO"),
+                    onPressed: () {
+                      Navigator.pop(context);
+                    }),
+                FlatButton(
+                    child: Text("YES"),
+                    onPressed: () {
+                      SystemNavigator.pop();
+                    }),
+              ],
+            ));
     return Future.value(false);
   }
 
