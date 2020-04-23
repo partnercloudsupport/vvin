@@ -19,7 +19,6 @@ import 'package:firebase_ml_vision/firebase_ml_vision.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:flutter_native_image/flutter_native_image.dart';
-import 'package:vvin/myworks.dart';
 import 'package:vvin/vdata.dart';
 
 class WhatsAppForward extends StatefulWidget {
@@ -915,6 +914,16 @@ class _WhatsAppForwardState extends State<WhatsAppForward> {
             isSend = true;
           });
         }
+        String full = "";
+        if (otherList.length != 0) {
+          for (int i = 1; i < otherList.length; i++) {
+            if (i != otherList.length - 1) {
+              full = full + otherList[i] + "~!";
+            } else {
+              full = full + otherList[i];
+            }
+          }
+        }
         if (_phonecontroller.text.substring(0, 1) != "6") {
           _phonecontroller.text = "6" + _phonecontroller.text;
         }
@@ -932,6 +941,7 @@ class _WhatsAppForwardState extends State<WhatsAppForward> {
           "nameCard": "",
           "number": widget.whatsappForward.userID + "_" + number,
           "system": platform,
+          "details": full,
         }).then((res) {
           Navigator.pop(context);
           FlutterOpenWhatsapp.sendSingleMessage(
@@ -942,7 +952,6 @@ class _WhatsAppForwardState extends State<WhatsAppForward> {
                   widget.whatsappForward.url +
                   res.body);
           // launch(res.body);
-          // CurrentIndex index = new CurrentIndex(index: 2);
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(
               builder: (context) => VData(),
@@ -956,40 +965,6 @@ class _WhatsAppForwardState extends State<WhatsAppForward> {
       Toast.show("No Internet Connection", context,
           duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
     }
-  }
-
-  void _onLoading() {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => Dialog(
-        elevation: 0.0,
-        backgroundColor: Colors.transparent,
-        child: Container(
-          height: MediaQuery.of(context).size.height * 0.1,
-          width: MediaQuery.of(context).size.width * 0.1,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                JumpingText('Loading...'),
-                SizedBox(height: MediaQuery.of(context).size.height * 0.02),
-                SpinKitRing(
-                  lineWidth: 3,
-                  color: Colors.blue,
-                  size: 30.0,
-                  duration: Duration(milliseconds: 600),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
   }
 
   void _selectVTag() {
@@ -1474,12 +1449,7 @@ class _WhatsAppForwardState extends State<WhatsAppForward> {
   }
 
   Future<bool> _onBackPressAppBar() async {
-    // CurrentIndex index = new CurrentIndex(index: 2);
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(
-        builder: (context) => MyWorks(),
-      ),
-    );
+    Navigator.of(context).pop();
     return Future.value(false);
   }
 }

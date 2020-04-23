@@ -53,8 +53,16 @@ class _EditVProfileState extends State<EditVProfile> {
   double font18 = ScreenUtil().setSp(41.4, allowFontScalingSelf: false);
   FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
   int genderIndex, industryIndex, countryIndex, handlerIndex;
-  String handler, email, companyID, userID, level, userType, selectedTag;
-  bool saveHandler, saveData, allHandler, allTag;
+  String handler,
+      email,
+      companyID,
+      userID,
+      level,
+      userType,
+      selectedTag,
+      details;
+  bool saveHandler, saveData, allHandler, allTag, nameCard, gotData;
+  String urlDetails = "https://vvinoa.vvin.com/api/cardDetails.php";
   String urlHandler = "https://vvinoa.vvin.com/api/getHandler.php";
   String urlVTag = "https://vvinoa.vvin.com/api/vtag.php";
   String urlSaveEditVProfile =
@@ -67,6 +75,7 @@ class _EditVProfileState extends State<EditVProfile> {
   List<Country> countryList = [];
   List<States> statesList = [];
   List vtagList = [];
+  List<String> otherList = [];
 
   List<String> industry = [
     "-",
@@ -381,6 +390,8 @@ class _EditVProfileState extends State<EditVProfile> {
     saveHandler = false;
     allHandler = false;
     allTag = false;
+    nameCard = false;
+    gotData = false;
     checkConnection();
     _firebaseMessaging.configure(
       onMessage: (Map<String, dynamic> message) async {
@@ -747,20 +758,53 @@ class _EditVProfileState extends State<EditVProfile> {
                       SizedBox(
                         height: ScreenUtil().setHeight(4),
                       ),
-                      SizedBox(
+                      Container(
                         height: ScreenUtil().setHeight(60),
-                        child: TextField(
-                          style: TextStyle(
-                            fontSize: font14,
-                          ),
-                          controller: _emailController,
-                          keyboardType: TextInputType.emailAddress,
-                          decoration: InputDecoration(
-                            contentPadding:
-                                EdgeInsets.all(ScreenUtil().setHeight(10)),
-                            border: OutlineInputBorder(
-                                borderSide: BorderSide(color: Colors.grey)),
-                          ),
+                        padding: EdgeInsets.all(0.5),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(5),
+                          border: Border.all(
+                              color: Colors.grey.shade400,
+                              style: BorderStyle.solid),
+                        ),
+                        child: Row(
+                          children: <Widget>[
+                            Expanded(
+                              child: TextField(
+                                style: TextStyle(
+                                  fontSize: font14,
+                                ),
+                                controller: _emailController,
+                                keyboardType: TextInputType.emailAddress,
+                                decoration: InputDecoration(
+                                  border: InputBorder.none,
+                                  contentPadding: EdgeInsets.only(
+                                      left: ScreenUtil().setHeight(10),
+                                      bottom: ScreenUtil().setHeight(20),
+                                      top: ScreenUtil().setHeight(-15),
+                                      right: ScreenUtil().setHeight(20)),
+                                ),
+                              ),
+                            ),
+                            (gotData == true)
+                                ? InkWell(
+                                    onTap: () {
+                                      _showBottomSheet("email");
+                                    },
+                                    child: Container(
+                                      height: ScreenUtil().setHeight(60),
+                                      width: ScreenUtil().setHeight(60),
+                                      child: Center(
+                                        child: Icon(
+                                          Icons.arrow_drop_down,
+                                          color: Colors.black,
+                                        ),
+                                      ),
+                                    ),
+                                  )
+                                : Container()
+                          ],
                         ),
                       ),
                       SizedBox(
@@ -781,21 +825,55 @@ class _EditVProfileState extends State<EditVProfile> {
                       SizedBox(
                         height: ScreenUtil().setHeight(4),
                       ),
-                      SizedBox(
+                      Container(
                         height: ScreenUtil().setHeight(60),
-                        child: TextField(
-                          style: TextStyle(
-                            height: 1,
-                            fontSize: font14,
-                          ),
-                          controller: _companyController,
-                          keyboardType: TextInputType.text,
-                          decoration: InputDecoration(
-                            contentPadding:
-                                EdgeInsets.all(ScreenUtil().setHeight(10)),
-                            border: OutlineInputBorder(
-                                borderSide: BorderSide(color: Colors.grey)),
-                          ),
+                        padding: EdgeInsets.all(0.5),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(5),
+                          border: Border.all(
+                              color: Colors.grey.shade400,
+                              style: BorderStyle.solid),
+                        ),
+                        child: Row(
+                          children: <Widget>[
+                            Expanded(
+                              child: TextField(
+                                style: TextStyle(
+                                  height: 1,
+                                  fontSize: font14,
+                                ),
+                                controller: _companyController,
+                                keyboardType: TextInputType.text,
+                                decoration: InputDecoration(
+                                  border: InputBorder.none,
+                                  focusedBorder: InputBorder.none,
+                                  contentPadding: EdgeInsets.only(
+                                      left: ScreenUtil().setHeight(10),
+                                      bottom: ScreenUtil().setHeight(20),
+                                      top: ScreenUtil().setHeight(-15),
+                                      right: ScreenUtil().setHeight(20)),
+                                ),
+                              ),
+                            ),
+                            (gotData == true)
+                                ? InkWell(
+                                    onTap: () {
+                                      _showBottomSheet("company");
+                                    },
+                                    child: Container(
+                                      height: ScreenUtil().setHeight(60),
+                                      width: ScreenUtil().setHeight(60),
+                                      child: Center(
+                                        child: Icon(
+                                          Icons.arrow_drop_down,
+                                          color: Colors.black,
+                                        ),
+                                      ),
+                                    ),
+                                  )
+                                : Container()
+                          ],
                         ),
                       ),
                       SizedBox(
@@ -816,21 +894,55 @@ class _EditVProfileState extends State<EditVProfile> {
                       SizedBox(
                         height: ScreenUtil().setHeight(4),
                       ),
-                      SizedBox(
+                      Container(
                         height: ScreenUtil().setHeight(60),
-                        child: TextField(
-                          style: TextStyle(
-                            height: 1,
-                            fontSize: font14,
-                          ),
-                          controller: _icController,
-                          keyboardType: TextInputType.text,
-                          decoration: InputDecoration(
-                            contentPadding:
-                                EdgeInsets.all(ScreenUtil().setHeight(10)),
-                            border: OutlineInputBorder(
-                                borderSide: BorderSide(color: Colors.grey)),
-                          ),
+                        padding: EdgeInsets.all(0.5),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(5),
+                          border: Border.all(
+                              color: Colors.grey.shade400,
+                              style: BorderStyle.solid),
+                        ),
+                        child: Row(
+                          children: <Widget>[
+                            Expanded(
+                              child: TextField(
+                                style: TextStyle(
+                                  height: 1,
+                                  fontSize: font14,
+                                ),
+                                controller: _icController,
+                                keyboardType: TextInputType.text,
+                                decoration: InputDecoration(
+                                  border: InputBorder.none,
+                                  focusedBorder: InputBorder.none,
+                                  contentPadding: EdgeInsets.only(
+                                      left: ScreenUtil().setHeight(10),
+                                      bottom: ScreenUtil().setHeight(20),
+                                      top: ScreenUtil().setHeight(-15),
+                                      right: ScreenUtil().setHeight(20)),
+                                ),
+                              ),
+                            ),
+                            // (gotData == true)
+                            //     ? InkWell(
+                            //         onTap: () {
+                            //           //  _showBottomSheet("phone");
+                            //         },
+                            //         child: Container(
+                            //           height: ScreenUtil().setHeight(60),
+                            //           width: ScreenUtil().setHeight(60),
+                            //           child: Center(
+                            //             child: Icon(
+                            //               Icons.arrow_drop_down,
+                            //               color: Colors.black,
+                            //             ),
+                            //           ),
+                            //         ),
+                            //       )
+                            //     : Container()
+                          ],
                         ),
                       ),
                       SizedBox(
@@ -867,7 +979,7 @@ class _EditVProfileState extends State<EditVProfile> {
                                   color: Colors.white,
                                   borderRadius: BorderRadius.circular(5),
                                   border: Border.all(
-                                      color: Colors.grey,
+                                      color: Colors.grey.shade400,
                                       style: BorderStyle.solid),
                                 ),
                                 child: Row(
@@ -939,7 +1051,7 @@ class _EditVProfileState extends State<EditVProfile> {
                                   color: Colors.white,
                                   borderRadius: BorderRadius.circular(5),
                                   border: Border.all(
-                                      color: Colors.grey,
+                                      color: Colors.grey.shade400,
                                       style: BorderStyle.solid),
                                 ),
                                 child: Row(
@@ -990,21 +1102,55 @@ class _EditVProfileState extends State<EditVProfile> {
                       SizedBox(
                         height: ScreenUtil().setHeight(5),
                       ),
-                      SizedBox(
+                      Container(
                         height: ScreenUtil().setHeight(60),
-                        child: TextField(
-                          style: TextStyle(
-                            height: 1,
-                            fontSize: font14,
-                          ),
-                          controller: _positionController,
-                          keyboardType: TextInputType.text,
-                          decoration: InputDecoration(
-                            contentPadding:
-                                EdgeInsets.all(ScreenUtil().setHeight(10)),
-                            border: OutlineInputBorder(
-                                borderSide: BorderSide(color: Colors.grey)),
-                          ),
+                        padding: EdgeInsets.all(0.5),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(5),
+                          border: Border.all(
+                              color: Colors.grey.shade400,
+                              style: BorderStyle.solid),
+                        ),
+                        child: Row(
+                          children: <Widget>[
+                            Expanded(
+                              child: TextField(
+                                style: TextStyle(
+                                  height: 1,
+                                  fontSize: font14,
+                                ),
+                                controller: _positionController,
+                                keyboardType: TextInputType.text,
+                                decoration: InputDecoration(
+                                  border: InputBorder.none,
+                                  focusedBorder: InputBorder.none,
+                                  contentPadding: EdgeInsets.only(
+                                      left: ScreenUtil().setHeight(10),
+                                      bottom: ScreenUtil().setHeight(20),
+                                      top: ScreenUtil().setHeight(-15),
+                                      right: ScreenUtil().setHeight(20)),
+                                ),
+                              ),
+                            ),
+                            (gotData == true)
+                                ? InkWell(
+                                    onTap: () {
+                                      _showBottomSheet("position");
+                                    },
+                                    child: Container(
+                                      height: ScreenUtil().setHeight(60),
+                                      width: ScreenUtil().setHeight(60),
+                                      child: Center(
+                                        child: Icon(
+                                          Icons.arrow_drop_down,
+                                          color: Colors.black,
+                                        ),
+                                      ),
+                                    ),
+                                  )
+                                : Container()
+                          ],
                         ),
                       ),
                       SizedBox(
@@ -1043,7 +1189,7 @@ class _EditVProfileState extends State<EditVProfile> {
                                   color: Colors.white,
                                   borderRadius: BorderRadius.circular(5),
                                   border: Border.all(
-                                      color: Colors.grey,
+                                      color: Colors.grey.shade400,
                                       style: BorderStyle.solid),
                                 ),
                                 child: Row(
@@ -1094,21 +1240,55 @@ class _EditVProfileState extends State<EditVProfile> {
                       SizedBox(
                         height: ScreenUtil().setHeight(5),
                       ),
-                      SizedBox(
+                      Container(
                         height: ScreenUtil().setHeight(60),
-                        child: TextField(
-                          style: TextStyle(
-                            height: 1,
-                            fontSize: font14,
-                          ),
-                          controller: _occupationController,
-                          keyboardType: TextInputType.text,
-                          decoration: InputDecoration(
-                            contentPadding:
-                                EdgeInsets.all(ScreenUtil().setHeight(10)),
-                            border: OutlineInputBorder(
-                                borderSide: BorderSide(color: Colors.grey)),
-                          ),
+                        padding: EdgeInsets.all(0.5),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(5),
+                          border: Border.all(
+                              color: Colors.grey.shade400,
+                              style: BorderStyle.solid),
+                        ),
+                        child: Row(
+                          children: <Widget>[
+                            Expanded(
+                              child: TextField(
+                                style: TextStyle(
+                                  height: 1,
+                                  fontSize: font14,
+                                ),
+                                controller: _occupationController,
+                                keyboardType: TextInputType.text,
+                                decoration: InputDecoration(
+                                  border: InputBorder.none,
+                                  focusedBorder: InputBorder.none,
+                                  contentPadding: EdgeInsets.only(
+                                      left: ScreenUtil().setHeight(10),
+                                      bottom: ScreenUtil().setHeight(20),
+                                      top: ScreenUtil().setHeight(-15),
+                                      right: ScreenUtil().setHeight(20)),
+                                ),
+                              ),
+                            ),
+                            (gotData == true)
+                                ? InkWell(
+                                    onTap: () {
+                                      _showBottomSheet("occupation");
+                                    },
+                                    child: Container(
+                                      height: ScreenUtil().setHeight(60),
+                                      width: ScreenUtil().setHeight(60),
+                                      child: Center(
+                                        child: Icon(
+                                          Icons.arrow_drop_down,
+                                          color: Colors.black,
+                                        ),
+                                      ),
+                                    ),
+                                  )
+                                : Container()
+                          ],
                         ),
                       ),
                       SizedBox(
@@ -1147,7 +1327,7 @@ class _EditVProfileState extends State<EditVProfile> {
                                   color: Colors.white,
                                   borderRadius: BorderRadius.circular(5),
                                   border: Border.all(
-                                      color: Colors.grey,
+                                      color: Colors.grey.shade400,
                                       style: BorderStyle.solid),
                                 ),
                                 child: Row(
@@ -1285,19 +1465,53 @@ class _EditVProfileState extends State<EditVProfile> {
                       ),
                       Container(
                         height: ScreenUtil().setHeight(60),
-                        child: TextField(
-                          style: TextStyle(
-                            height: 1,
-                            fontSize: font14,
-                          ),
-                          controller: _areaController,
-                          keyboardType: TextInputType.text,
-                          decoration: InputDecoration(
-                            contentPadding:
-                                EdgeInsets.all(ScreenUtil().setHeight(10)),
-                            border: OutlineInputBorder(
-                                borderSide: BorderSide(color: Colors.grey)),
-                          ),
+                        padding: EdgeInsets.all(0.5),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(5),
+                          border: Border.all(
+                              color: Colors.grey.shade400,
+                              style: BorderStyle.solid),
+                        ),
+                        child: Row(
+                          children: <Widget>[
+                            Expanded(
+                              child: TextField(
+                                style: TextStyle(
+                                  height: 1,
+                                  fontSize: font14,
+                                ),
+                                controller: _areaController,
+                                keyboardType: TextInputType.text,
+                                decoration: InputDecoration(
+                                  border: InputBorder.none,
+                                  focusedBorder: InputBorder.none,
+                                  contentPadding: EdgeInsets.only(
+                                      left: ScreenUtil().setHeight(10),
+                                      bottom: ScreenUtil().setHeight(20),
+                                      top: ScreenUtil().setHeight(-15),
+                                      right: ScreenUtil().setHeight(20)),
+                                ),
+                              ),
+                            ),
+                            (gotData == true)
+                                ? InkWell(
+                                    onTap: () {
+                                      _showBottomSheet("area");
+                                    },
+                                    child: Container(
+                                      height: ScreenUtil().setHeight(60),
+                                      width: ScreenUtil().setHeight(60),
+                                      child: Center(
+                                        child: Icon(
+                                          Icons.arrow_drop_down,
+                                          color: Colors.black,
+                                        ),
+                                      ),
+                                    ),
+                                  )
+                                : Container()
+                          ],
                         ),
                       ),
                       SizedBox(
@@ -1986,7 +2200,7 @@ class _EditVProfileState extends State<EditVProfile> {
       case "country":
         {
           int position;
-          if (widget.vprofileData.industry == "") {
+          if (widget.vprofileData.country == "") {
             position = 0;
           } else {
             for (int i = 0; i < countryList.length; i++) {
@@ -2194,6 +2408,551 @@ class _EditVProfileState extends State<EditVProfile> {
           );
         }
         break;
+      case "email":
+        {
+          int position = 0;
+          for (int i = 0; i < otherList.length; i++) {
+            if (_emailController.text == otherList[i]) {
+              position = i;
+            }
+          }
+          showModalBottomSheet(
+            isDismissible: false,
+            context: context,
+            builder: (context) {
+              return StatefulBuilder(
+                builder: (BuildContext context, StateSetter setModalState) {
+                  return Container(
+                    height: MediaQuery.of(context).size.height * 0.3,
+                    child: Column(
+                      children: <Widget>[
+                        Container(
+                          decoration: BoxDecoration(
+                            border: Border(
+                              bottom: BorderSide(
+                                  width: 1, color: Colors.grey.shade300),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: <Widget>[
+                              Container(
+                                padding: EdgeInsets.all(
+                                  ScreenUtil().setHeight(20),
+                                ),
+                                child: Text(
+                                  "Select",
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: font14,
+                                  ),
+                                ),
+                              ),
+                              InkWell(
+                                borderRadius: BorderRadius.circular(20),
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(100),
+                                  ),
+                                  padding: EdgeInsets.all(
+                                    ScreenUtil().setHeight(20),
+                                  ),
+                                  child: Text(
+                                    "Done",
+                                    style: TextStyle(
+                                      color: Colors.blue,
+                                      fontSize: font14,
+                                    ),
+                                  ),
+                                ),
+                                onTap: () {
+                                  Navigator.pop(context);
+                                  if (position != 0) {
+                                    if (this.mounted) {
+                                      setState(() {
+                                        _emailController.text =
+                                            otherList[position];
+                                      });
+                                    }
+                                  }
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                        Flexible(
+                            child: Container(
+                          color: Colors.white,
+                          child: CupertinoPicker(
+                            backgroundColor: Colors.white,
+                            itemExtent: 28,
+                            scrollController: FixedExtentScrollController(
+                                initialItem: position),
+                            onSelectedItemChanged: (int index) {
+                              if (position != index) {
+                                if (this.mounted) {
+                                  setState(() {
+                                    position = index;
+                                  });
+                                }
+                              }
+                            },
+                            children: <Widget>[
+                              for (var each in otherList)
+                                Text(
+                                  each,
+                                  style: TextStyle(
+                                    fontSize: font14,
+                                  ),
+                                )
+                            ],
+                          ),
+                        ))
+                      ],
+                    ),
+                  );
+                },
+              );
+            },
+          );
+        }
+        break;
+      case "company":
+        {
+          int position = 0;
+          for (int i = 0; i < otherList.length; i++) {
+            if (_companyController.text == otherList[i]) {
+              position = i;
+            }
+          }
+          showModalBottomSheet(
+            isDismissible: false,
+            context: context,
+            builder: (context) {
+              return StatefulBuilder(
+                builder: (BuildContext context, StateSetter setModalState) {
+                  return Container(
+                    height: MediaQuery.of(context).size.height * 0.3,
+                    child: Column(
+                      children: <Widget>[
+                        Container(
+                          decoration: BoxDecoration(
+                            border: Border(
+                              bottom: BorderSide(
+                                  width: 1, color: Colors.grey.shade300),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: <Widget>[
+                              Container(
+                                padding: EdgeInsets.all(
+                                  ScreenUtil().setHeight(20),
+                                ),
+                                child: Text(
+                                  "Select",
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: font14,
+                                  ),
+                                ),
+                              ),
+                              InkWell(
+                                borderRadius: BorderRadius.circular(20),
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(100),
+                                  ),
+                                  padding: EdgeInsets.all(
+                                    ScreenUtil().setHeight(20),
+                                  ),
+                                  child: Text(
+                                    "Done",
+                                    style: TextStyle(
+                                      color: Colors.blue,
+                                      fontSize: font14,
+                                    ),
+                                  ),
+                                ),
+                                onTap: () {
+                                  Navigator.pop(context);
+                                  if (position != 0) {
+                                    if (this.mounted) {
+                                      setState(() {
+                                        _companyController.text =
+                                            otherList[position];
+                                      });
+                                    }
+                                  }
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                        Flexible(
+                            child: Container(
+                          color: Colors.white,
+                          child: CupertinoPicker(
+                            backgroundColor: Colors.white,
+                            itemExtent: 28,
+                            scrollController: FixedExtentScrollController(
+                                initialItem: position),
+                            onSelectedItemChanged: (int index) {
+                              if (position != index) {
+                                if (this.mounted) {
+                                  setState(() {
+                                    position = index;
+                                  });
+                                }
+                              }
+                            },
+                            children: <Widget>[
+                              for (var each in otherList)
+                                Text(
+                                  each,
+                                  style: TextStyle(
+                                    fontSize: font14,
+                                  ),
+                                )
+                            ],
+                          ),
+                        ))
+                      ],
+                    ),
+                  );
+                },
+              );
+            },
+          );
+        }
+        break;
+      case "position":
+        {
+          int position = 0;
+          for (int i = 0; i < otherList.length; i++) {
+            if (_positionController.text == otherList[i]) {
+              position = i;
+            }
+          }
+          showModalBottomSheet(
+            isDismissible: false,
+            context: context,
+            builder: (context) {
+              return StatefulBuilder(
+                builder: (BuildContext context, StateSetter setModalState) {
+                  return Container(
+                    height: MediaQuery.of(context).size.height * 0.3,
+                    child: Column(
+                      children: <Widget>[
+                        Container(
+                          decoration: BoxDecoration(
+                            border: Border(
+                              bottom: BorderSide(
+                                  width: 1, color: Colors.grey.shade300),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: <Widget>[
+                              Container(
+                                padding: EdgeInsets.all(
+                                  ScreenUtil().setHeight(20),
+                                ),
+                                child: Text(
+                                  "Select",
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: font14,
+                                  ),
+                                ),
+                              ),
+                              InkWell(
+                                borderRadius: BorderRadius.circular(20),
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(100),
+                                  ),
+                                  padding: EdgeInsets.all(
+                                    ScreenUtil().setHeight(20),
+                                  ),
+                                  child: Text(
+                                    "Done",
+                                    style: TextStyle(
+                                      color: Colors.blue,
+                                      fontSize: font14,
+                                    ),
+                                  ),
+                                ),
+                                onTap: () {
+                                  Navigator.pop(context);
+                                  if (position != 0) {
+                                    if (this.mounted) {
+                                      setState(() {
+                                        _positionController.text =
+                                            otherList[position];
+                                      });
+                                    }
+                                  }
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                        Flexible(
+                            child: Container(
+                          color: Colors.white,
+                          child: CupertinoPicker(
+                            backgroundColor: Colors.white,
+                            itemExtent: 28,
+                            scrollController: FixedExtentScrollController(
+                                initialItem: position),
+                            onSelectedItemChanged: (int index) {
+                              if (position != index) {
+                                if (this.mounted) {
+                                  setState(() {
+                                    position = index;
+                                  });
+                                }
+                              }
+                            },
+                            children: <Widget>[
+                              for (var each in otherList)
+                                Text(
+                                  each,
+                                  style: TextStyle(
+                                    fontSize: font14,
+                                  ),
+                                )
+                            ],
+                          ),
+                        ))
+                      ],
+                    ),
+                  );
+                },
+              );
+            },
+          );
+        }
+        break;
+      case "occupation":
+        {
+          int position = 0;
+          for (int i = 0; i < otherList.length; i++) {
+            if (_occupationController.text == otherList[i]) {
+              position = i;
+            }
+          }
+          showModalBottomSheet(
+            isDismissible: false,
+            context: context,
+            builder: (context) {
+              return StatefulBuilder(
+                builder: (BuildContext context, StateSetter setModalState) {
+                  return Container(
+                    height: MediaQuery.of(context).size.height * 0.3,
+                    child: Column(
+                      children: <Widget>[
+                        Container(
+                          decoration: BoxDecoration(
+                            border: Border(
+                              bottom: BorderSide(
+                                  width: 1, color: Colors.grey.shade300),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: <Widget>[
+                              Container(
+                                padding: EdgeInsets.all(
+                                  ScreenUtil().setHeight(20),
+                                ),
+                                child: Text(
+                                  "Select",
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: font14,
+                                  ),
+                                ),
+                              ),
+                              InkWell(
+                                borderRadius: BorderRadius.circular(20),
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(100),
+                                  ),
+                                  padding: EdgeInsets.all(
+                                    ScreenUtil().setHeight(20),
+                                  ),
+                                  child: Text(
+                                    "Done",
+                                    style: TextStyle(
+                                      color: Colors.blue,
+                                      fontSize: font14,
+                                    ),
+                                  ),
+                                ),
+                                onTap: () {
+                                  Navigator.pop(context);
+                                  if (position != 0) {
+                                    if (this.mounted) {
+                                      setState(() {
+                                        _occupationController.text =
+                                            otherList[position];
+                                      });
+                                    }
+                                  }
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                        Flexible(
+                            child: Container(
+                          color: Colors.white,
+                          child: CupertinoPicker(
+                            backgroundColor: Colors.white,
+                            itemExtent: 28,
+                            scrollController: FixedExtentScrollController(
+                                initialItem: position),
+                            onSelectedItemChanged: (int index) {
+                              if (position != index) {
+                                if (this.mounted) {
+                                  setState(() {
+                                    position = index;
+                                  });
+                                }
+                              }
+                            },
+                            children: <Widget>[
+                              for (var each in otherList)
+                                Text(
+                                  each,
+                                  style: TextStyle(
+                                    fontSize: font14,
+                                  ),
+                                )
+                            ],
+                          ),
+                        ))
+                      ],
+                    ),
+                  );
+                },
+              );
+            },
+          );
+        }
+        break;
+      case "area":
+        {
+          int position = 0;
+          for (int i = 0; i < otherList.length; i++) {
+            if (_areaController.text == otherList[i]) {
+              position = i;
+            }
+          }
+          showModalBottomSheet(
+            isDismissible: false,
+            context: context,
+            builder: (context) {
+              return StatefulBuilder(
+                builder: (BuildContext context, StateSetter setModalState) {
+                  return Container(
+                    height: MediaQuery.of(context).size.height * 0.3,
+                    child: Column(
+                      children: <Widget>[
+                        Container(
+                          decoration: BoxDecoration(
+                            border: Border(
+                              bottom: BorderSide(
+                                  width: 1, color: Colors.grey.shade300),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: <Widget>[
+                              Container(
+                                padding: EdgeInsets.all(
+                                  ScreenUtil().setHeight(20),
+                                ),
+                                child: Text(
+                                  "Select",
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: font14,
+                                  ),
+                                ),
+                              ),
+                              InkWell(
+                                borderRadius: BorderRadius.circular(20),
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(100),
+                                  ),
+                                  padding: EdgeInsets.all(
+                                    ScreenUtil().setHeight(20),
+                                  ),
+                                  child: Text(
+                                    "Done",
+                                    style: TextStyle(
+                                      color: Colors.blue,
+                                      fontSize: font14,
+                                    ),
+                                  ),
+                                ),
+                                onTap: () {
+                                  Navigator.pop(context);
+                                  if (position != 0) {
+                                    if (this.mounted) {
+                                      setState(() {
+                                        _areaController.text =
+                                            otherList[position];
+                                      });
+                                    }
+                                  }
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                        Flexible(
+                            child: Container(
+                          color: Colors.white,
+                          child: CupertinoPicker(
+                            backgroundColor: Colors.white,
+                            itemExtent: 28,
+                            scrollController: FixedExtentScrollController(
+                                initialItem: position),
+                            onSelectedItemChanged: (int index) {
+                              if (position != index) {
+                                if (this.mounted) {
+                                  setState(() {
+                                    position = index;
+                                  });
+                                }
+                              }
+                            },
+                            children: <Widget>[
+                              for (var each in otherList)
+                                Text(
+                                  each,
+                                  style: TextStyle(
+                                    fontSize: font14,
+                                  ),
+                                )
+                            ],
+                          ),
+                        ))
+                      ],
+                    ),
+                  );
+                },
+              );
+            },
+          );
+        }
+        break;
     }
   }
 
@@ -2204,7 +2963,67 @@ class _EditVProfileState extends State<EditVProfile> {
       _onLoading1();
       setupData();
       getTag();
+      getDetails();
     }
+  }
+
+  void getDetails() {
+    companyID = widget.vdata.companyID;
+    userID = widget.vdata.userID;
+    level = widget.vdata.level;
+    userType = widget.vdata.userType;
+    http.post(urlDetails, body: {
+      "companyID": companyID,
+      "userID": userID,
+      "user_type": userType,
+      "level": level,
+      "phoneNo": widget.vdata.phoneNo,
+    }).then((res) {
+      if (res.body != "") {
+        otherList = res.body.split("~!");
+        otherList.insert(0, '-');
+        if (this.mounted) {
+          setState(() {
+            gotData = true;
+          });
+        }
+      }
+      for (int i = 0; i < otherList.length; i++) {
+        if (otherList[i].toLowerCase().contains('@') &&
+            otherList[i].toString().contains('.com')) {
+          if (this.mounted) {
+            setState(() {
+              _emailController.text = otherList[i];
+            });
+          }
+        }
+        if (otherList[i].toLowerCase().contains('sdn bhd') ||
+            otherList[i].toLowerCase().contains('company')) {
+          if (this.mounted) {
+            setState(() {
+              _companyController.text = otherList[i];
+            });
+          }
+        }
+        if (otherList[i].toLowerCase().contains('jalan')) {
+          if (this.mounted) {
+            setState(() {
+              _areaController.text = otherList[i];
+            });
+          }
+        }
+      }
+      if (this.mounted) {
+        setState(() {
+          nameCard = true;
+        });
+      }
+      if (allHandler == true && allTag == true && nameCard == true) {
+        Navigator.pop(context);
+      }
+    }).catchError((err) {
+      print("Setup Data error: " + (err).toString());
+    });
   }
 
   void setupData() {
@@ -2262,7 +3081,7 @@ class _EditVProfileState extends State<EditVProfile> {
           allHandler = true;
         });
       }
-      if (allHandler == true && allTag == true) {
+      if (allHandler == true && allTag == true && nameCard == true) {
         Navigator.pop(context);
       }
     }).catchError((err) {
@@ -2303,7 +3122,7 @@ class _EditVProfileState extends State<EditVProfile> {
           allTag = true;
         });
       }
-      if (allHandler == true && allTag == true) {
+      if (allHandler == true && allTag == true && nameCard == true) {
         Navigator.pop(context);
       }
     }).catchError((err) {
@@ -2313,52 +3132,39 @@ class _EditVProfileState extends State<EditVProfile> {
     });
   }
 
-  void _onLoading() {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => Dialog(
-        elevation: 0.0,
-        backgroundColor: Colors.transparent,
-        child: Container(
-          width: 50.0,
-          height: 60.0,
-          child: Loader(),
-        ),
-      ),
-    );
-  }
-
   void _onLoading1() {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (_) => Dialog(
-        elevation: 0.0,
-        backgroundColor: Colors.transparent,
-        child: Container(
-          height: MediaQuery.of(context).size.height * 0.15,
-          width: MediaQuery.of(context).size.width * 0.1,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                JumpingText('Loading...'),
-                SizedBox(height: MediaQuery.of(context).size.height * 0.02),
-                SpinKitRing(
-                  lineWidth: 3,
-                  color: Colors.blue,
-                  size: 30.0,
-                  duration: Duration(milliseconds: 600),
-                ),
-              ],
+      builder: (_) => WillPopScope(
+        child: Dialog(
+          elevation: 0.0,
+          backgroundColor: Colors.transparent,
+          child: Container(
+            height: MediaQuery.of(context).size.height * 0.15,
+            width: MediaQuery.of(context).size.width * 0.1,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  JumpingText('Loading...'),
+                  SizedBox(height: MediaQuery.of(context).size.height * 0.02),
+                  SpinKitRing(
+                    lineWidth: 3,
+                    color: Colors.blue,
+                    size: 30.0,
+                    duration: Duration(milliseconds: 600),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
+        onWillPop: () {},
       ),
     );
   }
@@ -2523,7 +3329,7 @@ class _EditVProfileState extends State<EditVProfile> {
                   phoneNo: widget.vdata.phoneNo,
                   status: widget.vdata.status,
                 );
-                Navigator.push(
+                Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(
                     builder: (context) => VProfile(
