@@ -16,7 +16,6 @@ import 'package:toast/toast.dart';
 import 'package:uni_links/uni_links.dart';
 import 'package:vvin/animator.dart';
 import 'package:vvin/data.dart';
-import 'package:vvin/loader.dart';
 import 'package:http/http.dart' as http;
 import 'package:vvin/more.dart';
 import 'package:vvin/myworksDB.dart';
@@ -25,14 +24,12 @@ import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_web_browser/flutter_web_browser.dart';
-import 'package:draggable_scrollbar/draggable_scrollbar.dart';
 import 'package:vvin/notifications.dart';
 import 'package:vvin/vanalytics.dart';
 import 'package:vvin/vdata.dart';
 import 'package:vvin/whatsappForward.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 
-final ScrollController controller = ScrollController();
 final ScrollController whatsappController = ScrollController();
 
 class MyWorks extends StatefulWidget {
@@ -106,7 +103,6 @@ class _MyWorksState extends State<MyWorks> {
   List<String> phoneList = [];
   List<String> otherList = [];
   String tempText = "";
-  ScrollController _scrollController = ScrollController();
   final _itemExtent = ScreenUtil().setHeight(316);
 
   @override
@@ -1392,7 +1388,40 @@ class _MyWorksState extends State<MyWorks> {
   }
 
   Future<bool> _onBackPressAppBar() async {
-    SystemNavigator.pop();
+    showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => Platform.isIOS
+            ? CupertinoAlertDialog(
+                content: Text("Are you sure you want to close application?"),
+                actions: <Widget>[
+                  FlatButton(
+                      child: Text("NO"),
+                      onPressed: () {
+                        Navigator.pop(context);
+                      }),
+                  FlatButton(
+                      child: Text("YES"),
+                      onPressed: () {
+                        SystemNavigator.pop();
+                      }),
+                ],
+              )
+            : AlertDialog(
+                content: Text("Are you sure you want to close application?"),
+                actions: <Widget>[
+                  FlatButton(
+                      child: Text("NO"),
+                      onPressed: () {
+                        Navigator.pop(context);
+                      }),
+                  FlatButton(
+                      child: Text("YES"),
+                      onPressed: () {
+                        SystemNavigator.pop();
+                      }),
+                ],
+              ));
     return Future.value(false);
   }
 
@@ -2918,6 +2947,4 @@ class _MyWorksState extends State<MyWorks> {
     var _newPath = await Directory("$_path/$path").create();
     return File("${_newPath.path}/$name.jpg");
   }
-
-  Future<Null> _handleRefresh() async {}
 }

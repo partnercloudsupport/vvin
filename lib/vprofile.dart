@@ -6,7 +6,6 @@ import 'package:connectivity/connectivity.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_ml_vision/firebase_ml_vision.dart';
 import 'package:flutter_web_browser/flutter_web_browser.dart';
-import 'package:photo_view/photo_view.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -26,10 +25,10 @@ import 'dart:async';
 // import 'package:speech_to_text/speech_to_text.dart';
 // import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
-import 'package:network_to_file_image/network_to_file_image.dart';
 import 'package:vvin/notifications.dart';
 import 'package:vvin/vanalytics.dart';
 import 'package:vvin/vdata.dart';
+import 'package:scalable_image/scalable_image.dart';
 
 class VProfile extends StatefulWidget {
   final VDataDetails vdata;
@@ -63,7 +62,6 @@ class _VProfileState extends State<VProfile>
       level,
       userType,
       resultText,
-      fromVAnalytics,
       speechText;
   String urlVProfile = "https://vvinoa.vvin.com/api/vprofile.php";
   String urlHandler = "https://vvinoa.vvin.com/api/handler.php";
@@ -108,7 +106,6 @@ class _VProfileState extends State<VProfile>
     userID = widget.vdata.userID;
     level = widget.vdata.level;
     userType = widget.vdata.userType;
-    fromVAnalytics = widget.vdata.fromVAnalytics;
     vProfileData = false;
     handlerData = false;
     viewsData = false;
@@ -1011,22 +1008,7 @@ class _VProfileState extends State<VProfile>
   }
 
   Future<bool> _onBackPressAppBar() async {
-    if (fromVAnalytics == "yes") {
-      // CurrentIndex index = new CurrentIndex(index: 0);
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder: (context) => VAnalytics(),
-        ),
-      );
-    } else {
-      // CurrentIndex index = new CurrentIndex(index: 1);
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder: (context) => VData(),
-        ),
-      );
-    }
-
+    Navigator.of(context).pop();
     return Future.value(false);
   }
 
@@ -2149,9 +2131,19 @@ class _DetailsState extends State<Details> {
                                       SizedBox(
                                         height: ScreenUtil().setHeight(20),
                                       ),
-                                      Stack(
-                                        children: <Widget>[
-                                          Container(
+                                      InkWell(
+                                        onTap: () {
+                                          Navigator.push(context,
+                                              MaterialPageRoute(builder: (_) {
+                                            return ImageScreen(
+                                              image:
+                                                  widget.vProfileDetails[0].img,
+                                            );
+                                          }));
+                                        },
+                                        child: Hero(
+                                          tag: 'imageHero',
+                                          child: Container(
                                             height: ScreenUtil().setHeight(500),
                                             width: ScreenUtil().setHeight(500),
                                             decoration: BoxDecoration(
@@ -2159,62 +2151,17 @@ class _DetailsState extends State<Details> {
                                               color: Colors.white,
                                               borderRadius: BorderRadius.all(
                                                   Radius.circular(10.0)),
-                                            ),
-                                            child: Image(
-                                                image: NetworkToFileImage(
-                                                    url: widget
-                                                        .vProfileDetails[0].img,
-                                                    file: file,
-                                                    debug: true)),
-                                          ),
-                                          InkWell(
-                                            onTap: () {
-                                              _showNameCard();
-                                              readText();
-                                            },
-                                            child: Container(
-                                              height:
-                                                  ScreenUtil().setHeight(500),
-                                              width:
-                                                  ScreenUtil().setHeight(500),
-                                              decoration: BoxDecoration(
-                                                shape: BoxShape.rectangle,
-                                                color: Colors.white,
-                                                borderRadius: BorderRadius.all(
-                                                    Radius.circular(10.0)),
-                                                image: DecorationImage(
-                                                  image:
-                                                      CachedNetworkImageProvider(
-                                                          widget
-                                                              .vProfileDetails[
-                                                                  0]
-                                                              .img),
-                                                ),
+                                              image: DecorationImage(
+                                                image:
+                                                    CachedNetworkImageProvider(
+                                                        widget
+                                                            .vProfileDetails[0]
+                                                            .img),
                                               ),
                                             ),
                                           ),
-                                        ],
+                                        ),
                                       ),
-                                      // InkWell(
-                                      //   onTap: () {
-                                      //     _showNameCard();
-                                      //     readText();
-                                      //   },
-                                      //   child: Container(
-                                      //     height: ScreenUtil().setHeight(500),
-                                      //     width: ScreenUtil().setHeight(500),
-                                      //     decoration: BoxDecoration(
-                                      //       shape: BoxShape.rectangle,
-                                      //       color: Colors.white,
-                                      //       borderRadius: BorderRadius.all(
-                                      //           Radius.circular(10.0)),
-                                      //       image: DecorationImage(
-                                      //         image: NetworkImage(widget
-                                      //             .vProfileDetails[0].img),
-                                      //       ),
-                                      //     ),
-                                      //   ),
-                                      // ),
                                     ],
                                   ),
                                 ),
@@ -2228,89 +2175,80 @@ class _DetailsState extends State<Details> {
     );
   }
 
-  Future readText() async {
-    if (file.existsSync() == true) {
-      otherList.add("-");
-      FirebaseVisionImage ourImage = FirebaseVisionImage.fromFile(file);
-      TextRecognizer recognizeText = FirebaseVision.instance.textRecognizer();
-      VisionText readText = await recognizeText.processImage(ourImage);
+  // Future readText() async {
+  //   if (file.existsSync() == true) {
+  //     otherList.add("-");
+  //     FirebaseVisionImage ourImage = FirebaseVisionImage.fromFile(file);
+  //     TextRecognizer recognizeText = FirebaseVision.instance.textRecognizer();
+  //     VisionText readText = await recognizeText.processImage(ourImage);
 
-      String patttern = r'[0-9]';
-      RegExp regExp = new RegExp(patttern);
-      for (TextBlock block in readText.blocks) {
-        for (TextLine line in block.lines) {
-          String temPhone = "";
-          for (int i = 0; i < line.text.length; i++) {
-            if (regExp.hasMatch(line.text[i])) {
-              temPhone = temPhone + line.text[i];
-            }
-          }
-          if (temPhone.length >= 10) {
-            if (temPhone.substring(0, 1).toString() != "6") {
-              phoneList.add("6" + temPhone);
-            } else {
-              phoneList.add(temPhone);
-            }
-          } else {
-            otherList.add(line.text);
-          }
-        }
-      }
-    } else {
-      print("File not exits");
-      print(file);
-    }
-  }
+  //     String patttern = r'[0-9]';
+  //     RegExp regExp = new RegExp(patttern);
+  //     for (TextBlock block in readText.blocks) {
+  //       for (TextLine line in block.lines) {
+  //         String temPhone = "";
+  //         for (int i = 0; i < line.text.length; i++) {
+  //           if (regExp.hasMatch(line.text[i])) {
+  //             temPhone = temPhone + line.text[i];
+  //           }
+  //         }
+  //         if (temPhone.length >= 10) {
+  //           if (temPhone.substring(0, 1).toString() != "6") {
+  //             phoneList.add("6" + temPhone);
+  //           } else {
+  //             phoneList.add(temPhone);
+  //           }
+  //         } else {
+  //           otherList.add(line.text);
+  //         }
+  //       }
+  //     }
+  //   } else {
+  //     print("File not exits");
+  //     print(file);
+  //   }
+  // }
 
-  void _showNameCard() {
-    showDialog(
-      context: context,
-      barrierDismissible: true,
-      builder: (_) => Dialog(
-        elevation: 0.0,
-        backgroundColor: Colors.transparent,
-        child: Stack(
-          children: <Widget>[
-            Container(
-              color: Colors.white,
-              margin: EdgeInsets.fromLTRB(
-                  0, ScreenUtil().setHeight(20), ScreenUtil().setHeight(20), 0),
-              height: MediaQuery.of(context).size.height * 0.5,
-              width: MediaQuery.of(context).size.width * 0.8,
-              // decoration: BoxDecoration(
-              //   shape: BoxShape.rectangle,
-              //   color: Colors.white,
-              //   borderRadius: BorderRadius.all(Radius.circular(30.0)),
-              //   image: DecorationImage(
-              //     fit: BoxFit.fitWidth,
-              //     image: NetworkImage(widget.vProfileDetails[0].img),
-              //   ),
-              // ),
-              child: PhotoView(
-                imageProvider: NetworkImage(widget.vProfileDetails[0].img),
-              ),
-            ),
-            Positioned(
-              right: 0.0,
-              child: GestureDetector(
-                onTap: () {
-                  Navigator.of(context).pop();
-                },
-                child: Align(
-                  alignment: Alignment.topRight,
-                  child: CircleAvatar(
-                    radius: 14.0,
-                    backgroundColor: Colors.white,
-                    child: Icon(Icons.close, color: Colors.red),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  // void _showNameCard() {
+  //   showDialog(
+  //     context: context,
+  //     barrierDismissible: true,
+  //     builder: (_) => Dialog(
+  //       elevation: 0.0,
+  //       backgroundColor: Colors.transparent,
+  //       child: Stack(
+  //         children: <Widget>[
+  //           Container(
+  //             color: Colors.white,
+  //             margin: EdgeInsets.fromLTRB(
+  //                 0, ScreenUtil().setHeight(20), ScreenUtil().setHeight(20), 0),
+  //             height: MediaQuery.of(context).size.height * 0.5,
+  //             width: MediaQuery.of(context).size.width * 0.8,
+  //             child: PhotoView(
+  //               imageProvider: NetworkImage(widget.vProfileDetails[0].img),
+  //             ),
+  //           ),
+  //           Positioned(
+  //             right: 0.0,
+  //             child: GestureDetector(
+  //               onTap: () {
+  //                 Navigator.of(context).pop();
+  //               },
+  //               child: Align(
+  //                 alignment: Alignment.topRight,
+  //                 child: CircleAvatar(
+  //                   radius: 14.0,
+  //                   backgroundColor: Colors.white,
+  //                   child: Icon(Icons.close, color: Colors.red),
+  //                 ),
+  //               ),
+  //             ),
+  //           ),
+  //         ],
+  //       ),
+  //     ),
+  //   );
+  // }
 
   String _dateFormat(String fullDate) {
     String result, date, month, year;
@@ -2627,4 +2565,66 @@ Route _createRoute(
       );
     },
   );
+}
+
+class ImageScreen extends StatefulWidget {
+  final String image;
+  const ImageScreen({Key key, this.image}) : super(key: key);
+
+  @override
+  _ImageScreenState createState() => _ImageScreenState();
+}
+
+class _ImageScreenState extends State<ImageScreen> {
+  double font14 = ScreenUtil().setSp(32.2, allowFontScalingSelf: false);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: PreferredSize(
+        preferredSize: Size.fromHeight(
+          ScreenUtil().setHeight(85),
+        ),
+        child: AppBar(
+          brightness: Brightness.light,
+          backgroundColor: Colors.white,
+          elevation: 1,
+          centerTitle: true,
+          leading: IconButton(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            icon: Icon(
+              Icons.arrow_back_ios,
+              size: ScreenUtil().setWidth(30),
+              color: Colors.grey,
+            ),
+          ),
+          title: Text(
+            "Name Card",
+            style: TextStyle(
+                color: Colors.black,
+                fontSize: font14,
+                fontWeight: FontWeight.bold),
+          ),
+        ),
+      ),
+      body: GestureDetector(
+        child: Container(
+          color: Colors.white,
+          child: Center(
+            child: Hero(
+              tag: 'imageHero',
+              child: ScalableImage(
+                imageProvider: NetworkImage(widget.image),
+              ),
+            ),
+          ),
+        ),
+        onTap: () {
+          Navigator.pop(context);
+        },
+      ),
+    );
+  }
 }

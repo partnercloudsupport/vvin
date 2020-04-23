@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'package:connectivity/connectivity.dart';
 import 'package:empty_widget/empty_widget.dart';
 // import 'package:firebase_messaging/firebase_messaging.dart';
@@ -21,7 +22,6 @@ import 'package:vvin/more.dart';
 import 'package:vvin/myworks.dart';
 import 'package:vvin/notiDB.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:draggable_scrollbar/draggable_scrollbar.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:vvin/vanalytics.dart';
@@ -64,7 +64,6 @@ class _NotificationsState extends State<Notifications> {
   bool status, connection, nodata;
   List<Map> offlineNoti;
   int total, startTime, endTime, currentTabIndex;
-  ScrollController _scrollController = ScrollController();
   SharedPreferences prefs;
   final _itemExtent = ScreenUtil().setHeight(245);
 
@@ -785,10 +784,40 @@ class _NotificationsState extends State<Notifications> {
   }
 
   Future<bool> _onBackPressAppBar() async {
-    if (!mounted) {
-      return null;
-    }
-    SystemNavigator.pop();
+    showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => Platform.isIOS
+            ? CupertinoAlertDialog(
+                content: Text("Are you sure you want to close application?"),
+                actions: <Widget>[
+                  FlatButton(
+                      child: Text("NO"),
+                      onPressed: () {
+                        Navigator.pop(context);
+                      }),
+                  FlatButton(
+                      child: Text("YES"),
+                      onPressed: () {
+                        SystemNavigator.pop();
+                      }),
+                ],
+              )
+            : AlertDialog(
+                content: Text("Are you sure you want to close application?"),
+                actions: <Widget>[
+                  FlatButton(
+                      child: Text("NO"),
+                      onPressed: () {
+                        Navigator.pop(context);
+                      }),
+                  FlatButton(
+                      child: Text("YES"),
+                      onPressed: () {
+                        SystemNavigator.pop();
+                      }),
+                ],
+              ));
     return Future.value(false);
   }
 
@@ -976,9 +1005,6 @@ class _NotificationsState extends State<Notifications> {
   }
 
   Future<void> setNoti() async {
-    if (!mounted) {
-      return null;
-    }
     Database db = await NotiDB.instance.database;
     await db.rawInsert('DELETE FROM noti WHERE id > 0');
     for (int index = 0; index < notifications.length; index++) {

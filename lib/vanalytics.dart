@@ -2268,14 +2268,14 @@ class _VAnalyticsState extends State<VAnalytics>
     if (connectivityResult == ConnectivityResult.wifi ||
         connectivityResult == ConnectivityResult.mobile) {
       VDataDetails vdata = new VDataDetails(
-          companyID: companyID,
-          userID: userID,
-          level: level,
-          userType: userType,
-          name: topViews[position].name,
-          phoneNo: topViews[position].phoneNo,
-          status: topViews[position].status,
-          fromVAnalytics: "yes");
+        companyID: companyID,
+        userID: userID,
+        level: level,
+        userType: userType,
+        name: topViews[position].name,
+        phoneNo: topViews[position].phoneNo,
+        status: topViews[position].status,
+      );
       Navigator.of(context).push(_createRoute(vdata));
     } else {
       Toast.show("No Internet Connection!", context,
@@ -2366,7 +2366,40 @@ class _VAnalyticsState extends State<VAnalytics>
   }
 
   Future<bool> _onBackPressAppBar() async {
-    SystemNavigator.pop();
+    showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => Platform.isIOS
+            ? CupertinoAlertDialog(
+                content: Text("Are you sure you want to close application?"),
+                actions: <Widget>[
+                  FlatButton(
+                      child: Text("NO"),
+                      onPressed: () {
+                        Navigator.pop(context);
+                      }),
+                  FlatButton(
+                      child: Text("YES"),
+                      onPressed: () {
+                        SystemNavigator.pop();
+                      }),
+                ],
+              )
+            : AlertDialog(
+                content: Text("Are you sure you want to close application?"),
+                actions: <Widget>[
+                  FlatButton(
+                      child: Text("NO"),
+                      onPressed: () {
+                        Navigator.pop(context);
+                      }),
+                  FlatButton(
+                      child: Text("YES"),
+                      onPressed: () {
+                        SystemNavigator.pop();
+                      }),
+                ],
+              ));
     return Future.value(false);
   }
 
@@ -2652,6 +2685,14 @@ class _VAnalyticsState extends State<VAnalytics>
         chartData = true;
       });
     }
+    String number = offlineVAnalyticsData[0]['total_leads_percentage'];
+    double percentage = double.parse(number.substring(1, number.length - 1));
+    if (percentage >= 0) {
+      positive = true;
+    } else {
+      positive = false;
+    }
+    animatedController.forward();
   }
 
   String checkMonth(String month) {
@@ -2984,7 +3025,14 @@ class _VAnalyticsState extends State<VAnalytics>
         vanalytic = false;
       });
     }
+    String system;
+    if (Platform.isAndroid) {
+      system = "android";
+    } else {
+      system = "ios";
+    }
     http.post(urlVAnalytics, body: {
+      "system": system,
       "companyID": companyID,
       "level": level,
       "userID": userID,

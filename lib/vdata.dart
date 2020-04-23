@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'package:bouncing_widget/bouncing_widget.dart';
 import 'package:connectivity/connectivity.dart';
 import 'package:empty_widget/empty_widget.dart';
@@ -124,7 +125,6 @@ class _VDataState extends State<VData> {
     "VHome",
     "VForm",
   ];
-  ScrollController _scrollController = ScrollController();
   final _itemExtent = ScreenUtil().setHeight(260);
 
   @override
@@ -1184,7 +1184,6 @@ class _VDataState extends State<VData> {
         name: name,
         phoneNo: phoneNo,
         status: status,
-        fromVAnalytics: "no",
       );
       Navigator.of(context).push(_createRoute(vdata));
     } else {
@@ -1209,7 +1208,40 @@ class _VDataState extends State<VData> {
   }
 
   Future<bool> _onBackPressAppBar() async {
-    SystemNavigator.pop();
+    showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => Platform.isIOS
+            ? CupertinoAlertDialog(
+                content: Text("Are you sure you want to close application?"),
+                actions: <Widget>[
+                  FlatButton(
+                      child: Text("NO"),
+                      onPressed: () {
+                        Navigator.pop(context);
+                      }),
+                  FlatButton(
+                      child: Text("YES"),
+                      onPressed: () {
+                        SystemNavigator.pop();
+                      }),
+                ],
+              )
+            : AlertDialog(
+                content: Text("Are you sure you want to close application?"),
+                actions: <Widget>[
+                  FlatButton(
+                      child: Text("NO"),
+                      onPressed: () {
+                        Navigator.pop(context);
+                      }),
+                  FlatButton(
+                      child: Text("YES"),
+                      onPressed: () {
+                        SystemNavigator.pop();
+                      }),
+                ],
+              ));
     return Future.value(false);
   }
 
