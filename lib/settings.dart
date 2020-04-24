@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_web_browser/flutter_web_browser.dart';
+import 'package:ndialog/ndialog.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:toast/toast.dart';
 import 'package:uni_links/uni_links.dart';
@@ -50,41 +51,36 @@ class _SettingsState extends State<Settings> {
           showDialog(
               barrierDismissible: false,
               context: context,
-              builder: (BuildContext context) => CupertinoAlertDialog(
-                    title: Text(
-                      "You have 1 new notification",
-                      style: TextStyle(
-                        fontSize: font14,
-                      ),
-                    ),
-                    actions: <Widget>[
-                      FlatButton(
-                        child: Text("Cancel"),
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                          Navigator.of(context).pop();
-                          if (this.mounted) {
-                            setState(() {
-                              noti = false;
-                            });
-                          }
-                        },
-                      ),
-                      FlatButton(
-                        child: Text("View"),
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                          Navigator.of(context).pop();
-                          // CurrentIndex index = new CurrentIndex(index: 3);
-                          Navigator.of(context).pushReplacement(
-                            MaterialPageRoute(
-                              builder: (context) => Notifications(),
-                            ),
-                          );
-                        },
-                      )
-                    ],
-                  ));
+              builder: (BuildContext context) => NDialog(
+              dialogStyle: DialogStyle(titleDivider: true),
+              title: Text("New Notification"),
+              content: Text("You have 1 new notification"),
+              actions: <Widget>[
+                FlatButton(
+                    child: Text("View"),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      Navigator.of(context).pop();
+                      Navigator.of(context).pushReplacement(
+                        MaterialPageRoute(
+                          builder: (context) => Notifications(),
+                        ),
+                      );
+                    }),
+                FlatButton(
+                    child: Text("Later"),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      Navigator.of(context).pop();
+                      if (this.mounted) {
+                        setState(() {
+                          noti = false;
+                        });
+                      }
+                    }),
+              ],
+            ),
+          );
           noti = true;
         }
       },
@@ -359,12 +355,7 @@ class _SettingsState extends State<Settings> {
   }
 
   Future<bool> _onBackPressAppBar() async {
-    // CurrentIndex index = new CurrentIndex(index: 4);
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(
-        builder: (context) => More(),
-      ),
-    );
+    Navigator.of(context).pop();
     return Future.value(false);
   }
 }

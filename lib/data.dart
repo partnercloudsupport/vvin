@@ -1,3 +1,7 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_custom_dialog/flutter_custom_dialog.dart';
+
 class CurrentIndex {
   int index;
   CurrentIndex({this.index});
@@ -182,4 +186,39 @@ class WhatsappForward{
   String url, userID, companyID, level, userType;
   List vtagList;
   WhatsappForward({this.url, this.userID, this.companyID, this.level, this.userType, this.vtagList});
+}
+
+YYDialog YYAlertDialogWithScaleIn() {
+  return YYDialog().build()
+    ..width = 240
+    ..borderRadius = 4.0
+    ..duration = Duration(milliseconds: 200)
+    ..animatedFunc = (child, animation) {
+      return ScaleTransition(
+        child: child,
+        scale: Tween(begin: 0.0, end: 1.0).animate(animation),
+      );
+    }
+    ..text(
+      padding: EdgeInsets.all(18.0),
+      text: "Are you sure you want to close application?",
+      color: Colors.black,
+      fontSize: 14.0,
+    )
+    ..doubleButton(
+      padding: EdgeInsets.only(top: 24.0),
+      gravity: Gravity.center,
+      text1: "NO",
+      onTap1: () {
+      },
+      color1: Colors.blue,
+      fontSize1: 14.0,
+      text2: "YES",
+      onTap2: () {
+        SystemNavigator.pop();
+      },
+      color2: Colors.blue,
+      fontSize2: 14.0,
+    )
+    ..show();
 }

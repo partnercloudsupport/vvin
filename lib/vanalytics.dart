@@ -6,9 +6,12 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_custom_dialog/flutter_custom_dialog.dart';
 import 'package:flutter_web_browser/flutter_web_browser.dart';
 import 'package:intl/intl.dart';
+import 'package:ndialog/ndialog.dart';
 import 'package:progress_indicators/progress_indicators.dart';
+import 'package:route_transitions/route_transitions.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:toast/toast.dart';
@@ -125,41 +128,36 @@ class _VAnalyticsState extends State<VAnalytics>
           showDialog(
               barrierDismissible: false,
               context: context,
-              builder: (BuildContext context) => CupertinoAlertDialog(
-                    title: Text(
-                      "You have 1 new notification",
-                      style: TextStyle(
-                        fontSize: font14,
-                      ),
-                    ),
-                    actions: <Widget>[
-                      FlatButton(
-                        child: Text("Cancel"),
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                          Navigator.of(context).pop();
-                          if (this.mounted) {
-                            setState(() {
-                              noti = false;
-                            });
-                          }
-                        },
-                      ),
-                      FlatButton(
-                        child: Text("View"),
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                          Navigator.of(context).pop();
-                          // CurrentIndex index = new CurrentIndex(index: 3);
-                          Navigator.of(context).pushReplacement(
-                            MaterialPageRoute(
-                              builder: (context) => Notifications(),
-                            ),
-                          );
-                        },
-                      )
-                    ],
-                  ));
+              builder: (BuildContext context) => NDialog(
+              dialogStyle: DialogStyle(titleDivider: true),
+              title: Text("New Notification"),
+              content: Text("You have 1 new notification"),
+              actions: <Widget>[
+                FlatButton(
+                    child: Text("View"),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      Navigator.of(context).pop();
+                      Navigator.of(context).pushReplacement(
+                        MaterialPageRoute(
+                          builder: (context) => Notifications(),
+                        ),
+                      );
+                    }),
+                FlatButton(
+                    child: Text("Later"),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      Navigator.of(context).pop();
+                      if (this.mounted) {
+                        setState(() {
+                          noti = false;
+                        });
+                      }
+                    }),
+              ],
+            ),
+          );
           noti = true;
         }
       },
@@ -271,6 +269,7 @@ class _VAnalyticsState extends State<VAnalytics>
   Widget build(BuildContext context) {
     ScreenUtil.init(context, width: 750, height: 1334, allowFontScaling: false);
     final deviceWidth = MediaQuery.of(context).size.width;
+    YYDialog.init(context);
     return AnimatedBuilder(
         animation: animatedController,
         builder: (BuildContext context, Widget child) {
@@ -2276,7 +2275,9 @@ class _VAnalyticsState extends State<VAnalytics>
         phoneNo: topViews[position].phoneNo,
         status: topViews[position].status,
       );
-      Navigator.of(context).push(_createRoute(vdata));
+      Navigator.of(context).push(PageRouteTransition(
+          animationType: AnimationType.scale,
+          builder: (context) => VProfile(vdata: vdata)));
     } else {
       Toast.show("No Internet Connection!", context,
           duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
@@ -2366,24 +2367,7 @@ class _VAnalyticsState extends State<VAnalytics>
   }
 
   Future<bool> _onBackPressAppBar() async {
-    showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (_) => AlertDialog(
-              content: Text("Are you sure you want to close application?"),
-              actions: <Widget>[
-                FlatButton(
-                    child: Text("NO"),
-                    onPressed: () {
-                      Navigator.pop(context);
-                    }),
-                FlatButton(
-                    child: Text("YES"),
-                    onPressed: () {
-                      SystemNavigator.pop();
-                    }),
-              ],
-            ));
+    YYAlertDialogWithScaleIn();
     return Future.value(false);
   }
 
@@ -2604,7 +2588,6 @@ class _VAnalyticsState extends State<VAnalytics>
       var connectivityResult = await (Connectivity().checkConnectivity());
       if (connectivityResult == ConnectivityResult.wifi ||
           connectivityResult == ConnectivityResult.mobile) {
-        // _onLoading();
         startTime = (DateTime.now()).millisecondsSinceEpoch;
         getPreference();
       } else {
@@ -2731,22 +2714,6 @@ class _VAnalyticsState extends State<VAnalytics>
         break;
     }
     return monthInEnglishFormat;
-  }
-
-  void _onLoading() {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => Dialog(
-        elevation: 0.0,
-        backgroundColor: Colors.transparent,
-        child: Container(
-          width: 50.0,
-          height: 50.0,
-          child: Loader(),
-        ),
-      ),
-    );
   }
 
   Future<void> getPreference() async {
@@ -3171,7 +3138,6 @@ class _VAnalyticsState extends State<VAnalytics>
         }
 
         Navigator.of(context).pop();
-        // _onLoading();
         getTopViewData();
         getVanalyticsData();
         getChartData();
@@ -3218,8 +3184,6 @@ class _VAnalyticsState extends State<VAnalytics>
           chartData = false;
         });
       }
-
-      // _onLoading();
       _startDate = DateTime(DateTime.now().year, DateTime.now().month - 1,
           DateTime.now().day + 1);
       _startdate = _startDate.toString();
@@ -3295,24 +3259,6 @@ class _VAnalyticsState extends State<VAnalytics>
       throw 'Could not launch $url';
     }
   }
-}
-
-Route _createRoute(VDataDetails vdata) {
-  return PageRouteBuilder(
-    pageBuilder: (context, animation, secondaryAnimation) =>
-        VProfile(vdata: vdata),
-    transitionsBuilder: (context, animation, secondaryAnimation, child) {
-      var begin = Offset(0.0, 1.0);
-      var end = Offset.zero;
-      var curve = Curves.ease;
-      var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-
-      return SlideTransition(
-        position: animation.drive(tween),
-        child: child,
-      );
-    },
-  );
 }
 
 class LeadsData {

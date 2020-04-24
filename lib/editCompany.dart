@@ -8,6 +8,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_web_browser/flutter_web_browser.dart';
+import 'package:ndialog/ndialog.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
@@ -89,41 +90,36 @@ class _EditCompanyState extends State<EditCompany> {
           showDialog(
               barrierDismissible: false,
               context: context,
-              builder: (BuildContext context) => CupertinoAlertDialog(
-                    title: Text(
-                      "You have 1 new notification",
-                      style: TextStyle(
-                        fontSize: font14,
-                        fontFamily: 'Roboto',
-                      ),
-                    ),
-                    actions: <Widget>[
-                      FlatButton(
-                        child: Text("Cancel"),
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                          Navigator.of(context).pop();
-                          if (this.mounted) {
-                            setState(() {
-                              noti = false;
-                            });
-                          }
-                        },
-                      ),
-                      FlatButton(
-                        child: Text("View"),
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                          Navigator.of(context).pop();
-                          Navigator.of(context).pushReplacement(
-                            MaterialPageRoute(
-                              builder: (context) => Notifications(),
-                            ),
-                          );
-                        },
-                      )
-                    ],
-                  ));
+              builder: (BuildContext context) => NDialog(
+              dialogStyle: DialogStyle(titleDivider: true),
+              title: Text("New Notification"),
+              content: Text("You have 1 new notification"),
+              actions: <Widget>[
+                FlatButton(
+                    child: Text("View"),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      Navigator.of(context).pop();
+                      Navigator.of(context).pushReplacement(
+                        MaterialPageRoute(
+                          builder: (context) => Notifications(),
+                        ),
+                      );
+                    }),
+                FlatButton(
+                    child: Text("Later"),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      Navigator.of(context).pop();
+                      if (this.mounted) {
+                        setState(() {
+                          noti = false;
+                        });
+                      }
+                    }),
+              ],
+            ),
+          );
           noti = true;
         }
       },

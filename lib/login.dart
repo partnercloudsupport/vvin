@@ -359,54 +359,54 @@ class _LoginPageState extends State<Login> {
     return RegExp(r"^[a-zA-Z0-9.]+@[a-zA-Z0-9]+\.[a-zA-Z]+").hasMatch(email);
   }
 
-  void _onLoading() {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => new Dialog(
-        elevation: 0.0,
-        backgroundColor: Colors.transparent,
-        child: Container(
-          width: 50.0,
-          height: 60.0,
-          child: Loader(),
-        ),
-      ),
-    );
-  }
-
   void _onLoading1() {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => Dialog(
-        elevation: 0.0,
-        backgroundColor: Colors.transparent,
-        child: Container(
-          height: MediaQuery.of(context).size.height * 0.15,
-          width: MediaQuery.of(context).size.width * 0.1,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                JumpingText('Loading...'),
-                SizedBox(height: MediaQuery.of(context).size.height * 0.02),
-                SpinKitRing(
-                  lineWidth: 3,
-                  color: Colors.blue,
-                  size: 30.0,
-                  duration: Duration(milliseconds: 600),
+    showGeneralDialog(
+        barrierColor: Colors.grey.withOpacity(0.5),
+        transitionBuilder: (context, a1, a2, widget) {
+          final curvedValue = Curves.easeInOutBack.transform(a1.value) - 1.0;
+          return Transform(
+            transform: Matrix4.translationValues(0.0, curvedValue * -200, 0.0),
+            child: Opacity(
+              opacity: a1.value,
+              child: WillPopScope(
+                child: Dialog(
+                  elevation: 0.0,
+                  backgroundColor: Colors.transparent,
+                  child: Container(
+                    height: MediaQuery.of(context).size.height * 0.12,
+                    width: MediaQuery.of(context).size.width * 0.1,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: <Widget>[
+                          JumpingText('Loading...'),
+                          SizedBox(
+                              height:
+                                  MediaQuery.of(context).size.height * 0.02),
+                          SpinKitRing(
+                            lineWidth: 3,
+                            color: Colors.blue,
+                            size: 30.0,
+                            duration: Duration(milliseconds: 600),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
-              ],
+                onWillPop: () {},
+              ),
             ),
-          ),
-        ),
-      ),
-    );
+          );
+        },
+        transitionDuration: Duration(milliseconds: 300),
+        barrierDismissible: false,
+        context: context,
+        pageBuilder: (context, animation1, animation2) {});
   }
 
   Future<void> checkPlatform() async {
@@ -571,36 +571,52 @@ class _Default extends State<Default> {
   }
 
   void _onLoading1() {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => Dialog(
-        elevation: 0.0,
-        backgroundColor: Colors.transparent,
-        child: Container(
-          height: MediaQuery.of(context).size.height * 0.15,
-          width: MediaQuery.of(context).size.width * 0.1,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                JumpingText('Loading...'),
-                SizedBox(height: MediaQuery.of(context).size.height * 0.02),
-                SpinKitRing(
-                  lineWidth: 3,
-                  color: Colors.blue,
-                  size: 30.0,
-                  duration: Duration(milliseconds: 600),
+    showGeneralDialog(
+        barrierColor: Colors.grey.withOpacity(0.5),
+        transitionBuilder: (context, a1, a2, widget) {
+          final curvedValue = Curves.easeInOutBack.transform(a1.value) - 1.0;
+          return Transform(
+            transform: Matrix4.translationValues(0.0, curvedValue * -200, 0.0),
+            child: Opacity(
+              opacity: a1.value,
+              child: WillPopScope(
+                child: Dialog(
+                  elevation: 0.0,
+                  backgroundColor: Colors.transparent,
+                  child: Container(
+                    height: MediaQuery.of(context).size.height * 0.12,
+                    width: MediaQuery.of(context).size.width * 0.1,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: <Widget>[
+                          JumpingText('Loading...'),
+                          SizedBox(
+                              height:
+                                  MediaQuery.of(context).size.height * 0.02),
+                          SpinKitRing(
+                            lineWidth: 3,
+                            color: Colors.blue,
+                            size: 30.0,
+                            duration: Duration(milliseconds: 600),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
-              ],
+                onWillPop: () {},
+              ),
             ),
-          ),
-        ),
-      ),
-    );
+          );
+        },
+        transitionDuration: Duration(milliseconds: 300),
+        barrierDismissible: false,
+        context: context,
+        pageBuilder: (context, animation1, animation2) {});
   }
 }

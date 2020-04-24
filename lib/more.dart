@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'package:awesome_page_transitions/awesome_page_transitions.dart';
 import 'package:connectivity/connectivity.dart';
+import 'package:flutter_custom_dialog/flutter_custom_dialog.dart';
 import 'package:flutter_web_browser/flutter_web_browser.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:http/http.dart' as http;
@@ -10,7 +12,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:ndialog/ndialog.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:route_transitions/route_transitions.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:toast/toast.dart';
@@ -86,41 +90,36 @@ class _MoreState extends State<More> {
           showDialog(
               barrierDismissible: false,
               context: context,
-              builder: (BuildContext context) => CupertinoAlertDialog(
-                    title: Text(
-                      "You have 1 new notification",
-                      style: TextStyle(
-                        fontSize: font14,
-                      ),
-                    ),
-                    actions: <Widget>[
-                      FlatButton(
-                        child: Text("Cancel"),
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                          Navigator.of(context).pop();
-                          if (this.mounted) {
-                            setState(() {
-                              noti = false;
-                            });
-                          }
-                        },
-                      ),
-                      FlatButton(
-                        child: Text("View"),
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                          Navigator.of(context).pop();
-                          // CurrentIndex index = new CurrentIndex(index: 3);
-                          Navigator.of(context).pushReplacement(
-                            MaterialPageRoute(
-                              builder: (context) => Notifications(),
-                            ),
-                          );
-                        },
-                      )
-                    ],
-                  ));
+              builder: (BuildContext context) => NDialog(
+              dialogStyle: DialogStyle(titleDivider: true),
+              title: Text("New Notification"),
+              content: Text("You have 1 new notification"),
+              actions: <Widget>[
+                FlatButton(
+                    child: Text("View"),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      Navigator.of(context).pop();
+                      Navigator.of(context).pushReplacement(
+                        MaterialPageRoute(
+                          builder: (context) => Notifications(),
+                        ),
+                      );
+                    }),
+                FlatButton(
+                    child: Text("Later"),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      Navigator.of(context).pop();
+                      if (this.mounted) {
+                        setState(() {
+                          noti = false;
+                        });
+                      }
+                    }),
+              ],
+            ),
+          );
           noti = true;
         }
       },
@@ -195,6 +194,7 @@ class _MoreState extends State<More> {
   @override
   Widget build(BuildContext context) {
     ScreenUtil.init(context, width: 750, height: 1334, allowFontScaling: false);
+    YYDialog.init(context);
     return WillPopScope(
       onWillPop: _onBackPressAppBar,
       child: Scaffold(
@@ -440,10 +440,15 @@ class _MoreState extends State<More> {
                                   InkWell(
                                       onTap: () {
                                         Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                                builder: (context) =>
-                                                    Profile()));
+                                          context,
+                                          AwesomePageRoute(
+                                            transitionDuration:
+                                                Duration(milliseconds: 600),
+                                            exitPage: widget,
+                                            enterPage: Profile(),
+                                            transition: CubeTransition(),
+                                          ),
+                                        );
                                       },
                                       child: Text(
                                         "View Profile",
@@ -636,11 +641,14 @@ class _MoreState extends State<More> {
             assign: assign,
             unassign: unassign);
         Navigator.push(
-            context,
-            MaterialPageRoute(
-                builder: (context) => Settings(
-                      setting: setting,
-                    )));
+          context,
+          AwesomePageRoute(
+            transitionDuration: Duration(milliseconds: 600),
+            exitPage: widget,
+            enterPage: Settings(setting: setting),
+            transition: AccordionTransition(),
+          ),
+        );
       } else {
         Toast.show("Data is loading. Please try again.", context,
             duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
@@ -845,7 +853,15 @@ class _MoreState extends State<More> {
       vanalyticsDB.rawInsert('DELETE FROM analytics WHERE id > 0');
       Database vdataDB = await VDataDB.instance.database;
       vdataDB.rawInsert('DELETE FROM vdata WHERE id > 0');
-      Navigator.push(context, MaterialPageRoute(builder: (context) => Login()));
+      Navigator.pushReplacement(
+        context,
+        AwesomePageRoute(
+          transitionDuration: Duration(milliseconds: 600),
+          exitPage: widget,
+          enterPage: Login(),
+          transition: ParallaxTransition(),
+        ),
+      );
     } else {
       Toast.show("Please connect to Internet first", context,
           duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
@@ -897,24 +913,7 @@ class _MoreState extends State<More> {
   }
 
   Future<bool> _onBackPressAppBar() async {
-    showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (_) => AlertDialog(
-              content: Text("Are you sure you want to close application?"),
-              actions: <Widget>[
-                FlatButton(
-                    child: Text("NO"),
-                    onPressed: () {
-                      Navigator.pop(context);
-                    }),
-                FlatButton(
-                    child: Text("YES"),
-                    onPressed: () {
-                      SystemNavigator.pop();
-                    }),
-              ],
-            ));
+    YYAlertDialogWithScaleIn();
     return Future.value(false);
   }
 }

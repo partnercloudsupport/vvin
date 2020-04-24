@@ -8,10 +8,13 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_custom_dialog/flutter_custom_dialog.dart';
 import 'package:flutter_web_browser/flutter_web_browser.dart';
 import 'package:intl/intl.dart';
+import 'package:ndialog/ndialog.dart';
 import 'package:progress_indicators/progress_indicators.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
+import 'package:route_transitions/route_transitions.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:toast/toast.dart';
@@ -157,40 +160,36 @@ class _VDataNoHandlerState extends State<VDataNoHandler> {
           showDialog(
               barrierDismissible: false,
               context: context,
-              builder: (BuildContext context) => CupertinoAlertDialog(
-                    title: Text(
-                      "You have 1 new notification",
-                      style: TextStyle(
-                        fontSize: font14,
-                      ),
-                    ),
-                    actions: <Widget>[
-                      FlatButton(
-                        child: Text("Cancel"),
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                          Navigator.of(context).pop();
-                          if (this.mounted) {
-                            setState(() {
-                              noti = false;
-                            });
-                          }
-                        },
-                      ),
-                      FlatButton(
-                        child: Text("View"),
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                          Navigator.of(context).pop();
-                          Navigator.of(context).pushReplacement(
-                            MaterialPageRoute(
-                              builder: (context) => Notifications(),
-                            ),
-                          );
-                        },
-                      )
-                    ],
-                  ));
+              builder: (BuildContext context) => NDialog(
+              dialogStyle: DialogStyle(titleDivider: true),
+              title: Text("New Notification"),
+              content: Text("You have 1 new notification"),
+              actions: <Widget>[
+                FlatButton(
+                    child: Text("View"),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      Navigator.of(context).pop();
+                      Navigator.of(context).pushReplacement(
+                        MaterialPageRoute(
+                          builder: (context) => Notifications(),
+                        ),
+                      );
+                    }),
+                FlatButton(
+                    child: Text("Later"),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      Navigator.of(context).pop();
+                      if (this.mounted) {
+                        setState(() {
+                          noti = false;
+                        });
+                      }
+                    }),
+              ],
+            ),
+          );
           noti = true;
         }
       },
@@ -266,6 +265,7 @@ class _VDataNoHandlerState extends State<VDataNoHandler> {
     ScreenUtil.init(context, width: 750, height: 1334, allowFontScaling: false);
     double remark = MediaQuery.of(context).size.width * 0.30;
     double cWidth = MediaQuery.of(context).size.width * 0.30;
+    YYDialog.init(context);
     return WillPopScope(
       onWillPop: _onBackPressAppBar,
       child: Scaffold(
@@ -584,8 +584,13 @@ class _VDataNoHandlerState extends State<VDataNoHandler> {
                                                   status: vDataDetails[index]
                                                       .status,
                                                 );
-                                                Navigator.of(context)
-                                                    .push(_createRoute(vdata));
+                                                Navigator.of(context).push(
+                                                    PageRouteTransition(
+                                                        animationType:
+                                                            AnimationType.scale,
+                                                        builder: (context) =>
+                                                            VProfile(
+                                                                vdata: vdata)));
                                               } else {
                                                 Toast.show(
                                                     "No Internet Connection!",
@@ -1012,24 +1017,7 @@ class _VDataNoHandlerState extends State<VDataNoHandler> {
   }
 
   Future<bool> _onBackPressAppBar() async {
-    showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (_) => AlertDialog(
-              content: Text("Are you sure you want to close application?"),
-              actions: <Widget>[
-                FlatButton(
-                    child: Text("NO"),
-                    onPressed: () {
-                      Navigator.pop(context);
-                    }),
-                FlatButton(
-                    child: Text("YES"),
-                    onPressed: () {
-                      SystemNavigator.pop();
-                    }),
-              ],
-            ));
+    YYAlertDialogWithScaleIn();
     return Future.value(false);
   }
 
@@ -2460,7 +2448,6 @@ class _VDataNoHandlerState extends State<VDataNoHandler> {
     var connectivityResult = await (Connectivity().checkConnectivity());
     if (connectivityResult == ConnectivityResult.wifi ||
         connectivityResult == ConnectivityResult.mobile) {
-      // _onLoading();
       getPreference();
     } else {
       Toast.show("Please connect to Internet!", context,
@@ -2753,22 +2740,6 @@ class _VDataNoHandlerState extends State<VDataNoHandler> {
       });
     }
   }
-
-  // void _onLoading() {
-  //   showDialog(
-  //     context: context,
-  //     barrierDismissible: false,
-  //     builder: (_) => Dialog(
-  //       elevation: 0.0,
-  //       backgroundColor: Colors.transparent,
-  //       child: Container(
-  //         width: 50.0,
-  //         height: 50.0,
-  //         child: Loader(),
-  //       ),
-  //     ),
-  //   );
-  // }
 
   void _noInternet() {
     Toast.show("You are in offline mode, filter feature is not allow", context,
@@ -3091,22 +3062,4 @@ class _VDataNoHandlerState extends State<VDataNoHandler> {
       _refreshController.refreshCompleted();
     }
   }
-}
-
-Route _createRoute(VDataDetails vdata) {
-  return PageRouteBuilder(
-    pageBuilder: (context, animation, secondaryAnimation) =>
-        VProfile(vdata: vdata),
-    transitionsBuilder: (context, animation, secondaryAnimation, child) {
-      var begin = Offset(0.0, 1.0);
-      var end = Offset.zero;
-      var curve = Curves.ease;
-      var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-
-      return SlideTransition(
-        position: animation.drive(tween),
-        child: child,
-      );
-    },
-  );
 }

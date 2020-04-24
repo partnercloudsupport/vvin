@@ -59,7 +59,6 @@ class _NotiDetailState extends State<NotiDetail> {
     return WillPopScope(
       onWillPop: _onBackPressAppBar,
       child: Scaffold(
-          // backgroundColor: Color.fromRGBO(235, 235, 255, 1),
           appBar: PreferredSize(
             preferredSize: Size.fromHeight(
               ScreenUtil().setHeight(85),

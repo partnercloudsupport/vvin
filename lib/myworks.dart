@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:awesome_page_transitions/awesome_page_transitions.dart';
 import 'package:bouncing_widget/bouncing_widget.dart';
 import 'package:connectivity/connectivity.dart';
 import 'package:empty_widget/empty_widget.dart';
@@ -7,7 +8,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter_custom_dialog/flutter_custom_dialog.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:ndialog/ndialog.dart';
 import 'package:progress_indicators/progress_indicators.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -114,42 +117,38 @@ class _MyWorksState extends State<MyWorks> {
         bool noti = false;
         if (noti == false) {
           showDialog(
-              barrierDismissible: false,
-              context: context,
-              builder: (BuildContext context) => CupertinoAlertDialog(
-                    title: Text(
-                      "You have 1 new notification",
-                      style: TextStyle(
-                        fontSize: font14,
-                      ),
-                    ),
-                    actions: <Widget>[
-                      FlatButton(
-                        child: Text("Cancel"),
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                          Navigator.of(context).pop();
-                          if (this.mounted) {
-                            setState(() {
-                              noti = false;
-                            });
-                          }
-                        },
-                      ),
-                      FlatButton(
-                        child: Text("View"),
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                          Navigator.of(context).pop();
-                          Navigator.of(context).pushReplacement(
-                            MaterialPageRoute(
-                              builder: (context) => Notifications(),
-                            ),
-                          );
-                        },
-                      )
-                    ],
-                  ));
+            barrierDismissible: false,
+            context: context,
+            builder: (BuildContext context) => NDialog(
+              dialogStyle: DialogStyle(titleDivider: true),
+              title: Text("New Notification"),
+              content: Text("You have 1 new notification"),
+              actions: <Widget>[
+                FlatButton(
+                    child: Text("View"),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      Navigator.of(context).pop();
+                      Navigator.of(context).pushReplacement(
+                        MaterialPageRoute(
+                          builder: (context) => Notifications(),
+                        ),
+                      );
+                    }),
+                FlatButton(
+                    child: Text("Later"),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      Navigator.of(context).pop();
+                      if (this.mounted) {
+                        setState(() {
+                          noti = false;
+                        });
+                      }
+                    }),
+              ],
+            ),
+          );
           noti = true;
         }
       },
@@ -286,11 +285,10 @@ class _MyWorksState extends State<MyWorks> {
     _refreshController.refreshCompleted();
   }
 
-  void _onLoading() {}
-
   @override
   Widget build(BuildContext context) {
     ScreenUtil.init(context, width: 750, height: 1334, allowFontScaling: false);
+    YYDialog.init(context);
     return WillPopScope(
       onWillPop: _onBackPressAppBar,
       child: Scaffold(
@@ -565,7 +563,7 @@ class _MyWorksState extends State<MyWorks> {
                             ),
                             controller: _refreshController,
                             onRefresh: _onRefresh,
-                            onLoading: _onLoading,
+                            // onLoading: _onLoading,
                             child: ListView.builder(
                               itemExtent: _itemExtent,
                               itemCount: (connection == false)
@@ -996,11 +994,13 @@ class _MyWorksState extends State<MyWorks> {
         level: level,
         vtagList: vtagList,
       );
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder: (context) => WhatsAppForward(
-            whatsappForward: whatsapp,
-          ),
+      Navigator.push(
+        context,
+        AwesomePageRoute(
+          transitionDuration: Duration(milliseconds: 600),
+          exitPage: widget,
+          enterPage: WhatsAppForward(whatsappForward: whatsapp),
+          transition: StackTransition(),
         ),
       );
     } else {
@@ -1388,24 +1388,7 @@ class _MyWorksState extends State<MyWorks> {
   }
 
   Future<bool> _onBackPressAppBar() async {
-    showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (_) => AlertDialog(
-              content: Text("Are you sure you want to close application?"),
-              actions: <Widget>[
-                FlatButton(
-                    child: Text("NO"),
-                    onPressed: () {
-                      Navigator.pop(context);
-                    }),
-                FlatButton(
-                    child: Text("YES"),
-                    onPressed: () {
-                      SystemNavigator.pop();
-                    }),
-              ],
-            ));
+    YYAlertDialogWithScaleIn();
     return Future.value(false);
   }
 
@@ -2356,22 +2339,6 @@ class _MyWorksState extends State<MyWorks> {
       print("Setup Data error: " + (err).toString());
     });
   }
-
-  // void _onLoading() {
-  //   showDialog(
-  //     context: context,
-  //     barrierDismissible: false,
-  //     builder: (_) => Dialog(
-  //       elevation: 0.0,
-  //       backgroundColor: Colors.transparent,
-  //       child: Container(
-  //         width: 50.0,
-  //         height: 50.0,
-  //         child: Loader(),
-  //       ),
-  //     ),
-  //   );
-  // }
 
   void getVTag() {
     http.post(urlVTag, body: {

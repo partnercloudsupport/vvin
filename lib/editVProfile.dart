@@ -6,9 +6,11 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_page_transition/flutter_page_transition.dart';
 import 'package:flutter_web_browser/flutter_web_browser.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:http/http.dart' as http;
+import 'package:ndialog/ndialog.dart';
 import 'package:progress_indicators/progress_indicators.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:toast/toast.dart';
@@ -398,40 +400,38 @@ class _EditVProfileState extends State<EditVProfile> {
         bool noti = false;
         if (noti == false) {
           showDialog(
-              barrierDismissible: false,
-              context: context,
-              builder: (BuildContext context) => CupertinoAlertDialog(
-                    title: Text(
-                      "You have 1 new notification",
-                      style: TextStyle(fontSize: font14),
-                    ),
-                    actions: <Widget>[
-                      FlatButton(
-                        child: Text("Cancel"),
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                          Navigator.of(context).pop();
-                          if (this.mounted) {
-                            setState(() {
-                              noti = false;
-                            });
-                          }
-                        },
-                      ),
-                      FlatButton(
-                        child: Text("View"),
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                          Navigator.of(context).pop();
-                          Navigator.of(context).pushReplacement(
-                            MaterialPageRoute(
-                              builder: (context) => Notifications(),
-                            ),
-                          );
-                        },
-                      )
-                    ],
-                  ));
+            barrierDismissible: false,
+            context: context,
+            builder: (BuildContext context) => NDialog(
+              dialogStyle: DialogStyle(titleDivider: true),
+              title: Text("New Notification"),
+              content: Text("You have 1 new notification"),
+              actions: <Widget>[
+                FlatButton(
+                    child: Text("View"),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      Navigator.of(context).pop();
+                      Navigator.of(context).pushReplacement(
+                        MaterialPageRoute(
+                          builder: (context) => Notifications(),
+                        ),
+                      );
+                    }),
+                FlatButton(
+                    child: Text("Later"),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      Navigator.of(context).pop();
+                      if (this.mounted) {
+                        setState(() {
+                          noti = false;
+                        });
+                      }
+                    }),
+              ],
+            ),
+          );
           noti = true;
         }
       },
@@ -3133,40 +3133,53 @@ class _EditVProfileState extends State<EditVProfile> {
   }
 
   void _onLoading1() {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => WillPopScope(
-        child: Dialog(
-          elevation: 0.0,
-          backgroundColor: Colors.transparent,
-          child: Container(
-            height: MediaQuery.of(context).size.height * 0.15,
-            width: MediaQuery.of(context).size.width * 0.1,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  JumpingText('Loading...'),
-                  SizedBox(height: MediaQuery.of(context).size.height * 0.02),
-                  SpinKitRing(
-                    lineWidth: 3,
-                    color: Colors.blue,
-                    size: 30.0,
-                    duration: Duration(milliseconds: 600),
+    showGeneralDialog(
+        barrierColor: Colors.grey.withOpacity(0.5),
+        transitionBuilder: (context, a1, a2, widget) {
+          final curvedValue = Curves.easeInOutBack.transform(a1.value) - 1.0;
+          return Transform(
+            transform: Matrix4.translationValues(0.0, curvedValue * -200, 0.0),
+            child: Opacity(
+              opacity: a1.value,
+              child: WillPopScope(
+                child: Dialog(
+                  elevation: 0.0,
+                  backgroundColor: Colors.transparent,
+                  child: Container(
+                    height: MediaQuery.of(context).size.height * 0.12,
+                    width: MediaQuery.of(context).size.width * 0.1,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: <Widget>[
+                          JumpingText('Loading...'),
+                          SizedBox(
+                              height:
+                                  MediaQuery.of(context).size.height * 0.02),
+                          SpinKitRing(
+                            lineWidth: 3,
+                            color: Colors.blue,
+                            size: 30.0,
+                            duration: Duration(milliseconds: 600),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                ],
+                ),
+                onWillPop: () {},
               ),
             ),
-          ),
-        ),
-        onWillPop: () {},
-      ),
-    );
+          );
+        },
+        transitionDuration: Duration(milliseconds: 300),
+        barrierDismissible: false,
+        context: context,
+        pageBuilder: (context, animation1, animation2) {});
   }
 
   void _deleteHandler(int i) {
@@ -3329,14 +3342,11 @@ class _EditVProfileState extends State<EditVProfile> {
                   phoneNo: widget.vdata.phoneNo,
                   status: widget.vdata.status,
                 );
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => VProfile(
-                      vdata: vdata1,
-                    ),
-                  ),
-                );
+                Navigator.of(context).pop();
+                Navigator.of(context).push(PageTransition(
+                  type: PageTransitionType.slideParallaxDown,
+                  child: VProfile(vdata: vdata1),
+                ));
               }
             }).catchError((err) {
               Toast.show("No Internet Connection", context,

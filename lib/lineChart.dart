@@ -1,8 +1,8 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_web_browser/flutter_web_browser.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 import 'package:uni_links/uni_links.dart';
 import 'package:vvin/data.dart';
@@ -59,7 +59,9 @@ class _LineChartState extends State<LineChart> {
       onWillPop: _onBackPressAppBar,
       child: Scaffold(
         appBar: PreferredSize(
-          preferredSize: Size.fromHeight(ScreenUtil().setHeight(80),),
+          preferredSize: Size.fromHeight(
+            ScreenUtil().setHeight(80),
+          ),
           child: AppBar(
             brightness: Brightness.light,
             backgroundColor: Colors.white,

@@ -5,10 +5,12 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:connectivity/connectivity.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_ml_vision/firebase_ml_vision.dart';
+import 'package:flutter_page_transition/flutter_page_transition.dart';
 import 'package:flutter_web_browser/flutter_web_browser.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:ndialog/ndialog.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:progress_indicators/progress_indicators.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -26,8 +28,6 @@ import 'dart:async';
 // import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:vvin/notifications.dart';
-import 'package:vvin/vanalytics.dart';
-import 'package:vvin/vdata.dart';
 import 'package:scalable_image/scalable_image.dart';
 
 class VProfile extends StatefulWidget {
@@ -76,7 +76,8 @@ class _VProfileState extends State<VProfile>
       remarksData,
       vTagData,
       hasSpeech,
-      start;
+      start,
+      isSend;
   double font12 = ScreenUtil().setSp(27.6, allowFontScalingSelf: false);
   double font14 = ScreenUtil().setSp(32.2, allowFontScalingSelf: false);
   double font16 = ScreenUtil().setSp(36.8, allowFontScalingSelf: false);
@@ -113,6 +114,7 @@ class _VProfileState extends State<VProfile>
     vTagData = false;
     hasSpeech = false;
     start = false;
+    isSend = false;
     speechText = "";
     resultText = "";
     _addRemark.text = "";
@@ -126,42 +128,38 @@ class _VProfileState extends State<VProfile>
         bool noti = false;
         if (noti == false) {
           showDialog(
-              barrierDismissible: false,
-              context: context,
-              builder: (BuildContext context) => CupertinoAlertDialog(
-                    title: Text(
-                      "You have 1 new notification",
-                      style: TextStyle(
-                        fontSize: font14,
-                      ),
-                    ),
-                    actions: <Widget>[
-                      FlatButton(
-                        child: Text("Cancel"),
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                          Navigator.of(context).pop();
-                          if (this.mounted) {
-                            setState(() {
-                              noti = false;
-                            });
-                          }
-                        },
-                      ),
-                      FlatButton(
-                        child: Text("View"),
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                          Navigator.of(context).pop();
-                          Navigator.of(context).pushReplacement(
-                            MaterialPageRoute(
-                              builder: (context) => Notifications(),
-                            ),
-                          );
-                        },
-                      )
-                    ],
-                  ));
+            barrierDismissible: false,
+            context: context,
+            builder: (BuildContext context) => NDialog(
+              dialogStyle: DialogStyle(titleDivider: true),
+              title: Text("New Notification"),
+              content: Text("You have 1 new notification"),
+              actions: <Widget>[
+                FlatButton(
+                    child: Text("View"),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      Navigator.of(context).pop();
+                      Navigator.of(context).pushReplacement(
+                        MaterialPageRoute(
+                          builder: (context) => Notifications(),
+                        ),
+                      );
+                    }),
+                FlatButton(
+                    child: Text("Later"),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      Navigator.of(context).pop();
+                      if (this.mounted) {
+                        setState(() {
+                          noti = false;
+                        });
+                      }
+                    }),
+              ],
+            ),
+          );
           noti = true;
         }
       },
@@ -575,85 +573,101 @@ class _VProfileState extends State<VProfile>
         switch (selectedItem) {
           case "add remark":
             {
-              showDialog(
-                context: context,
-                barrierDismissible: false,
-                builder: (_) => AlertDialog(
-                  elevation: 1.0,
-                  title: Text(
-                    "Add new remark",
-                    style: TextStyle(
-                      fontSize: font16,
-                    ),
-                  ),
-                  content: Container(
-                    decoration: BoxDecoration(
-                        color: Color.fromRGBO(235, 235, 255, 1),
-                        borderRadius: BorderRadius.all(Radius.circular(10))),
-                    height: MediaQuery.of(context).size.height * 0.2,
-                    child: TextField(
-                      style: TextStyle(
-                        fontSize: font14,
-                      ),
-                      maxLines: 5,
-                      controller: _addRemark,
-                      keyboardType: TextInputType.text,
-                      decoration: InputDecoration(
-                        border: InputBorder.none,
-                      ),
-                    ),
-                  ),
-                  actions: <Widget>[
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: <Widget>[
-                        // FloatingActionButton(
-                        //   child: Icon(
-                        //     Icons.mic,
-                        //     // color: (start == false) ? Colors.pink : Colors.grey,
-                        //   ),
-                        //   mini: true,
-                        //   onPressed: () {
-                        //     initSpeechState();
-                        //     startListening();
-                        //     // setState(() {
-                        //     //   start = true;
-                        //     // });
-                        //   },
-                        //   backgroundColor:
-                        //   // Colors.pink,
-                        //   (start == false)
-                        //   ? Colors.pink
-                        //   : Colors.grey,
-                        // ),
-                        // SizedBox(
-                        //   width: MediaQuery.of(context).size.width * 0.2,
-                        // ),
-                        FlatButton(
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                          },
-                          child: Text(
-                            "Cancel",
+              showGeneralDialog(
+                  barrierDismissible: false,
+                  barrierColor: Colors.grey.withOpacity(0.5),
+                  transitionBuilder: (context, a1, a2, widget) {
+                    final curvedValue =
+                        Curves.easeInOutBack.transform(a1.value) - 1.0;
+                    return Transform(
+                      transform: Matrix4.translationValues(
+                          0.0, curvedValue * 200, 0.0),
+                      child: Opacity(
+                        opacity: a1.value,
+                        child: AlertDialog(
+                          shape: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10.0)),
+                          elevation: 1.0,
+                          title: Text(
+                            "Add new remark",
                             style: TextStyle(
-                              fontSize: font14,
+                              fontSize: font16,
                             ),
                           ),
-                        ),
-                        FlatButton(
-                          onPressed: _onSubmit,
-                          child: Text(
-                            "Submit",
-                            style: TextStyle(
-                              fontSize: font14,
+                          content: Container(
+                            decoration: BoxDecoration(
+                                color: Color.fromRGBO(235, 235, 255, 1),
+                                borderRadius:
+                                    BorderRadius.all(Radius.circular(10))),
+                            height: MediaQuery.of(context).size.height * 0.2,
+                            child: TextField(
+                              style: TextStyle(
+                                fontSize: font14,
+                              ),
+                              maxLines: 5,
+                              controller: _addRemark,
+                              keyboardType: TextInputType.text,
+                              decoration: InputDecoration(
+                                border: InputBorder.none,
+                              ),
                             ),
                           ),
+                          actions: <Widget>[
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: <Widget>[
+                                // FloatingActionButton(
+                                //   child: Icon(
+                                //     Icons.mic,
+                                //     // color: (start == false) ? Colors.pink : Colors.grey,
+                                //   ),
+                                //   mini: true,
+                                //   onPressed: () {
+                                //     initSpeechState();
+                                //     startListening();
+                                //     // setState(() {
+                                //     //   start = true;
+                                //     // });
+                                //   },
+                                //   backgroundColor:
+                                //   // Colors.pink,
+                                //   (start == false)
+                                //   ? Colors.pink
+                                //   : Colors.grey,
+                                // ),
+                                // SizedBox(
+                                //   width: MediaQuery.of(context).size.width * 0.2,
+                                // ),
+                                FlatButton(
+                                  onPressed: () {
+                                    Navigator.of(context).pop();
+                                  },
+                                  child: Text(
+                                    "Cancel",
+                                    style: TextStyle(
+                                      fontSize: font14,
+                                    ),
+                                  ),
+                                ),
+                                FlatButton(
+                                  onPressed: _onSubmit,
+                                  child: Text(
+                                    "Submit",
+                                    style: TextStyle(
+                                      fontSize: font14,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                  ],
-                ),
-              );
+                      ),
+                    );
+                  },
+                  transitionDuration: Duration(milliseconds: 300),
+                  context: context,
+                  pageBuilder: (context, animation1, animation2) {});
             }
             break;
 
@@ -689,8 +703,15 @@ class _VProfileState extends State<VProfile>
         created: vProfileDetails[0].created,
         lastActive: vProfileDetails[0].lastActive,
       );
-      Navigator.of(context)
-          .push(_createRoute(vprofile, handler, widget.vdata, vTag));
+      Navigator.of(context).push(PageTransition(
+        type: PageTransitionType.rippleRightDown,
+        child: EditVProfile(
+          vprofileData: vprofile,
+          handler: handler,
+          vdata: widget.vdata,
+          vtag: vTag,
+        ),
+      ));
     } else {
       Toast.show("Please check your Internet connection", context,
           duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
@@ -712,54 +733,61 @@ class _VProfileState extends State<VProfile>
   }
 
   void _onSubmit() async {
-    if (_addRemark.text == "") {
-      Toast.show("Please key in something", context,
-          duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
-    } else {
-      var connectivityResult = await (Connectivity().checkConnectivity());
-      if (connectivityResult == ConnectivityResult.wifi ||
-          connectivityResult == ConnectivityResult.mobile) {
-        http.post(urlSaveRemark, body: {
-          "companyID": companyID,
-          "userID": userID,
-          "level": level,
-          "user_type": userType,
-          "phone_number": phoneNo,
-          "remark": _addRemark.text,
-        }).then((res) async {
-          if (res.body == "success") {
-            VDataDetails vdata = new VDataDetails(
-              companyID: widget.vdata.companyID,
-              userID: widget.vdata.userID,
-              level: widget.vdata.level,
-              userType: widget.vdata.userType,
-              name: widget.vdata.name,
-              phoneNo: widget.vdata.phoneNo,
-              status: widget.vdata.status,
-            );
-            Navigator.pop(context);
-            Navigator.pop(context);
-            Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => VProfile(vdata: vdata)));
-            _addRemark.text = "";
-          } else {
-            Navigator.pop(context);
-            _addRemark.text = "";
-            Toast.show("Please contact VVIN help desk", context,
-                duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
-          }
-        }).catchError((err) {
-          Navigator.pop(context);
-          _addRemark.text = "";
-          Toast.show("No Internet Connection, data can't save", context,
-              duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
-          print("On submit error: " + (err).toString());
-        });
-      } else {
-        Toast.show("Please check your Internet connection", context,
+    if (isSend == false) {
+      if (_addRemark.text == "") {
+        Toast.show("Please key in something", context,
             duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
+      } else {
+        var connectivityResult = await (Connectivity().checkConnectivity());
+        if (connectivityResult == ConnectivityResult.wifi ||
+            connectivityResult == ConnectivityResult.mobile) {
+          if (this.mounted) {
+            setState(() {
+              isSend = true;
+            });
+          }
+          http.post(urlSaveRemark, body: {
+            "companyID": companyID,
+            "userID": userID,
+            "level": level,
+            "user_type": userType,
+            "phone_number": phoneNo,
+            "remark": _addRemark.text,
+          }).then((res) async {
+            if (res.body == "success") {
+              VDataDetails vdata = new VDataDetails(
+                companyID: widget.vdata.companyID,
+                userID: widget.vdata.userID,
+                level: widget.vdata.level,
+                userType: widget.vdata.userType,
+                name: widget.vdata.name,
+                phoneNo: widget.vdata.phoneNo,
+                status: widget.vdata.status,
+              );
+              Navigator.pop(context);
+              Navigator.pop(context);
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => VProfile(vdata: vdata)));
+              _addRemark.text = "";
+            } else {
+              Navigator.pop(context);
+              _addRemark.text = "";
+              Toast.show("Please contact VVIN help desk", context,
+                  duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
+            }
+          }).catchError((err) {
+            Navigator.pop(context);
+            _addRemark.text = "";
+            Toast.show("No Internet Connection, data can't save", context,
+                duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
+            print("On submit error: " + (err).toString());
+          });
+        } else {
+          Toast.show("Please check your Internet connection", context,
+              duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
+        }
       }
     }
   }
@@ -776,7 +804,6 @@ class _VProfileState extends State<VProfile>
     var connectivityResult = await (Connectivity().checkConnectivity());
     if (connectivityResult == ConnectivityResult.wifi ||
         connectivityResult == ConnectivityResult.mobile) {
-      // _onLoading();
       getVProfileData();
       getHandler();
       getViews();
@@ -989,22 +1016,6 @@ class _VProfileState extends State<VProfile>
           duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
       print("Get remark error: " + (err).toString());
     });
-  }
-
-  void _onLoading() {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => Dialog(
-        elevation: 0.0,
-        backgroundColor: Colors.transparent,
-        child: Container(
-          width: 50.0,
-          height: 50.0,
-          child: Loader(),
-        ),
-      ),
-    );
   }
 
   Future<bool> _onBackPressAppBar() async {
@@ -2542,29 +2553,6 @@ class _RemarkState extends State<Remark> {
       ),
     );
   }
-}
-
-Route _createRoute(
-    VProfileData vprofileData, List handler, VDataDetails vdata, List vtag) {
-  return PageRouteBuilder(
-    pageBuilder: (context, animation, secondaryAnimation) => EditVProfile(
-      vprofileData: vprofileData,
-      handler: handler,
-      vdata: vdata,
-      vtag: vtag,
-    ),
-    transitionsBuilder: (context, animation, secondaryAnimation, child) {
-      var begin = Offset(0.0, 1.0);
-      var end = Offset.zero;
-      var curve = Curves.ease;
-      var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-
-      return SlideTransition(
-        position: animation.drive(tween),
-        child: child,
-      );
-    },
-  );
 }
 
 class ImageScreen extends StatefulWidget {

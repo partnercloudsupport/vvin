@@ -1,12 +1,14 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'package:awesome_page_transitions/awesome_page_transitions.dart';
 import 'package:connectivity/connectivity.dart';
 import 'package:empty_widget/empty_widget.dart';
 // import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_custom_dialog/flutter_custom_dialog.dart';
 import 'package:flutter_web_browser/flutter_web_browser.dart';
 import 'package:http/http.dart' as http;
 import 'package:progress_indicators/progress_indicators.dart';
@@ -142,6 +144,7 @@ class _NotificationsState extends State<Notifications> {
   @override
   Widget build(BuildContext context) {
     ScreenUtil.init(context, width: 750, height: 1334, allowFontScaling: false);
+    YYDialog.init(context);
     return WillPopScope(
       onWillPop: _onBackPressAppBar,
       child: Scaffold(
@@ -458,6 +461,7 @@ class _NotificationsState extends State<Notifications> {
       "user_type": userType,
       "count": "0",
     }).then((res) {
+      notifications.clear();
       if (res.body == "nodata") {
         Toast.show("No Data", context,
             duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
@@ -733,8 +737,15 @@ class _NotificationsState extends State<Notifications> {
         subtitle1: subtitle1,
         subtitle2: subtitle2,
       );
-      Navigator.of(context).push(_createRoute(notification));
-
+      Navigator.push(
+        context,
+        AwesomePageRoute(
+          transitionDuration: Duration(milliseconds: 600),
+          exitPage: widget,
+          enterPage: NotiDetail(notification: notification),
+          transition: StackTransition(),
+        ),
+      );
       if (notifications[index].status == "0" && connection == true) {
         http
             .post(urlNotiChangeStatus, body: {
@@ -784,24 +795,7 @@ class _NotificationsState extends State<Notifications> {
   }
 
   Future<bool> _onBackPressAppBar() async {
-    showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (_) => AlertDialog(
-              content: Text("Are you sure you want to close application?"),
-              actions: <Widget>[
-                FlatButton(
-                    child: Text("NO"),
-                    onPressed: () {
-                      Navigator.pop(context);
-                    }),
-                FlatButton(
-                    child: Text("YES"),
-                    onPressed: () {
-                      SystemNavigator.pop();
-                    }),
-              ],
-            ));
+    YYAlertDialogWithScaleIn();
     return Future.value(false);
   }
 
@@ -1005,23 +999,5 @@ class _NotificationsState extends State<Notifications> {
               notifications[index].status +
               '")');
     }
-  }
-
-  Route _createRoute(NotificationDetail notification) {
-    return PageRouteBuilder(
-      pageBuilder: (context, animation, secondaryAnimation) =>
-          NotiDetail(notification: notification),
-      transitionsBuilder: (context, animation, secondaryAnimation, child) {
-        var begin = Offset(0.0, 1.0);
-        var end = Offset.zero;
-        var curve = Curves.ease;
-        var tween =
-            Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-        return SlideTransition(
-          position: animation.drive(tween),
-          child: child,
-        );
-      },
-    );
   }
 }
